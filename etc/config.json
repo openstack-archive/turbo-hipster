@@ -4,7 +4,7 @@
         "gearman_host": "localhost",
         "gearman_port": 4730
     },
-    "debug_log": "debug.log",
-    "git_working_dir": "/home/josh/var/lib/ci-worker/git/",
-    "job_log_dir": "/home/josh/var/lib/ci-worker/logs/"
+    "debug_log": "/home/josh/var/log/turbo-hipster/debug.log",
+    "git_working_dir": "/home/josh/var/lib/turbo-hipster/git/",
+    "job_log_dir": "/home/josh/var/lib/turbo-hipster/logs/"
 }
