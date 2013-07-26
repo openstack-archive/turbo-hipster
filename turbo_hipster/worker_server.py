@@ -42,6 +42,8 @@ class Server(object):
 
     def setup_logging(self):
         if self.debug_log:
+            if not os.path.isdir(os.path.dirname(self.debug_log)):
+                os.makedirs(os.path.dirname(self.debug_log))
             logging.basicConfig(format='%(asctime)s %(message)s',
                                 filename=self.debug_log, level=logging.DEBUG)
         else:
@@ -52,11 +54,13 @@ class Server(object):
     def load_plugins(self):
         """ Load the available plugins from task_plugins """
         # Load plugins
-        for ent in os.listdir('task_plugins'):
-            if (os.path.isdir('task_plugins/' + ent)
-               and os.path.isfile('task_plugins/' + ent + '/task.py')):
-                plugin_info = imp.find_module('task', ['task_plugins/' + ent])
-                self.plugins.append(imp.load_module('task', *plugin_info))
+        for plugin in self.config['plugins']:
+            print
+            plugin_info = imp.find_module('task',
+                                          [(os.path.dirname(
+                                            os.path.realpath(__file__)) +
+                                            '/task_plugins/' + plugin)])
+            self.plugins.append(imp.load_module('task', *plugin_info))
 
     def run_tasks(self):
         """ Run the tasks """
