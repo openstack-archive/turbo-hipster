@@ -97,7 +97,8 @@ def execute_to_log(cmd, logfile, timeout=-1,
         os.lseek(fd, 0, os.SEEK_END)
         descriptors[fd] = dict(
             name=watch_file[0],
-            poll=select.POLLIN
+            poll=select.POLLIN,
+            lines=''
         )
 
     cmd += ' 2>&1'
@@ -106,11 +107,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
         cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     descriptors[p.stdout.fileno()] = dict(
-        name='[stdout]',
-        poll=(select.POLLIN | select.POLLHUP)
-    )
-    descriptors[p.stderr.fileno()] = dict(
-        name='[stderr]',
+        name='[output]',
         poll=(select.POLLIN | select.POLLHUP)
     )
 
@@ -120,6 +117,21 @@ def execute_to_log(cmd, logfile, timeout=-1,
 
     last_heartbeat = time.time()
 
+    def process(fd):
+        """ Write the fd to log """
+        descriptors[fd]['lines'] += os.read(fd, 1024 * 1024)
+        # Avoid partial lines by only processing input with breaks
+        if lines[fd].find('\n') != -1:
+            elems = descriptors[fd]['lines'].split('\n')
+            # Take all but the partial line
+            for l in elems[:-1]:
+                if len(l) > 0:
+                    l = '%s %s' % (descriptors[fd]['name'], l)
+                    logger.info(l)
+                    last_heartbeat = time.time()
+            # Place the partial line back into lines to be processed
+            descriptors[fd]['lines'] = elems[-1]
+
     while p.poll() is None:
         if timeout > 0 and time.time() - start_time > timeout:
             # Append to logfile
@@ -127,16 +139,15 @@ def execute_to_log(cmd, logfile, timeout=-1,
             os.kill(p.pid, 9)
 
         for fd, flag in poll_obj.poll(0):
-            lines = os.read(fd, 1024 * 1024)
-            for l in lines.split('\n'):
-                if len(l) > 0:
-                    l = '%s %s' % (descriptors[fd]['name'], l)
-                    logger.info(l)
-                    last_heartbeat = time.time()
+            process(fd)
 
         if time.time() - last_heartbeat > 30:
             # Append to logfile
             logger.info("[heartbeat]")
             last_heartbeat = time.time()
+
+    # Do one last write to get the remaining lines
+    for fd, flag in poll_obj.poll(0):
+        process(fd)
 
     logger.info('[script exit code = %d]' % p.returncode)
