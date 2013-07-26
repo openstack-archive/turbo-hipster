@@ -90,8 +90,8 @@ def main():
                         default=
                         '/etc/turbo-hipster/config.json',
                         help='Path to json config file.')
-    parser.add_argument('--foreground', action='store_true',
-                        help='Run in the foreground.')
+    parser.add_argument('--background', action='store_true',
+                        help='Run in the background.')
     parser.add_argument('-p', '--pidfile',
                         default='/var/run/turbo-hipster/'
                                 'sql-migrate-gearman-worker.pid',
@@ -103,12 +103,12 @@ def main():
 
     server = Server(config)
 
-    if args.foreground:
-        server.main()
-    else:
+    if args.background:
         pidfile = pid_file_module.TimeoutPIDLockFile(args.pidfile, 10)
         with daemon.DaemonContext(pidfile=pidfile):
             server.main()
+    else:
+        server.main()
 
 
 if __name__ == '__main__':
