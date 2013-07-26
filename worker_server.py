@@ -2,6 +2,10 @@
 #
 # Copyright 2013 ...
 
+
+""" worker_server.py is an executable worker server that loads and runs
+task_plugins. """
+
 import argparse
 import daemon
 import extras
@@ -16,7 +20,7 @@ import worker_manager
 
 # as of python-daemon 1.6 it doesn't bundle pidlockfile anymore
 # instead it depends on lockfile-0.9.1 which uses pidfile.
-pid_file_module = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
+PID_FILE_MODULE = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
 
 
 class Server(object):
@@ -104,7 +108,7 @@ def main():
     server = Server(config)
 
     if args.background:
-        pidfile = pid_file_module.TimeoutPIDLockFile(args.pidfile, 10)
+        pidfile = PID_FILE_MODULE.TimeoutPIDLockFile(args.pidfile, 10)
         with daemon.DaemonContext(pidfile=pidfile):
             server.main()
     else:
