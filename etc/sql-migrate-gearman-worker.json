@@ -1,0 +1,10 @@
+{
+    "zuul_server": {
+        "git_url": "/home/josh/var/lib/zuul/git/",
+        "gearman_host": "localhost",
+        "gearman_port": 4730
+    },
+    "debug_log": "debug.log",
+    "git_working_dir": "/home/josh/var/lib/ci-worker/git/",
+    "job_log_dir": "/home/josh/var/lib/ci-worker/logs/"
+}
