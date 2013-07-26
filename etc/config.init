@@ -1,11 +1,11 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides: worker-server
+# Provides: turbo-hipster-worker-server
 # Required-Start: $remote_fs $syslog
 # Required-Stop: $remote_fs $syslog
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: CI Worker
+# Short-Description: turbo-hipster CI Worker
 # Description: Service to run extra CI tests
 ### END INIT INFO
 
@@ -13,13 +13,13 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="CI Worker Server"
-NAME=ci-worker-server
-DAEMON=/usr/local/bin/worker_server.py
+DESC="turbo-hipster CI Worker Server"
+NAME=turbo-hipster-worker-server
+DAEMON=/usr/local/bin/turbo-hipster
 PIDFILE=/var/run/$NAME/$NAME.pid
-DAEMON_ARGS="-c /etc/ci-worker/config.json -p $PIDFILE"
+DAEMON_ARGS="-c /etc/turbo-hipster/config.json -p $PIDFILE"
 SCRIPTNAME=/etc/init.d/$NAME
-USER=ciworker
+USER=turbo-hipster
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0

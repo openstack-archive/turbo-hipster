@@ -17,7 +17,7 @@ class Runner(threading.Thread):
         It pulls in a gearman job from the  build:gate-real-db-upgrade
         queue and runs it through _handle_patchset"""
 
-    log = logging.getLogger("rcbau-ci.task_plugins.task.Runner")
+    log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
 
     def __init__(self, config):
         super(Runner, self).__init__()
@@ -132,7 +132,7 @@ class Runner(threading.Thread):
             self.work_data = dict(
                 name=__worker_name__,
                 number=1,
-                manager='rcbau-ci-manager-%s' % hostname,
+                manager='turbo-hipster-manager-%s' % hostname,
                 url='http://localhost',
             )
         return self.work_data

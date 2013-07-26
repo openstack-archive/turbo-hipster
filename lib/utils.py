@@ -11,7 +11,7 @@ import time
 class GitRepository(object):
 
     """ Manage a git repository for our uses """
-    log = logging.getLogger("rcbau-ci.GitRepository")
+    log = logging.getLogger("lib.utils.GitRepository")
 
     def __init__(self, remote_url, local_path):
         self.remote_url = remote_url

@@ -11,11 +11,11 @@ class GearmanManager(threading.Thread):
 
     """ This thread manages all of the launched gearman workers.
         As required by the zuul protocol it handles stopping builds when they
-        are cancelled through stop:rcbau-ci-manager-%hostname.
+        are cancelled through stop:turbo-hipster-manager-%hostname.
         To do this it implements its own gearman worker waiting for events on
         that manager. """
 
-    log = logging.getLogger("rcbau-ci.worker_manager.Manager")
+    log = logging.getLogger("worker_manager.GearmanManager")
 
     def __init__(self, config, tasks):
         super(GearmanManager, self).__init__()
@@ -28,14 +28,14 @@ class GearmanManager(threading.Thread):
 
     def setup_gearman(self):
         hostname = os.uname()[1]
-        self.gearman_worker = gear.Worker('rcbau-manager-%s'
+        self.gearman_worker = gear.Worker('turbo-hipster-manager-%s'
                                           % hostname)
         self.gearman_worker.addServer(
             self.config['zuul_server']['gearman_host'],
             self.config['zuul_server']['gearman_port']
         )
         self.gearman_worker.registerFunction(
-            'stop:rcbau-ci-manager-%s' % hostname)
+            'stop:turbo-hipster-manager-%s' % hostname)
 
     def stop(self):
         self._stop.set()

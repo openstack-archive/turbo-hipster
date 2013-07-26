@@ -22,7 +22,7 @@ pid_file_module = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
 class Server(object):
 
     """ This is the worker server object to be daemonized """
-    log = logging.getLogger("rcbau-ci.Server")
+    log = logging.getLogger("worker_server.Server")
 
     def __init__(self, config):
         # Config init
@@ -88,12 +88,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
                         default=
-                        '/etc/rcbau-ci/sql-migrate-gearman-worker.json',
+                        '/etc/turbo-hipster/config.json',
                         help='Path to json config file.')
     parser.add_argument('--foreground', action='store_true',
                         help='Run in the foreground.')
     parser.add_argument('-p', '--pidfile',
-                        default='/var/run/rcbau-ci/'
+                        default='/var/run/turbo-hipster/'
                                 'sql-migrate-gearman-worker.pid',
                         help='PID file to lock during daemonization.')
     args = parser.parse_args()
