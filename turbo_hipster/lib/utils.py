@@ -108,7 +108,8 @@ def execute_to_log(cmd, logfile, timeout=-1,
 
     descriptors[p.stdout.fileno()] = dict(
         name='[output]',
-        poll=(select.POLLIN | select.POLLHUP)
+        poll=(select.POLLIN | select.POLLHUP),
+        lines=''
     )
 
     poll_obj = select.poll()
@@ -121,7 +122,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
         """ Write the fd to log """
         descriptors[fd]['lines'] += os.read(fd, 1024 * 1024)
         # Avoid partial lines by only processing input with breaks
-        if lines[fd].find('\n') != -1:
+        if descriptors[fd]['lines'].find('\n') != -1:
             elems = descriptors[fd]['lines'].split('\n')
             # Take all but the partial line
             for l in elems[:-1]:
