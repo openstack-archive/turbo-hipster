@@ -43,30 +43,6 @@ class GitRepository(object):
                                                       self.local_path))
             git.Repo.clone_from(self.remote_url, self.local_path)
 
-    """ ####UNUSED>....
-    def _make_ssh_wrappesubprocessr(self, key):
-        name = os.path.join(self.config['git_working_dir'], '.ssh_wrapper')
-        fd = open(name, 'w')
-        fd.write('#!/bin/bash\n')
-        fd.write('ssh -i %s $@\n' % key)
-        fd.close()
-        os.chmod(name, 0755)
-        os.environ['GIT_SSH'] = name
-
-    def construct_git_url(self, project_name):
-        url = 'ssh://%s@%s:%s/%s' % (
-                                    self.config['gerrit_server']['user'],
-                                    self.config['gerrit_server']['host'],
-                                    self.config['gerrit_server']['port'],
-                                    project_name
-                                )
-        url = 'https://%s/%s' % (
-            self.config['gerrit_server']['host'],
-            project_name
-        )
-        return url
-    """
-
 
 def execute_to_log(cmd, logfile, timeout=-1,
                    watch_logs=[
