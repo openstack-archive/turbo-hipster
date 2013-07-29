@@ -135,7 +135,7 @@ class Runner(threading.Thread):
             # $7 is the path to the dataset to test against
             # $8 is the pip cache dir
             cmd += (
-                ('%(unique_id)s %(working_dir)s %(git_path)s'
+                (' %(unique_id)s %(working_dir)s %(git_path)s'
                     ' %(dbuser)s %(dbpassword)s %(db)s'
                     ' %(dataset_path)s %(pip_cache_dir)s')
                 % {
