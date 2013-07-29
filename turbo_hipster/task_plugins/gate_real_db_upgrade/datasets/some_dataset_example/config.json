@@ -1,5 +1,5 @@
 {
     "db_user": "nova",
     "db_pass": "tester",
-    "nova_db": "nova",
+    "nova_db": "nova"
 }
