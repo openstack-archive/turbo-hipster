@@ -112,7 +112,7 @@ class Runner(threading.Thread):
                and os.path.isfile(
                     os.path.join(datasets_path, ent, 'config.json'))):
                 datasets.append(
-                    os.path.join(datasets_path, ent, 'config.json'))
+                    os.path.join(datasets_path, ent))
 
         return datasets
 
