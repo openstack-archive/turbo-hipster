@@ -5,7 +5,8 @@
         "gearman_port": 4730
     },
     "debug_log": "/home/josh/var/log/turbo-hipster/debug.log",
-    "job_log_dir": "/home/josh/var/lib/turbo-hipster/logs/",
-    "git_working_dir": "/home/josh/var/lib/turbo-hipster/git/",
+    "job_working_dir": "/home/josh/var/lib/turbo-hipster/jobs",
+    "git_working_dir": "/home/josh/var/lib/turbo-hipster/git",
+    "pip_download_cache": "/home/josh/var/cache/pip",
     "plugins": ["gate_real_db_upgrade"]
 }

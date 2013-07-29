@@ -81,22 +81,14 @@ class Runner(threading.Thread):
             self._do_next_step(job)
 
             # Checkout the patchset
-            local_path = self._grab_patchset(
+            git_path = self._grab_patchset(
                 job_arguments['ZUUL_PROJECT'],
                 job_arguments['ZUUL_REF']
             )
 
             # Step 2:
             self._do_next_step(job)
-            utils.execute_to_log(
-                'ping && sleep 70',
-                os.path.join(
-                    self.config['job_log_dir'],
-                    job.unique,
-                    'testing.log'
-                ),
-                timeout=70
-            )
+            self._execute_migrations(job, git_path)
 
             # Step 3:
             self._do_next_step(job)
@@ -108,6 +100,65 @@ class Runner(threading.Thread):
             self.log.exception('Exception handling log event.')
             if not self.cancelled:
                 job.sendWorkException(str(e).encode('utf-8'))
+
+    def _get_datasets(self):
+        datasets_path = os.path.join(os.path.dirname(__file__),
+                                     'datasets')
+
+        datasets = []
+
+        for ent in os.listdir(datasets_path):
+            if (os.path.isdir(os.path.join(datasets_path, ent))
+               and os.path.isfile(
+                    os.path.join(datasets_path, ent, 'config.json'))):
+                datasets.append(
+                    os.path.join(datasets_path, ent, 'config.json'))
+
+        return datasets
+
+    def _execute_migrations(self, job, git_path):
+        """ Execute the migration on each dataset in datasets """
+
+        for dataset_path in self._get_datasets():
+            with open(os.path.join(dataset_path, 'config.json'),
+                      'r') as config_stream:
+                dataset_config = json.loads(config_stream)
+
+            cmd = os.path.join(os.path.dirname(__file__),
+                               'nova_mysql_migrations.sh')
+            # $1 is the unique id
+            # $2 is the working dir path
+            # $3 is the path to the git repo path
+            # $4 is the nova db user
+            # $5 is the nova db password
+            # $6 is the nova db name
+            # $7 is the path to the dataset to test against
+            # $8 is the pip cache dir
+            cmd += (
+                ('%(unique_id)s %(working_dir)s %(git_path)s'
+                    ' %(dbuser)s %(dbpassword)s %(db)s'
+                    ' %(dataset_path)s %(pip_cache_dir)s')
+                % {
+                    'unique_id': job.unique,
+                    'working_dir': self.config['job_working_dir'],
+                    'git_path': git_path,
+                    'dbuser': dataset_config['db_user'],
+                    'dbpassword': dataset_config['db_pass'],
+                    'db': dataset_config['nova_db'],
+                    'dataset_path': dataset_path,
+                    'pip_cache_dir': self.config['pip_download_cache']
+                }
+            )
+
+            print cmd
+            """utils.execute_to_log(
+                                    cmd,
+                                    os.path.join(
+                                        self.config['job_working_dir'],
+                                        job.unique,
+                                        'testing.log'
+                                    )
+                                )"""
 
     def _grab_patchset(self, project_name, zuul_ref):
         """ Checkout the reference into config['git_working_dir'] """
@@ -142,6 +193,9 @@ class Runner(threading.Thread):
         job.sendWorkData(json.dumps(self._get_work_data()))
 
     def _do_next_step(self, job):
+        """ Send a WORK_STATUS command to the gearman server.
+        This can provide a progress bar. """
+
         # Each opportunity we should check if we need to stop
         if self.stopped():
             self.work_data['result'] = "Failed: Worker interrupted/stopped"
