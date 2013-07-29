@@ -122,7 +122,7 @@ class Runner(threading.Thread):
         for dataset_path in self._get_datasets():
             with open(os.path.join(dataset_path, 'config.json'),
                       'r') as config_stream:
-                dataset_config = json.loads(config_stream)
+                dataset_config = json.load(config_stream)
 
             cmd = os.path.join(os.path.dirname(__file__),
                                'nova_mysql_migrations.sh')
