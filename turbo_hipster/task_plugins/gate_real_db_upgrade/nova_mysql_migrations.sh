@@ -9,6 +9,8 @@
 # $7 is the path to the dataset to test against
 # $8 is the pip cache dir
 
+set -x
+
 pip_requires() {
   requires="tools/pip-requires"
   if [ ! -e $requires ]
@@ -55,7 +57,6 @@ EOF
 echo "To execute this script manually, run this:"
 echo "$0 $1 $2 $3 $4 $5 $6 $7 $8"
 
-set -x
 
 # Setup the environment
 export PATH=/usr/lib/ccache:$PATH
@@ -64,7 +65,7 @@ export PIP_DOWNLOAD_CACHE=$8
 # Restore database to known good state
 echo "Restoring test database $6"
 mysql -u root -e "drop database $6"
-mysql -u root -e "create database $7"
+mysql -u root -e "create database $6"
 mysql -u root -e "create user '$4'@'localhost' identified by '$5';"
 mysql -u root -e "grant all privileges on $6.* TO '$4'@'localhost';"
 mysql -u $4 --password=$5 $6 < /$7/$6.sql
@@ -72,14 +73,14 @@ mysql -u $4 --password=$5 $6 < /$7/$6.sql
 echo "Build test environment"
 cd $3
 
-set +x
+#set +x
 echo "Setting up virtual env"
 source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
 rm -rf ~/.virtualenvs/$1
 mkvirtualenv $1
 toggleglobalsitepackages
-set -x
+#set -x
 export PYTHONPATH=$PYTHONPATH:$3
 
 # Some databases are from Folsom
@@ -115,11 +116,11 @@ git checkout master
 git branch -D working
 
 # Cleanup virtual env
-set +x
+
 echo "Cleaning up virtual env"
 deactivate
 rmvirtualenv $1
-set -x
+set +x
 
 echo "done" 
 

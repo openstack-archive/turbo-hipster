@@ -92,6 +92,7 @@ class Runner(threading.Thread):
 
             # Step 3:
             self._do_next_step(job)
+            self._check_log_for_errors(job)
 
             # Final step, send completed packet
             self._send_work_data(job)
@@ -100,6 +101,20 @@ class Runner(threading.Thread):
             self.log.exception('Exception handling log event.')
             if not self.cancelled:
                 job.sendWorkException(str(e).encode('utf-8'))
+
+    def _get_logging_file(self, job):
+        return os.path.join(
+            self.config['job_working_dir'],
+            job.unique,
+            'testing.log'
+        )
+
+    def _check_log_for_errors(self, job):
+        logging_file = self._get_logging_file(job)
+
+        self.work_data['result'] = "Failed: errors found in log"
+        job.sendWorkStatus(self.current_step, self.total_steps)
+        job.sendWorkFail()
 
     def _get_datasets(self):
         datasets_path = os.path.join(os.path.dirname(__file__),
@@ -150,15 +165,10 @@ class Runner(threading.Thread):
                 }
             )
 
-            print cmd
-            """utils.execute_to_log(
-                                    cmd,
-                                    os.path.join(
-                                        self.config['job_working_dir'],
-                                        job.unique,
-                                        'testing.log'
-                                    )
-                                )"""
+            utils.execute_to_log(
+                cmd,
+                self._get_logging_file(job)
+            )
 
     def _grab_patchset(self, project_name, zuul_ref):
         """ Checkout the reference into config['git_working_dir'] """
