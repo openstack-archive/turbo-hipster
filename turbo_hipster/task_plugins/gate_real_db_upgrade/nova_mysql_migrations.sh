@@ -9,8 +9,6 @@
 # $7 is the path to the dataset to test against
 # $8 is the pip cache dir
 
-set -x
-
 pip_requires() {
   requires="tools/pip-requires"
   if [ ! -e $requires ]
@@ -39,7 +37,7 @@ log_config = $7
 EOF
 
   find $3 -type f -name "*.pyc" -exec rm -f {} \;
-
+  set -x
   nova_manage="$3/bin/nova-manage"
   if [ -e $nova_manage ]
   then
@@ -52,6 +50,7 @@ EOF
     nova-manage --config-file $3/nova-$1.conf db sync
   fi
   echo "***** DB upgrade to state of $1 finished *****"
+  set +x
 }
 
 echo "To execute this script manually, run this:"
@@ -64,23 +63,23 @@ export PIP_DOWNLOAD_CACHE=$8
 
 # Restore database to known good state
 echo "Restoring test database $6"
+set -x
 mysql -u root -e "drop database $6"
 mysql -u root -e "create database $6"
 mysql -u root -e "create user '$4'@'localhost' identified by '$5';"
 mysql -u root -e "grant all privileges on $6.* TO '$4'@'localhost';"
 mysql -u $4 --password=$5 $6 < /$7/$6.sql
+set +x
 
 echo "Build test environment"
 cd $3
 
-#set +x
 echo "Setting up virtual env"
 source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
 rm -rf ~/.virtualenvs/$1
 mkvirtualenv $1
 toggleglobalsitepackages
-#set -x
 export PYTHONPATH=$PYTHONPATH:$3
 
 # Some databases are from Folsom
@@ -120,7 +119,5 @@ git branch -D working
 echo "Cleaning up virtual env"
 deactivate
 rmvirtualenv $1
-set +x
 
 echo "done" 
-
