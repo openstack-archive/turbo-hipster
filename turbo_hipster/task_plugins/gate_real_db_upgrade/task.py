@@ -95,9 +95,17 @@ class Runner(threading.Thread):
                 self._do_next_step()
                 self._check_log_for_errors()
 
-                # Final step, send completed packet
+                # Step 4: handle the results (and upload etc)
+                self._do_next_step()
+                self._handle_results()
+
+                # Finally, send completed packet
                 self._send_work_data()
-                self.job.sendWorkComplete(json.dumps(self._get_work_data()))
+                if self.work_data['result'] is 'SUCCESS':
+                    self.job.sendWorkComplete(
+                        json.dumps(self._get_work_data()))
+                else:
+                    self.job.sendWorkFail()
             except Exception as e:
                 self.log.exception('Exception handling log event.')
                 if not self.cancelled:
@@ -110,12 +118,14 @@ class Runner(threading.Thread):
             dataset + '.log'
         )
 
+    def _handle_results(self):
+        """ pass over the results to handle_results.py for post-processing """
+        pass
+
     def _check_log_for_errors(self):
-        #logging_file = self._get_logging_file(job)
+        # logging_file = self._get_logging_file(job)
 
         self.work_data['result'] = "Failed: errors found in log"
-        self.job.sendWorkStatus(self.current_step, self.total_steps)
-        self.job.sendWorkFail()
 
     def _get_datasets(self):
         if self.datasets is not None:
@@ -168,9 +178,26 @@ class Runner(threading.Thread):
                 }
             )
 
+            # Gather logs to watch
+            syslog = '/var/log/syslog'
+            sqlslo = '/var/log/mysql/slow-queries.log'
+            sqlerr = '/var/log/mysql/error.log'
+            if 'logs' in self.config:
+                if 'syslog' in self.config['logs']:
+                    syslog = self.config['logs']['syslog']
+                if 'sqlslo' in self.config['logs']:
+                    sqlslo = self.config['logs']['sqlslo']
+                if 'sqlerr' in self.config['logs']:
+                    sqlerr = self.config['logs']['sqlerr']
+
             utils.execute_to_log(
                 cmd,
-                self._get_logging_file(dataset)
+                self._get_logging_file(dataset),
+                watch_logs=[
+                    ('[syslog]', syslog),
+                    ('[sqlslo]', sqlslo),
+                    ('[sqlerr]', sqlerr)
+                ],
             )
 
     def _grab_patchset(self, project_name, zuul_ref):
