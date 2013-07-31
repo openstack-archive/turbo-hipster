@@ -128,3 +128,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
         process(fd)
 
     logger.info('[script exit code = %d]' % p.returncode)
+
+def push_file(local_file):
+    """ Push a log file to a server. Returns the public URL """
+    pass
