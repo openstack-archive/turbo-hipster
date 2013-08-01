@@ -41,7 +41,7 @@ class Runner(threading.Thread):
         self.gearman_worker = None
         self.setup_gearman()
 
-        self.datasets = None
+        self.datasets = []
         self.job = None
         self.work_data = None
         self.cancelled = False
@@ -128,7 +128,7 @@ class Runner(threading.Thread):
         return os.path.join(
             self.config['job_working_dir'],
             self.job.unique,
-            dataset + '.log'
+            dataset['name'] + '.log'
         )
 
     def _handle_results(self):
@@ -141,29 +141,30 @@ class Runner(threading.Thread):
         self.work_data['result'] = "Failed: errors found in log"
 
     def _get_datasets(self):
-        if self.datasets is not None:
+        if len(self.datasets) > 0:
             return self.datasets
 
         datasets_path = os.path.join(os.path.dirname(__file__),
                                      'datasets')
-
-        self.datasets = {}
-
         for ent in os.listdir(datasets_path):
             if (os.path.isdir(os.path.join(datasets_path, ent))
                and os.path.isfile(
                     os.path.join(datasets_path, ent, 'config.json'))):
-                self.datasets[ent] = os.path.join(datasets_path, ent)
+                dataset = {}
+                dataset['name'] = ent
+                dataset['path'] = os.path.join(datasets_path, ent)
+                with open(os.path.join(dataset['path'], 'config.json'),
+                            'r') as config_stream:
+                    dataset['config'] = json.load(config_stream)
+
+                self.datasets.append(dataset)
 
         return self.datasets
 
     def _execute_migrations(self, git_path):
         """ Execute the migration on each dataset in datasets """
 
-        for dataset, dataset_path in self._get_datasets().items():
-            with open(os.path.join(dataset_path, 'config.json'),
-                      'r') as config_stream:
-                dataset_config = json.load(config_stream)
+        for dataset in self._get_datasets():
 
             cmd = os.path.join(os.path.dirname(__file__),
                                'nova_mysql_migrations.sh')
@@ -183,10 +184,10 @@ class Runner(threading.Thread):
                     'unique_id': self.job.unique,
                     'working_dir': self.config['job_working_dir'],
                     'git_path': git_path,
-                    'dbuser': dataset_config['db_user'],
-                    'dbpassword': dataset_config['db_pass'],
-                    'db': dataset_config['nova_db'],
-                    'dataset_path': dataset_path,
+                    'dbuser': dataset['config']['db_user'],
+                    'dbpassword': dataset['config']['db_pass'],
+                    'db': dataset['config']['nova_db'],
+                    'dataset_path': dataset['path'],
                     'pip_cache_dir': self.config['pip_download_cache']
                 }
             )
