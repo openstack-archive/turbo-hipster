@@ -21,23 +21,22 @@ somebody """
 from lib.utils import push_file
 
 
-def generate_log_index(logfiles):
+def generate_log_index(datasets):
     """ Create an index of logfiles and links to them """
     # Loop over logfile URLs
     # Create summary and links
     pass
 
 
-def make_index_file(logfiles):
+def make_index_file(datasets):
     """ Writes an index into a file for pushing """
-    generate_log_index(logfiles)
+    generate_log_index(datasets)
     # write out to file
 
 
 def generate_push_results(datasets):
     """ Generates and pushes results """
 
-    files = []
     for i, dataset in enumerate(datasets):
         files = []
         if 'publish_to' in dataset['config']:
@@ -47,7 +46,7 @@ def generate_push_results(datasets):
                                        publish_config))
         datasets[i]['files'] = files
 
-    index_file = make_index_file(datasets, files)
+    index_file = make_index_file(datasets)
     #index_file_url = push_file(index_file)
 
     return files[0]
