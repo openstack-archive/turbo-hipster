@@ -172,11 +172,14 @@ def execute_to_log(cmd, logfile, timeout=-1,
 
     logger.info('[script exit code = %d]' % p.returncode)
 
+
 def push_file(job_name, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
     if method in locals():
-        return locals(method)(job_name, dataset['log_file_path'], publish_config)
+        return locals(method)(job_name, dataset['log_file_path'],
+                              publish_config)
+
 
 def swift_push_file(job_name, file_path, swift_config):
     """ Push a log file to a swift server. """
@@ -188,6 +191,7 @@ def swift_push_file(job_name, file_path, swift_config):
         obj = con.put_object(swift_config['container'], name, fd)
         return con.get_object(swift_config['container'], name)
 
+
 def local_push_file(job_name, file_path, local_config):
     """ Copy the file locally somewhere sensible """
     dest = os.path.join(local_config['path'], job_name)
@@ -196,6 +200,7 @@ def local_push_file(job_name, file_path, local_config):
     dest_file = os.path.join(dest, os.path.basename(file_path))
     os.copyfile(file_path, dest_file)
     return dest_file
+
 
 def scp_push_file(job_name, file_path, local_config):
     """ Copy the file remotely over ssh """

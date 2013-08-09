@@ -20,16 +20,19 @@ somebody """
 
 from lib.utils import push_file
 
+
 def generate_log_index(logfiles):
     """ Create an index of logfiles and links to them """
     # Loop over logfile URLs
     # Create summary and links
     pass
 
+
 def make_index_file(logfiles):
     """ Writes an index into a file for pushing """
     generate_log_index(logfiles)
     # write out to file
+
 
 def generate_push_results(datasets):
     """ Generates and pushes results """
@@ -40,9 +43,9 @@ def generate_push_results(datasets):
         if 'publish_to' in dataset['config']:
             for publish_config in dataset['config']['publish_to']:
                 files.append(push_file(dataset['name'],
-                                        dataset['log_file_path'],
-                                        publish_config))
-        datasets[i]['files'] = files;
+                                       dataset['log_file_path'],
+                                       publish_config))
+        datasets[i]['files'] = files
 
     index_file = make_index_file(datasets, files)
     #index_file_url = push_file(index_file)

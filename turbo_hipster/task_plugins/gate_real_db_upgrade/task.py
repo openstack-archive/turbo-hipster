@@ -163,15 +163,15 @@ class Runner(threading.Thread):
                 dataset['name'] = ent
                 dataset['path'] = os.path.join(datasets_path, ent)
                 dataset['job_working_dir'] = os.path.join(
-                                                self.config['jobs_working_dir'],
-                                                self.job.unique
-                                            )
+                    self.config['jobs_working_dir'],
+                    self.job.unique
+                )
                 dataset['log_file_path'] = os.path.join(
-                                                dataset['job_working_dir'],
-                                                dataset['name'] + '.log'
-                                            )
+                    dataset['job_working_dir'],
+                    dataset['name'] + '.log'
+                )
                 with open(os.path.join(dataset['path'], 'config.json'),
-                            'r') as config_stream:
+                          'r') as config_stream:
                     dataset['config'] = json.load(config_stream)
 
                 self.datasets.append(dataset)
