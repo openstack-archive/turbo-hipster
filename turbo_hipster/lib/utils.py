@@ -17,7 +17,9 @@ import git
 import logging
 import os
 import select
+#import shutils
 import subprocess
+import swiftclient
 import time
 
 
@@ -32,6 +34,12 @@ class GitRepository(object):
         self._ensure_cloned()
 
         self.repo = git.Repo(self.local_path)
+
+    def _ensure_cloned(self):
+        if not os.path.exists(self.local_path):
+            self.log.debug("Cloning from %s to %s" % (self.remote_url,
+                                                      self.local_path))
+            git.Repo.clone_from(self.remote_url, self.local_path)
 
     def fetch(self, ref):
         # The git.remote.fetch method may read in git progress info and
@@ -50,11 +58,33 @@ class GitRepository(object):
         self.log.debug("Checking out %s" % ref)
         return self.repo.git.checkout(ref)
 
-    def _ensure_cloned(self):
-        if not os.path.exists(self.local_path):
-            self.log.debug("Cloning from %s to %s" % (self.remote_url,
-                                                      self.local_path))
-            git.Repo.clone_from(self.remote_url, self.local_path)
+    def reset(self):
+        self._ensure_cloned()
+        self.log.debug("Resetting repository %s" % self.local_path)
+        self.update()
+        origin = self.repo.remotes.origin
+        for ref in origin.refs:
+            if ref.remote_head == 'HEAD':
+                continue
+            self.repo.create_head(ref.remote_head, ref, force=True)
+
+        # Reset to remote HEAD (usually origin/master)
+        self.repo.head.reference = origin.refs['HEAD']
+        self.repo.head.reset(index=True, working_tree=True)
+        self.repo.git.clean('-x', '-f', '-d')
+
+    def update(self):
+        self._ensure_cloned()
+        self.log.debug("Updating repository %s" % self.local_path)
+        origin = self.repo.remotes.origin
+        origin.update()
+        # If the remote repository is repacked, the repo object's
+        # cache may be out of date.  Specifically, it caches whether
+        # to check the loose or packed DB for a given SHA.  Further,
+        # if there was no pack or lose directory to start with, the
+        # repo object may not even have a database for it.  Avoid
+        # these problems by recreating the repo object.
+        self.repo = git.Repo(self.local_path)
 
 
 def execute_to_log(cmd, logfile, timeout=-1,
@@ -142,6 +172,31 @@ def execute_to_log(cmd, logfile, timeout=-1,
 
     logger.info('[script exit code = %d]' % p.returncode)
 
-def push_file(local_file):
+def push_file(job_name, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
+    method = publish_config['type'] + '_push_file'
+    if method in locals():
+        return locals(method)(job_name, dataset['log_file_path'], publish_config)
+
+def swift_push_file(job_name, file_path, swift_config):
+    """ Push a log file to a swift server. """
+    with open(file_path, 'r') as fd:
+        name = filename
+        con = swiftclient.client.Connection(swift_config['authurl'],
+                                            swift_config['user'],
+                                            swift_config['apikey'])
+        obj = con.put_object(swift_config['container'], name, fd)
+        return con.get_object(swift_config['container'], name)
+
+def local_push_file(job_name, file_path, local_config):
+    """ Copy the file locally somewhere sensible """
+    dest = os.path.join(local_config['path'], job_name)
+    os.makedirs(dest)
+
+    dest_file = os.path.join(dest, os.path.basename(file_path))
+    os.copyfile(file_path, dest_file)
+    return dest_file
+
+def scp_push_file(job_name, file_path, local_config):
+    """ Copy the file remotely over ssh """
     pass

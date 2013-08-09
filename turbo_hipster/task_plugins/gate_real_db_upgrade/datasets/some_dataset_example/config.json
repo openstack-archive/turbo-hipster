@@ -1,5 +1,18 @@
 {
     "db_user": "nova",
     "db_pass": "tester",
-    "nova_db": "nova"
+    "nova_db": "nova",
+    "publish_to": [
+        {
+            "type": "deactivated_swift",
+            "authurl": "",
+            "user": "",
+            "apikey": "",
+            "container": ""
+        },
+        {
+            "type": "local",
+            "path": "/home/josh/var/www/results/"
+        }
+    ]
 }
