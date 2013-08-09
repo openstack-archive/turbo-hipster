@@ -25,6 +25,7 @@
 # $8 is the pip cache dir
 
 pip_requires() {
+  pip install -q mysql-python
   requires="tools/pip-requires"
   if [ ! -e $requires ]
   then
@@ -45,7 +46,7 @@ db_sync() {
 # $7 is the logging.conf for openstack
 
   # Create a nova.conf file
-  cat - > $3/nova-$1.conf <<EOF
+  cat - > $2/nova-$1.conf <<EOF
 [DEFAULT]
 sql_connection = mysql://$4:$5@localhost/$6?charset=utf8
 log_config = $7
@@ -57,12 +58,13 @@ EOF
   if [ -e $nova_manage ]
   then
     echo "***** DB upgrade to state of $1 starts *****"
-    python $nova_manage --config-file $3/nova-$1.conf db sync
+    python $nova_manage --config-file $2/nova-$1.conf db sync
   else
-    python setup.py clean
-    python setup.py develop
+    python setup.py -q clean
+    python setup.py -q develop
+    python setup.py -q install
     echo "***** DB upgrade to state of $1 starts *****"
-    nova-manage --config-file $3/nova-$1.conf db sync
+    nova-manage --config-file $2/nova-$1.conf db sync
   fi
   echo "***** DB upgrade to state of $1 finished *****"
   set +x
@@ -94,11 +96,11 @@ source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
 rm -rf ~/.virtualenvs/$1
 mkvirtualenv $1
-toggleglobalsitepackages
+#toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
 
 # Some databases are from Folsom
-version=`mysql -u $5 --password=$6 $7 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 # zuul puts us in a headless mode, lets check it out into a working branch
@@ -135,4 +137,4 @@ echo "Cleaning up virtual env"
 deactivate
 rmvirtualenv $1
 
-echo "done" 
+echo "done"
