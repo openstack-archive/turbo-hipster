@@ -39,7 +39,8 @@ def generate_push_results(datasets):
         files = []
         if 'publish_to' in dataset['config']:
             for publish_config in dataset['config']['publish_to']:
-                files.append(push_file(filename, dataset['log_file_path'],
+                files.append(push_file(dataset['name'],
+                                        dataset['log_file_path'],
                                         publish_config))
         datasets[i]['files'] = files;
 
