@@ -58,6 +58,7 @@ class Runner(threading.Thread):
         self.total_steps = 4
 
     def setup_gearman(self):
+        self.log.debug("Set up real_db gearman worker")
         self.gearman_worker = gear.Worker(__worker_name__)
         self.gearman_worker.addServer(
             self.config['zuul_server']['gearman_host'],
@@ -76,20 +77,21 @@ class Runner(threading.Thread):
         return self._stop.isSet()
 
     def stop_worker(self, number):
+        self.log.debug("We've been asked to stop")
         self.cancelled = True
 
     def run(self):
         while True and not self.stopped():
             try:
                 # gearman_worker.getJob() blocks until a job is available
-                logging.debug("Waiting for job")
+                self.log.debug("Waiting for job")
                 self.current_step = 0
                 self.cancelled = False
                 self.job = self.gearman_worker.getJob()
                 self._handle_job()
                 return
             except:
-                logging.exception('Exception retrieving log event.')
+                self.log.exception('Exception retrieving log event.')
 
     def _handle_job(self):
         if self.job is not None:
@@ -122,7 +124,6 @@ class Runner(threading.Thread):
                 # Finally, send completed packet
                 self._send_work_data()
 
-                return
                 if self.work_data['result'] is 'SUCCESS':
                     self.job.sendWorkComplete(
                         json.dumps(self._get_work_data()))
@@ -135,14 +136,21 @@ class Runner(threading.Thread):
 
     def _handle_results(self):
         """ pass over the results to handle_results.py for post-processing """
+        self.log.debug("Process the resulting files (upload/push)")
         index_url = handle_results.generate_push_results(self._get_datasets())
+        self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
 
     def _check_all_dataset_logs_for_errors(self):
+        self.log.debug("Check logs for errors")
         failed = False
         for dataset in self._get_datasets():
             # Look for the beginning of the migration start
-            pass
+            result = \
+                handle_results.check_log_for_errors(dataset['log_file_path'])
+            if not result:
+                failed = true
+                break
 
         if failed:
             self.work_data['result'] = "Failed: errors found in dataset log(s)"
@@ -150,6 +158,7 @@ class Runner(threading.Thread):
             self.work_data['result'] = "SUCCESS"
 
     def _get_datasets(self):
+        self.log.debug("Get configured datasets to run tests against")
         if len(self.datasets) > 0:
             return self.datasets
 
@@ -180,6 +189,8 @@ class Runner(threading.Thread):
 
     def _execute_migrations(self, git_path):
         """ Execute the migration on each dataset in datasets """
+
+        self.log.debug("Run the db sync upgrade script")
 
         for dataset in self._get_datasets():
 
@@ -234,6 +245,8 @@ class Runner(threading.Thread):
     def _grab_patchset(self, project_name, zuul_ref):
         """ Checkout the reference into config['git_working_dir'] """
 
+        self.log.debug("Grab the patchset we want to test against")
+
         repo = utils.GitRepository(
             self.config['zuul_server']['git_url'] + project_name,
             os.path.join(
@@ -265,6 +278,8 @@ class Runner(threading.Thread):
 
     def _send_work_data(self):
         """ Send the WORK DATA in json format for job """
+        self.log.debug("Send the work data response: %s" % 
+                       json.dumps(self._get_work_data()))
         self.job.sendWorkData(json.dumps(self._get_work_data()))
 
     def _do_next_step(self):
