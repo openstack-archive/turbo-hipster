@@ -77,8 +77,12 @@ class Runner(threading.Thread):
         return self._stop.isSet()
 
     def stop_worker(self, number):
-        self.log.debug("We've been asked to stop")
-        self.cancelled = True
+        # Check the number is for this job instance
+        # (makes it possible to run multiple workers with this task
+        # on this server)
+        if number == self.job.unique:
+            self.log.debug("We've been asked to stop by our gearman manager")
+            self.cancelled = True
 
     def run(self):
         while True and not self.stopped():
@@ -121,7 +125,7 @@ class Runner(threading.Thread):
                 self._do_next_step()
                 self._handle_results()
 
-                # Finally, send completed packet
+                # Finally, send updated work data and completed packets
                 self._send_work_data()
 
                 if self.work_data['result'] is 'SUCCESS':
@@ -270,7 +274,7 @@ class Runner(threading.Thread):
             hostname = os.uname()[1]
             self.work_data = dict(
                 name=__worker_name__,
-                number=1,
+                number=self.job.unique,
                 manager='turbo-hipster-manager-%s' % hostname,
                 url='http://localhost',
             )
