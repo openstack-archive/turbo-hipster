@@ -8,6 +8,7 @@
 *.sqlite
 *~
 *.sql
+.pythoscope
 .tox
 .venv
 .testrepository
