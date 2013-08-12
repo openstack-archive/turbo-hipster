@@ -1,11 +1,5 @@
 {
     "db_user": "nova",
     "db_pass": "tester",
-    "nova_db": "nova",
-    "publish_to":
-        {
-            "type": "local",
-            "path": "/home/josh/var/www/results/",
-            "prepend_url": "http://localhost/results/"
-        }
+    "nova_db": "nova"
 }

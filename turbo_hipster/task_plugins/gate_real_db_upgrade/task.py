@@ -141,18 +141,22 @@ class Runner(threading.Thread):
     def _handle_results(self):
         """ pass over the results to handle_results.py for post-processing """
         self.log.debug("Process the resulting files (upload/push)")
-        index_url = handle_results.generate_push_results(self._get_datasets(),
-                                                         self.job.unique)
+        index_url = handle_results.generate_push_results(
+            self._get_datasets(),
+            self.job.unique,
+            self.config['publish_logs']
+        )
         self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
 
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
         failed = False
-        for dataset in self._get_datasets():
+        for i, dataset in enumerate(self._get_datasets()):
             # Look for the beginning of the migration start
             result = \
                 handle_results.check_log_for_errors(dataset['log_file_path'])
+            self.datasets[i]['result'] = 'SUCCESS' if result else 'FAILURE'
             if not result:
                 failed = True
                 break
@@ -181,6 +185,7 @@ class Runner(threading.Thread):
                     self.job.unique,
                     dataset['name'] + '.log'
                 )
+                dataset['result'] = 'UNTESTED'
                 with open(os.path.join(dataset['path'], 'config.json'),
                           'r') as config_stream:
                     dataset['config'] = json.load(config_stream)

@@ -21,6 +21,7 @@ somebody """
 from lib.utils import push_file
 import tempfile
 import os
+import re
 
 def generate_log_index(datasets):
     """ Create an index of logfiles and links to them """
@@ -29,8 +30,12 @@ def generate_log_index(datasets):
     output = '<html><head><title>Index of results</title></head><body>'
     output += '<ul>'
     for dataset in datasets:
-        output += '<li><a href="%s">%s</a></li>' % (dataset['result_uri'],
-                                                    dataset['name'])
+        output += '<li>'
+        output += '<a href="%s">%s</a>' % (dataset['result_uri'],
+                                           dataset['name'])
+        output += ' <span class="%s">%s</span>' % (dataset['result'],
+                                                   dataset['result'])
+        output += '</li>'
 
     output += '</ul>'
     output += '</body></html>'
@@ -47,14 +52,13 @@ def make_index_file(datasets, index_filename):
     return os.path.join(tempdir, index_filename)
 
 
-def generate_push_results(datasets, job_unique_number):
+def generate_push_results(datasets, job_unique_number, publish_config):
     """ Generates and pushes results """
 
     for i, dataset in enumerate(datasets):
-        if 'publish_to' in dataset['config']:
-            result_uri = push_file(job_unique_number,
-                                   dataset['log_file_path'],
-                                   dataset['config']['publish_to'])
+        result_uri = push_file(job_unique_number,
+                               dataset['log_file_path'],
+                               publish_config)
         datasets[i]['result_uri'] = result_uri
 
     index_file = make_index_file(datasets, 'index.html')
@@ -66,4 +70,30 @@ def generate_push_results(datasets, job_unique_number):
 
 
 def check_log_for_errors(logfile):
+    """ Run regex over the given logfile to find errors """
+    MIGRATION_START_RE = re.compile('([0-9]+) -&gt; ([0-9]+)\.\.\.$')
+    MIGRATION_END_RE = re.compile('^done$')
+    MIGRATION_COMMAND_START = '***** Start DB upgrade to state of'
+    MIGRATION_COMMAND_END = '***** Finished DB upgrade to state of'
+
+    with open(logfile,'r') as fd:
+        migration_started = False
+        for line in fd:
+            if MIGRATION_START_RE.match(line):
+                if migration_started:
+                    # We didn't see the last one finish,
+                    # something must have failed
+                    return False
+
+                migration_started = True
+            elif MIGRATION_END_RE.match(line):
+                if migration_started:
+                    # We found the end to this migration
+                    migration_started = False
+
+        if migration_started:
+            # We never saw the end of a migration,
+            # something must have failed
+            return False
+
     return True
