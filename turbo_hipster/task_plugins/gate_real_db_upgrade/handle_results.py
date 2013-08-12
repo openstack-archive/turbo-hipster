@@ -46,10 +46,11 @@ def generate_push_results(datasets):
                                        publish_config))
         datasets[i]['files'] = files
 
-    index_file = make_index_file(datasets)
+    #index_file = make_index_file(datasets)
     #index_file_url = push_file(index_file)
 
     return files[0]
+
 
 def check_log_for_errors(logfile):
     return True

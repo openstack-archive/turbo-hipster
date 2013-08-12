@@ -139,6 +139,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
 
     def process(fd):
         """ Write the fd to log """
+        global last_heartbeat
         descriptors[fd]['lines'] += os.read(fd, 1024 * 1024)
         # Avoid partial lines by only processing input with breaks
         if descriptors[fd]['lines'].find('\n') != -1:
@@ -177,8 +178,7 @@ def push_file(job_name, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
     if method in locals():
-        return locals(method)(job_name, dataset['log_file_path'],
-                              publish_config)
+        return locals(method)(job_name, file_path, publish_config)
 
 
 def swift_push_file(job_name, file_path, swift_config):

@@ -153,7 +153,7 @@ class Runner(threading.Thread):
             result = \
                 handle_results.check_log_for_errors(dataset['log_file_path'])
             if not result:
-                failed = true
+                failed = True
                 break
 
         if failed:
@@ -282,7 +282,7 @@ class Runner(threading.Thread):
 
     def _send_work_data(self):
         """ Send the WORK DATA in json format for job """
-        self.log.debug("Send the work data response: %s" % 
+        self.log.debug("Send the work data response: %s" %
                        json.dumps(self._get_work_data()))
         self.job.sendWorkData(json.dumps(self._get_work_data()))
 
