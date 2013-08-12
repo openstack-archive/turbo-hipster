@@ -57,16 +57,16 @@ EOF
   nova_manage="$3/bin/nova-manage"
   if [ -e $nova_manage ]
   then
-    echo "***** DB upgrade to state of $1 starts *****"
+    echo "***** Start DB upgrade to state of $1 *****"
     python $nova_manage --config-file $2/nova-$1.conf db sync
   else
     python setup.py -q clean
     python setup.py -q develop
     python setup.py -q install
-    echo "***** DB upgrade to state of $1 starts *****"
+    echo "***** Start DB upgrade to state of $1 *****"
     nova-manage --config-file $2/nova-$1.conf db sync
   fi
-  echo "***** DB upgrade to state of $1 finished *****"
+  echo "***** Finished DB upgrade to state of $1 *****"
   set +x
 }
 
@@ -136,5 +136,3 @@ git branch -D working
 echo "Cleaning up virtual env"
 deactivate
 rmvirtualenv $1
-
-echo "done"

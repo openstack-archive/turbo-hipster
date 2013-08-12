@@ -202,7 +202,8 @@ def local_push_file(job_unique_number, file_path, local_config):
     dest_file = os.path.join(dest_dir, dest_filename)
 
     shutil.copyfile(file_path, dest_file)
-    return local_config['prepend_url'] + dest_filename
+    return local_config['prepend_url'] + os.path.join(job_unique_number,
+                                                      dest_filename)
 
 
 def scp_push_file(job_unique_number, file_path, local_config):

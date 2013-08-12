@@ -93,7 +93,6 @@ class Runner(threading.Thread):
                 self.cancelled = False
                 self.job = self.gearman_worker.getJob()
                 self._handle_job()
-                return
             except:
                 self.log.exception('Exception retrieving log event.')
 
@@ -159,7 +158,6 @@ class Runner(threading.Thread):
             self.datasets[i]['result'] = 'SUCCESS' if result else 'FAILURE'
             if not result:
                 failed = True
-                break
 
         if failed:
             self.work_data['result'] = "Failed: errors found in dataset log(s)"

@@ -71,22 +71,22 @@ def generate_push_results(datasets, job_unique_number, publish_config):
 
 def check_log_for_errors(logfile):
     """ Run regex over the given logfile to find errors """
-    MIGRATION_START_RE = re.compile('([0-9]+) -&gt; ([0-9]+)\.\.\.$')
-    MIGRATION_END_RE = re.compile('^done$')
-    MIGRATION_COMMAND_START = '***** Start DB upgrade to state of'
-    MIGRATION_COMMAND_END = '***** Finished DB upgrade to state of'
+    MIGRATION_START_RE = re.compile('([0-9]+) -\> ([0-9]+)\.\.\. $')
+    MIGRATION_END_RE = re.compile('done$')
+    #MIGRATION_COMMAND_START = '***** Start DB upgrade to state of'
+    #MIGRATION_COMMAND_END = '***** Finished DB upgrade to state of'
 
-    with open(logfile,'r') as fd:
+    with open(logfile, 'r') as fd:
         migration_started = False
         for line in fd:
-            if MIGRATION_START_RE.match(line):
+            if MIGRATION_START_RE.search(line):
                 if migration_started:
                     # We didn't see the last one finish,
                     # something must have failed
                     return False
 
                 migration_started = True
-            elif MIGRATION_END_RE.match(line):
+            elif MIGRATION_END_RE.search(line):
                 if migration_started:
                     # We found the end to this migration
                     migration_started = False
