@@ -184,12 +184,12 @@ def push_file(job_name, file_path, publish_config):
 def swift_push_file(job_name, file_path, swift_config):
     """ Push a log file to a swift server. """
     with open(file_path, 'r') as fd:
-        name = filename
+        name = job_name + '_' + os.path.basename(file_path)
         con = swiftclient.client.Connection(swift_config['authurl'],
                                             swift_config['user'],
                                             swift_config['apikey'])
         obj = con.put_object(swift_config['container'], name, fd)
-        return con.get_object(swift_config['container'], name)
+        return obj
 
 
 def local_push_file(job_name, file_path, local_config):

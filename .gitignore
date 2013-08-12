@@ -11,3 +11,9 @@
 .tox
 .venv
 .testrepository
+.test
+AUTHORS
+build/*
+ChangeLog
+doc/build/*
+dist/
