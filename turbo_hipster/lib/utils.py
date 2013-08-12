@@ -174,17 +174,17 @@ def execute_to_log(cmd, logfile, timeout=-1,
     logger.info('[script exit code = %d]' % p.returncode)
 
 
-def push_file(job_name, file_path, publish_config):
+def push_file(job_unique_number, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
     if method in globals() and hasattr(globals()[method], '__call__'):
-        return globals()[method](job_name, file_path, publish_config)
+        return globals()[method](job_unique_number, file_path, publish_config)
 
 
-def swift_push_file(job_name, file_path, swift_config):
+def swift_push_file(job_unique_number, file_path, swift_config):
     """ Push a log file to a swift server. """
     with open(file_path, 'r') as fd:
-        name = job_name + '_' + os.path.basename(file_path)
+        name = job_unique_number + '_' + os.path.basename(file_path)
         con = swiftclient.client.Connection(swift_config['authurl'],
                                             swift_config['user'],
                                             swift_config['apikey'])
@@ -192,18 +192,19 @@ def swift_push_file(job_name, file_path, swift_config):
         return obj
 
 
-def local_push_file(job_name, file_path, local_config):
+def local_push_file(job_unique_number, file_path, local_config):
     """ Copy the file locally somewhere sensible """
-    dest = os.path.join(local_config['path'], job_name)
-    if not os.path.isdir(dest):
-        os.makedirs(dest)
+    dest_dir = os.path.join(local_config['path'], job_unique_number)
+    dest_filename = os.path.basename(file_path)
+    if not os.path.isdir(dest_dir):
+        os.makedirs(dest_dir)
 
-    dest_file = os.path.join(dest, os.path.basename(file_path))
+    dest_file = os.path.join(dest_dir, dest_filename)
 
     shutil.copyfile(file_path, dest_file)
-    return dest_file
+    return local_config['prepend_url'] + dest_filename
 
 
-def scp_push_file(job_name, file_path, local_config):
+def scp_push_file(job_unique_number, file_path, local_config):
     """ Copy the file remotely over ssh """
     pass
