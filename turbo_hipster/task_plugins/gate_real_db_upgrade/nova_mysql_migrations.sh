@@ -53,21 +53,21 @@ log_config = $7
 EOF
 
   find $3 -type f -name "*.pyc" -exec rm -f {} \;
-  set -x
+  echo "***** Start DB upgrade to state of $1 *****"
   nova_manage="$3/bin/nova-manage"
   if [ -e $nova_manage ]
   then
-    echo "***** Start DB upgrade to state of $1 *****"
+    set -x
     python $nova_manage --config-file $2/nova-$1.conf db sync
   else
     python setup.py -q clean
     python setup.py -q develop
     python setup.py -q install
-    echo "***** Start DB upgrade to state of $1 *****"
+    set -x
     nova-manage --config-file $2/nova-$1.conf db sync
   fi
-  echo "***** Finished DB upgrade to state of $1 *****"
   set +x
+  echo "***** Finished DB upgrade to state of $1 *****"
 }
 
 echo "To execute this script manually, run this:"
