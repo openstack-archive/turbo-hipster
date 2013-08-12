@@ -141,7 +141,8 @@ class Runner(threading.Thread):
     def _handle_results(self):
         """ pass over the results to handle_results.py for post-processing """
         self.log.debug("Process the resulting files (upload/push)")
-        index_url = handle_results.generate_push_results(self._get_datasets())
+        index_url = handle_results.generate_push_results(self._get_datasets(),
+                                                         self.job.unique)
         self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
 
@@ -175,12 +176,9 @@ class Runner(threading.Thread):
                 dataset = {}
                 dataset['name'] = ent
                 dataset['path'] = os.path.join(datasets_path, ent)
-                dataset['job_working_dir'] = os.path.join(
-                    self.config['jobs_working_dir'],
-                    self.job.unique
-                )
                 dataset['log_file_path'] = os.path.join(
-                    dataset['job_working_dir'],
+                    self.config['jobs_working_dir'],
+                    self.job.unique,
                     dataset['name'] + '.log'
                 )
                 with open(os.path.join(dataset['path'], 'config.json'),
@@ -214,7 +212,10 @@ class Runner(threading.Thread):
                     ' %(dataset_path)s %(pip_cache_dir)s')
                 % {
                     'unique_id': self.job.unique,
-                    'job_working_dir': dataset['job_working_dir'],
+                    'job_working_dir': os.path.join(
+                        self.config['jobs_working_dir'],
+                        self.job.unique
+                    ),
                     'git_path': git_path,
                     'dbuser': dataset['config']['db_user'],
                     'dbpassword': dataset['config']['db_pass'],

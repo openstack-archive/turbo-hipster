@@ -19,37 +19,50 @@ Primarily place the log files somewhere useful and optionally email
 somebody """
 
 from lib.utils import push_file
-
+import tempfile
+import os
 
 def generate_log_index(datasets):
     """ Create an index of logfiles and links to them """
     # Loop over logfile URLs
     # Create summary and links
-    pass
+    output = '<html><head><title>Index of results</title></head><body>'
+    output += '<ul>'
+    for dataset in datasets:
+        output += '<li><a href="%s">%s</a></li>' % (dataset['result_uri'],
+                                                    dataset['name'])
+
+    output += '</ul>'
+    output += '</body></html>'
+    return output
 
 
-def make_index_file(datasets):
+
+def make_index_file(datasets, index_filename):
     """ Writes an index into a file for pushing """
-    generate_log_index(datasets)
-    # write out to file
+    index_content = generate_log_index(datasets)
+    tempdir = tempfile.mkdtemp()
+    fd = open(os.path.join(tempdir, index_filename), 'w')
+    fd.write(index_content)
+    return os.path.join(tempdir, index_filename)
 
 
-def generate_push_results(datasets):
+def generate_push_results(datasets, job_unique_number):
     """ Generates and pushes results """
 
     for i, dataset in enumerate(datasets):
-        files = []
         if 'publish_to' in dataset['config']:
-            for publish_config in dataset['config']['publish_to']:
-                files.append(push_file(dataset['name'],
-                                       dataset['log_file_path'],
-                                       publish_config))
-        datasets[i]['files'] = files
+            result_uri = push_file(job_unique_number,
+                                   dataset['log_file_path'],
+                                   dataset['config']['publish_to'])
+        datasets[i]['result_uri'] = result_uri
 
-    #index_file = make_index_file(datasets)
-    #index_file_url = push_file(index_file)
+    index_file = make_index_file(datasets, 'index.html')
+    index_file_url = push_file(job_unique_number,
+                               index_file,
+                               publish_config)
 
-    return files[0]
+    return index_file_url
 
 
 def check_log_for_errors(logfile):
