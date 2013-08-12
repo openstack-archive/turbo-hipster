@@ -17,7 +17,7 @@ import git
 import logging
 import os
 import select
-#import shutils
+import shutil
 import subprocess
 import swiftclient
 import time
@@ -177,8 +177,8 @@ def execute_to_log(cmd, logfile, timeout=-1,
 def push_file(job_name, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
-    if method in locals():
-        return locals(method)(job_name, file_path, publish_config)
+    if method in globals() and hasattr(globals()[method], '__call__'):
+        return globals()[method](job_name, file_path, publish_config)
 
 
 def swift_push_file(job_name, file_path, swift_config):
@@ -195,10 +195,12 @@ def swift_push_file(job_name, file_path, swift_config):
 def local_push_file(job_name, file_path, local_config):
     """ Copy the file locally somewhere sensible """
     dest = os.path.join(local_config['path'], job_name)
-    os.makedirs(dest)
+    if not os.path.isdir(dest):
+        os.makedirs(dest)
 
     dest_file = os.path.join(dest, os.path.basename(file_path))
-    os.copyfile(file_path, dest_file)
+
+    shutil.copyfile(file_path, dest_file)
     return dest_file
 
 
