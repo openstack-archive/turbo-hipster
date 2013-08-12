@@ -77,6 +77,7 @@ class GearmanManager(threading.Thread):
             job_arguments = json.loads(job.arguments.decode('utf-8'))
             self.tasks[job_arguments['name']].stop_worker(
                 job_arguments['number'])
+            job.sendWorkComplete()
         except Exception as e:
             self.log.exception('Exception handling log event.')
             job.sendWorkException(str(e).encode('utf-8'))
