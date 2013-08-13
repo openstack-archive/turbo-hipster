@@ -51,6 +51,7 @@ class Runner(threading.Thread):
         self.datasets = []
         self.job = None
         self.job_arguments = None
+        self.job_datasets = []
         self.work_data = None
         self.cancelled = False
 
@@ -70,19 +71,8 @@ class Runner(threading.Thread):
     def register_functions(self):
         """ Determine which functions to register based off available
         datasets """
-        datasets_path = os.path.join(os.path.dirname(__file__),
-                                     'datasets')
-        for ent in os.listdir(datasets_path):
-            dataset_dir = os.path.join(datasets_path, ent)
-            if (os.path.isdir(dataset_dir) and os.path.isfile(
-                    os.path.join(dataset_dir, 'config.json'))):
-                dataset = {}
-                with open(os.path.join(dataset_dir, 'config.json'),
-                          'r') as config_stream:
-                    dataset_config = json.load(config_stream)
-                    self.gearman_worker.registerFunction(
-                        dataset_config['gate']
-                    )
+        for dataset in self._get_datasets():
+            self.gearman_worker.registerFunction(dataset['config']['gate'])
 
     def stop(self):
         self._stop.set()
@@ -159,7 +149,7 @@ class Runner(threading.Thread):
         """ pass over the results to handle_results.py for post-processing """
         self.log.debug("Process the resulting files (upload/push)")
         index_url = handle_results.generate_push_results(
-            self._get_datasets(),
+            self._get_job_datasets(),
             self.job.unique,
             self.config['publish_logs']
         )
@@ -169,7 +159,7 @@ class Runner(threading.Thread):
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
         failed = False
-        for i, dataset in enumerate(self._get_datasets()):
+        for i, dataset in enumerate(self._get_job_datasets()):
             # Look for the beginning of the migration start
             result = \
                 handle_results.check_log_for_errors(dataset['log_file_path'])
@@ -198,28 +188,34 @@ class Runner(threading.Thread):
                           'r') as config_stream:
                     dataset_config = json.load(config_stream)
 
-                    # Only load a dataset if it is the right project and we
-                    # know how to process the upgrade
-                    if (self.job_arguments['ZUUL_PROJECT'] ==\
-                            dataset_config['project'] and
-                            self._get_project_command(
-                                dataset_config['type'])):
+                    dataset['name'] = ent
+                    dataset['dataset_dir'] = dataset_dir
+                    dataset['config'] = dataset_config
+                    dataset['command'] = \
+                        self._get_project_command(dataset_config['type'])
 
-                        dataset['name'] = ent
-                        dataset['dataset_dir'] = dataset_dir
-                        dataset['log_file_path'] = os.path.join(
-                            self.config['jobs_working_dir'],
-                            self.job.unique,
-                            dataset['name'] + '.log'
-                        )
-                        dataset['result'] = 'UNTESTED'
-                        dataset['config'] = dataset_config
-                        dataset['command'] = \
-                            self._get_project_command(dataset_config['type'])
-
-                        self.datasets.append(dataset)
+                    self.datasets.append(dataset)
 
         return self.datasets
+
+    def _get_job_datasets(self):
+        """ Take the applicable datasets for this job and set them up in
+        self.job_datasets """
+
+        self.job_datasets = []
+        for dataset in self._get_datasets():
+            # Only load a dataset if it is the right project and we
+            # know how to process the upgrade
+            if (self.job_arguments['ZUUL_PROJECT'] ==\
+                    dataset['config']['project'] and
+                    self._get_project_command(dataset['config']['type'])):
+                dataset['log_file_path'] = os.path.join(
+                    self.config['jobs_working_dir'],
+                    self.job.unique,
+                    dataset['name'] + '.log'
+                )
+                dataset['result'] = 'UNTESTED'
+                self.job_datasets.append(dataset)
 
     def _get_project_command(db_type):
         command = (self.job_arguments['ZUUL_PROJECT'].split('/')[:-1] + '_' +
@@ -234,7 +230,7 @@ class Runner(threading.Thread):
 
         self.log.debug("Run the db sync upgrade script")
 
-        for dataset in self._get_datasets():
+        for dataset in self._get_job_datasets():
 
             cmd = dataset['command']
             # $1 is the unique id
