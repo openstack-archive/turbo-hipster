@@ -73,16 +73,16 @@ class Runner(threading.Thread):
         datasets_path = os.path.join(os.path.dirname(__file__),
                                      'datasets')
         for ent in os.listdir(datasets_path):
-            if (os.path.isdir(os.path.join(datasets_path, ent))
-               and os.path.isfile(
-                    os.path.join(datasets_path, ent, 'config.json'))):
-                with open(os.path.join(dataset['path'], 'config.json'),
+            dataset_dir = os.path.join(datasets_path, ent)
+            if (os.path.isdir(dataset_dir) and os.path.isfile(
+                    os.path.join(dataset_dir, 'config.json'))):
+                dataset = {}
+                with open(os.path.join(dataset_dir, 'config.json'),
                           'r') as config_stream:
                     dataset_config = json.load(config_stream)
                     self.gearman_worker.registerFunction(
                         dataset_config['gate']
                     )
-
 
     def stop(self):
         self._stop.set()
@@ -190,10 +190,11 @@ class Runner(threading.Thread):
         datasets_path = os.path.join(os.path.dirname(__file__),
                                      'datasets')
         for ent in os.listdir(datasets_path):
-            if (os.path.isdir(os.path.join(datasets_path, ent))
-               and os.path.isfile(
-                    os.path.join(datasets_path, ent, 'config.json'))):
-                with open(os.path.join(dataset['path'], 'config.json'),
+            dataset_dir = os.path.join(datasets_path, ent)
+            if (os.path.isdir(dataset_dir) and os.path.isfile(
+                    os.path.join(dataset_dir, 'config.json'))):
+                dataset = {}
+                with open(os.path.join(dataset_dir, 'config.json'),
                           'r') as config_stream:
                     dataset_config = json.load(config_stream)
 
@@ -203,9 +204,9 @@ class Runner(threading.Thread):
                             dataset_config['project'] and
                             self._get_project_command(
                                 dataset_config['type'])):
-                        dataset = {}
+
                         dataset['name'] = ent
-                        dataset['dir'] = os.path.join(datasets_path, ent)
+                        dataset['dataset_dir'] = dataset_dir
                         dataset['log_file_path'] = os.path.join(
                             self.config['jobs_working_dir'],
                             self.job.unique,
