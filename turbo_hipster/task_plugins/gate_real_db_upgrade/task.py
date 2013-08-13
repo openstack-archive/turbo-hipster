@@ -65,7 +65,24 @@ class Runner(threading.Thread):
             self.config['zuul_server']['gearman_host'],
             self.config['zuul_server']['gearman_port']
         )
-        self.gearman_worker.registerFunction('build:gate-real-db-upgrade')
+        self.register_functions()
+
+    def register_functions(self):
+        """ Determine which functions to register based off available
+        datasets """
+        datasets_path = os.path.join(os.path.dirname(__file__),
+                                     'datasets')
+        for ent in os.listdir(datasets_path):
+            if (os.path.isdir(os.path.join(datasets_path, ent))
+               and os.path.isfile(
+                    os.path.join(datasets_path, ent, 'config.json'))):
+                with open(os.path.join(dataset['path'], 'config.json'),
+                          'r') as config_stream:
+                    dataset_config = json.load(config_stream)
+                    self.gearman_worker.registerFunction(
+                        dataset_config['gate']
+                    )
+
 
     def stop(self):
         self._stop.set()
