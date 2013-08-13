@@ -192,8 +192,6 @@ class Runner(threading.Thread):
                     dataset['name'] = ent
                     dataset['dataset_dir'] = dataset_dir
                     dataset['config'] = dataset_config
-                    dataset['command'] = \
-                        self._get_project_command(dataset_config['type'])
 
                     self.datasets.append(dataset)
 
@@ -216,6 +214,9 @@ class Runner(threading.Thread):
                     dataset['name'] + '.log'
                 )
                 dataset['result'] = 'UNTESTED'
+                dataset['command'] = \
+                    self._get_project_command(dataset_config['type'])
+
                 self.job_datasets.append(dataset)
 
     def _get_project_command(self, db_type):
