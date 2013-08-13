@@ -300,7 +300,7 @@ class Runner(threading.Thread):
         self.log.debug("Grab the patchset we want to test against")
 
         repo = utils.GitRepository(
-            self.config['zuul_server']['git_url'] + project_name,
+            self.config['zuul_server']['git_url'] + project_name + '/.git',
             os.path.join(
                 self.config['git_working_dir'],
                 __worker_name__,
