@@ -44,6 +44,7 @@ db_sync() {
 # $5 is the nova db password
 # $6 is the nova db name
 # $7 is the logging.conf for openstack
+# $8 is any sync options
 
   # Create a nova.conf file
   cat - > $2/nova-$1.conf <<EOF
@@ -58,13 +59,13 @@ EOF
   if [ -e $nova_manage ]
   then
     set -x
-    python $nova_manage --config-file $2/nova-$1.conf db sync
+    python $nova_manage --config-file $2/nova-$1.conf db sync $8
   else
     python setup.py -q clean
     python setup.py -q develop
     python setup.py -q install
     set -x
-    nova-manage --config-file $2/nova-$1.conf db sync
+    nova-manage --config-file $2/nova-$1.conf db sync $8
   fi
   set +x
   echo "***** Finished DB upgrade to state of $1 *****"
@@ -121,6 +122,20 @@ fi
 # Now run the patchset
 echo "Now test the patchset"
 pip_requires
+db_sync "patchset" $2 $3 $4 $5 $6 $7/logging.conf
+
+# Determine the schema version
+version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+echo "Schema version is $version"
+
+echo "Now downgrade all the way back to Folsom"
+db_sync "patchset" $2 $3 $4 $5 $6 $7/logging.conf "--version 133"
+
+# Determine the schema version
+version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+echo "Schema version is $version"
+
+echo "And now back up to head from Folsom"
 db_sync "patchset" $2 $3 $4 $5 $6 $7/logging.conf
 
 # Determine the final schema version
