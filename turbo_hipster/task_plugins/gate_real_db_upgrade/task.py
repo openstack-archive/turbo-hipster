@@ -46,9 +46,8 @@ class Runner(threading.Thread):
 
         # Set up the runner worker
         self.gearman_worker = None
-        self.setup_gearman()
-
         self.datasets = []
+
         self.job = None
         self.job_arguments = None
         self.job_datasets = []
@@ -58,6 +57,8 @@ class Runner(threading.Thread):
         # Define the number of steps we will do to determine our progress.
         self.current_step = 0
         self.total_steps = 4
+
+        self.setup_gearman()
 
     def setup_gearman(self):
         self.log.debug("Set up real_db gearman worker")
