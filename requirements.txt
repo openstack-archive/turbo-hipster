@@ -1,4 +1,7 @@
 gear
-git
-swiftclient
-daemon
+python-swiftclient
+
+lockfile
+python-daemon
+extras
+GitPython>=0.3.2.RC1
