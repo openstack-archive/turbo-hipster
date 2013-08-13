@@ -23,6 +23,7 @@ import tempfile
 import os
 import re
 
+
 def generate_log_index(datasets):
     """ Create an index of logfiles and links to them """
     # Loop over logfile URLs
@@ -40,7 +41,6 @@ def generate_log_index(datasets):
     output += '</ul>'
     output += '</body></html>'
     return output
-
 
 
 def make_index_file(datasets, index_filename):

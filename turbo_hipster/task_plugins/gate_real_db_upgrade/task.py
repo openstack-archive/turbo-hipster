@@ -108,7 +108,8 @@ class Runner(threading.Thread):
     def _handle_job(self):
         if self.job is not None:
             try:
-                self.job_arguments = json.loads(self.job.arguments.decode('utf-8'))
+                self.job_arguments = \
+                    json.loads(self.job.arguments.decode('utf-8'))
                 self.log.debug("Got job from ZUUL %s" % self.job_arguments)
 
                 # Send an initial WORK_DATA and WORK_STATUS packets
@@ -205,7 +206,7 @@ class Runner(threading.Thread):
         for dataset in self._get_datasets():
             # Only load a dataset if it is the right project and we
             # know how to process the upgrade
-            if (self.job_arguments['ZUUL_PROJECT'] ==\
+            if (self.job_arguments['ZUUL_PROJECT'] ==
                     dataset['config']['project'] and
                     self._get_project_command(dataset['config']['type'])):
                 dataset['log_file_path'] = os.path.join(
@@ -215,7 +216,7 @@ class Runner(threading.Thread):
                 )
                 dataset['result'] = 'UNTESTED'
                 dataset['command'] = \
-                    self._get_project_command(dataset_config['type'])
+                    self._get_project_command(dataset['config']['type'])
 
                 self.job_datasets.append(dataset)
 
