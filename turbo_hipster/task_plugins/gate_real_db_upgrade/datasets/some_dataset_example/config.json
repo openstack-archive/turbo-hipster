@@ -1,5 +1,9 @@
 {
+    "project": "openstack/nova",
+    "type": "mysql",
     "db_user": "nova",
     "db_pass": "tester",
-    "nova_db": "nova"
+    "database": "nova",
+    "seed_data": "nova.sql",
+    "logging_conf": "logging.conf"
 }

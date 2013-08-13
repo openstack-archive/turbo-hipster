@@ -50,6 +50,7 @@ class Runner(threading.Thread):
 
         self.datasets = []
         self.job = None
+        self.job_arguments = None
         self.work_data = None
         self.cancelled = False
 
@@ -99,8 +100,8 @@ class Runner(threading.Thread):
     def _handle_job(self):
         if self.job is not None:
             try:
-                job_arguments = json.loads(self.job.arguments.decode('utf-8'))
-                self.log.debug("Got job from ZUUL %s" % job_arguments)
+                self.job_arguments = json.loads(self.job.arguments.decode('utf-8'))
+                self.log.debug("Got job from ZUUL %s" % self.job_arguments)
 
                 # Send an initial WORK_DATA and WORK_STATUS packets
                 self._send_work_data()
@@ -108,8 +109,8 @@ class Runner(threading.Thread):
                 # Step 1: Checkout updates from git!
                 self._do_next_step()
                 git_path = self._grab_patchset(
-                    job_arguments['ZUUL_PROJECT'],
-                    job_arguments['ZUUL_REF']
+                    self.job_arguments['ZUUL_PROJECT'],
+                    self.job_arguments['ZUUL_REF']
                 )
 
                 # Step 2: Run migrations on datasets
@@ -175,22 +176,40 @@ class Runner(threading.Thread):
             if (os.path.isdir(os.path.join(datasets_path, ent))
                and os.path.isfile(
                     os.path.join(datasets_path, ent, 'config.json'))):
-                dataset = {}
-                dataset['name'] = ent
-                dataset['path'] = os.path.join(datasets_path, ent)
-                dataset['log_file_path'] = os.path.join(
-                    self.config['jobs_working_dir'],
-                    self.job.unique,
-                    dataset['name'] + '.log'
-                )
-                dataset['result'] = 'UNTESTED'
                 with open(os.path.join(dataset['path'], 'config.json'),
                           'r') as config_stream:
-                    dataset['config'] = json.load(config_stream)
+                    dataset_config = json.load(config_stream)
 
-                self.datasets.append(dataset)
+                    # Only load a dataset if it is the right project and we
+                    # know how to process the upgrade
+                    if (self.job_arguments['ZUUL_PROJECT'] ==\
+                            dataset_config['project'] and
+                            self._get_project_command(
+                                dataset_config['type'])):
+                        dataset = {}
+                        dataset['name'] = ent
+                        dataset['dir'] = os.path.join(datasets_path, ent)
+                        dataset['log_file_path'] = os.path.join(
+                            self.config['jobs_working_dir'],
+                            self.job.unique,
+                            dataset['name'] + '.log'
+                        )
+                        dataset['result'] = 'UNTESTED'
+                        dataset['config'] = dataset_config
+                        dataset['command'] = \
+                            self._get_project_command(dataset_config['type'])
+
+                        self.datasets.append(dataset)
 
         return self.datasets
+
+    def _get_project_command(db_type):
+        command = (self.job_arguments['ZUUL_PROJECT'].split('/')[:-1] + '_' +
+                   db_type + '_migrations.sh')
+        command = os.path.join(os.path.dirname(__file__), command)
+        if os.path.isfile(command):
+            return command
+        return False
 
     def _execute_migrations(self, git_path):
         """ Execute the migration on each dataset in datasets """
@@ -199,20 +218,21 @@ class Runner(threading.Thread):
 
         for dataset in self._get_datasets():
 
-            cmd = os.path.join(os.path.dirname(__file__),
-                               'nova_mysql_migrations.sh')
+            cmd = dataset['command']
             # $1 is the unique id
             # $2 is the working dir path
             # $3 is the path to the git repo path
-            # $4 is the nova db user
-            # $5 is the nova db password
-            # $6 is the nova db name
+            # $4 is the db user
+            # $5 is the db password
+            # $6 is the db name
             # $7 is the path to the dataset to test against
-            # $8 is the pip cache dir
+            # $8 is the logging.conf for openstack
+            # $9 is the pip cache dir
+
             cmd += (
                 (' %(unique_id)s %(job_working_dir)s %(git_path)s'
                     ' %(dbuser)s %(dbpassword)s %(db)s'
-                    ' %(dataset_path)s %(pip_cache_dir)s')
+                    ' %(dataset_path)s %(logging_conf)s %(pip_cache_dir)s')
                 % {
                     'unique_id': self.job.unique,
                     'job_working_dir': os.path.join(
@@ -222,8 +242,15 @@ class Runner(threading.Thread):
                     'git_path': git_path,
                     'dbuser': dataset['config']['db_user'],
                     'dbpassword': dataset['config']['db_pass'],
-                    'db': dataset['config']['nova_db'],
-                    'dataset_path': dataset['path'],
+                    'db': dataset['config']['database'],
+                    'dataset_path': os.path.join(
+                        dataset['dir'],
+                        dataset['config']['seed_data']
+                    ),
+                    'logging_conf': os.path.join(
+                        dataset['dir'],
+                        dataset['config']['logging_conf']
+                    ),
                     'pip_cache_dir': self.config['pip_download_cache']
                 }
             )

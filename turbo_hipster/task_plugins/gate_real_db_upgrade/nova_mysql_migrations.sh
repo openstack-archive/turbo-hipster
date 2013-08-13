@@ -22,7 +22,8 @@
 # $5 is the nova db password
 # $6 is the nova db name
 # $7 is the path to the dataset to test against
-# $8 is the pip cache dir
+# $8 is the logging.conf for openstack
+# $9 is the pip cache dir
 
 pip_requires() {
   pip install -q mysql-python
@@ -72,7 +73,7 @@ EOF
 }
 
 echo "To execute this script manually, run this:"
-echo "$0 $1 $2 $3 $4 $5 $6 $7 $8"
+echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
 
 
 # Setup the environment
@@ -86,7 +87,7 @@ mysql -u root -e "drop database $6"
 mysql -u root -e "create database $6"
 mysql -u root -e "create user '$4'@'localhost' identified by '$5';"
 mysql -u root -e "grant all privileges on $6.* TO '$4'@'localhost';"
-mysql -u $4 --password=$5 $6 < /$7/$6.sql
+mysql -u $4 --password=$5 $6 < /$7
 set +x
 
 echo "Build test environment"
@@ -115,28 +116,28 @@ else
   echo "Update database to current state of trunk"
   git checkout master
   pip_requires
-  db_sync "trunk" $2 $3 $4 $5 $6 $7/logging.conf
+  db_sync "trunk" $2 $3 $4 $5 $6 $8
   git checkout working
 fi
 
 # Now run the patchset
 echo "Now test the patchset"
 pip_requires
-db_sync "patchset" $2 $3 $4 $5 $6 $7/logging.conf
+db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the schema version
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 echo "Now downgrade all the way back to Folsom"
-db_sync "patchset" $2 $3 $4 $5 $6 $7/logging.conf "--version 133"
+db_sync "patchset" $2 $3 $4 $5 $6 $8 "--version 133"
 
 # Determine the schema version
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 echo "And now back up to head from Folsom"
-db_sync "patchset" $2 $3 $4 $5 $6 $7/logging.conf
+db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the final schema version
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
