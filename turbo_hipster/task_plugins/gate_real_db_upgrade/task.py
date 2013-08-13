@@ -218,7 +218,7 @@ class Runner(threading.Thread):
                 dataset['result'] = 'UNTESTED'
                 self.job_datasets.append(dataset)
 
-    def _get_project_command(db_type):
+    def _get_project_command(self, db_type):
         command = (self.job_arguments['ZUUL_PROJECT'].split('/')[:-1] + '_' +
                    db_type + '_migrations.sh')
         command = os.path.join(os.path.dirname(__file__), command)
