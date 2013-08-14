@@ -264,11 +264,11 @@ class Runner(threading.Thread):
                     'dbpassword': dataset['config']['db_pass'],
                     'db': dataset['config']['database'],
                     'dataset_path': os.path.join(
-                        dataset['dir'],
+                        dataset['dataset_dir'],
                         dataset['config']['seed_data']
                     ),
                     'logging_conf': os.path.join(
-                        dataset['dir'],
+                        dataset['dataset_dir'],
                         dataset['config']['logging_conf']
                     ),
                     'pip_cache_dir': self.config['pip_download_cache']
