@@ -18,7 +18,8 @@
 import json
 import os
 import testtools
-from fakes import FakeGearmanManager, FakeGearmanServer
+import time
+from fakes import FakeGearmanManager, FakeGearmanServer, FakeRealDbUpgradeRunner
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'etc')
 with open(os.path.join(CONFIG_DIR, 'config.json'), 'r') as config_stream:
@@ -29,9 +30,12 @@ class TestGearmanManager(testtools.TestCase):
     def setUp(self):
         super(TestGearmanManager, self).setUp()
         self.config = CONFIG
-        self.tasks = []
         self.gearman_server = FakeGearmanServer(
             self.config['zuul_server']['gearman_port'])
+        self.config['zuul_server']['gearman_port'] = self.gearman_server.port
+
+        self.task = FakeRealDbUpgradeRunner(self.config, self)
+        self.tasks = dict(FakeRealDbUpgradeRunner_worker=self.task)
 
         self.gearman_manager = FakeGearmanManager(self.config,
                                                   self.tasks,
@@ -40,6 +44,26 @@ class TestGearmanManager(testtools.TestCase):
     def test_manager_function_registered(self):
         """ Check the manager is set up correctly and registered with the
         gearman server with an appropriate function """
+
+        # Give the gearman server up to 5 seconds to register the function
+        for x in range(500):
+            time.sleep(0.01)
+            if len(self.gearman_server.functions) > 0:
+                break
+
+        hostname = os.uname()[1]
+        function_name = 'stop:turbo-hipster-manager-%s' % hostname
+
+        self.assertIn(function_name, self.gearman_server.functions)
+
+    def test_task_registered_with_manager(self):
+        """ Check the FakeRealDbUpgradeRunner_worker task is registered """
+        self.assertIn('FakeRealDbUpgradeRunner_worker',
+                      self.gearman_manager.tasks.keys())
+
+    def test_stop_task(self):
+        """ Check that the manager successfully stops a task when requested
+        """
         pass
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
     "zuul_server": {
         "git_url": "/home/josh/var/lib/zuul/git/",
         "gearman_host": "localhost",
-        "gearman_port": 14730
+        "gearman_port": 0
     },
     "debug_log": "/home/josh/var/log/turbo-hipster/debug.log",
     "jobs_working_dir": "/home/josh/var/lib/turbo-hipster/jobs",

@@ -19,6 +19,8 @@ import threading
 import os
 
 from turbo_hipster.worker_manager import GearmanManager
+from turbo_hipster.task_plugins.gate_real_db_upgrade.task import Runner\
+    as RealDbUpgradeRunner
 
 
 class FakeGearmanManager(GearmanManager):
@@ -146,6 +148,22 @@ class FakeWorker(gear.Worker):
                                (build.parameters['ZUUL_UUID']))
         self.log.debug("done releasing builds %s (%s)" %
                        (regex, len(self.running_builds)))
+
+
+class FakeRealDbUpgradeRunner(RealDbUpgradeRunner):
+    def __init__(self, config, test):
+        self.test = test
+        super(FakeRealDbUpgradeRunner, self).__init__(config)
+
+    def setup_gearman(self):
+        self.log.debug("Set up real_db gearman worker")
+        self.gearman_worker = FakeWorker('FakeRealDbUpgradeRunner_worker',
+                                         self.test)
+        self.gearman_worker.addServer(
+            self.config['zuul_server']['gearman_host'],
+            self.config['zuul_server']['gearman_port']
+        )
+        self.register_functions()
 
 
 class FakeBuild(threading.Thread):
