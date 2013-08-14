@@ -221,6 +221,8 @@ class Runner(threading.Thread):
 
                 self.job_datasets.append(dataset)
 
+        return self.job_datasets
+
     def _get_project_command(self, db_type):
         command = (self.job_arguments['ZUUL_PROJECT'].split('/')[-1] + '_' +
                    db_type + '_migrations.sh')
