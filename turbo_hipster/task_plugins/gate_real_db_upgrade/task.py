@@ -20,9 +20,10 @@ import os
 import re
 import threading
 
-from lib import utils
+from turbo_hipster.lib import utils
 
-import task_plugins.gate_real_db_upgrade.handle_results as handle_results
+import turbo_hipster.task_plugins.gate_real_db_upgrade.handle_results\
+    as handle_results
 
 __worker_name__ = 'sql-migrate-test-runner-%s' % os.uname()[1]
 

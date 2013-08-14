@@ -18,7 +18,7 @@
 Primarily place the log files somewhere useful and optionally email
 somebody """
 
-from lib.utils import push_file
+from turbo_hipster.lib.utils import push_file
 import tempfile
 import os
 import re
