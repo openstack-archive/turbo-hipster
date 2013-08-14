@@ -19,7 +19,8 @@ import json
 import os
 import testtools
 import time
-from fakes import FakeGearmanManager, FakeGearmanServer, FakeRealDbUpgradeRunner
+from fakes import FakeGearmanManager, FakeGearmanServer,\
+    FakeRealDbUpgradeRunner
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'etc')
 with open(os.path.join(CONFIG_DIR, 'config.json'), 'r') as config_stream:
@@ -65,6 +66,3 @@ class TestGearmanManager(testtools.TestCase):
         """ Check that the manager successfully stops a task when requested
         """
         pass
-
-if __name__ == '__main__':
-    unittest.main()

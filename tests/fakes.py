@@ -15,8 +15,11 @@
 # under the License.
 
 import gear
+import json
 import threading
 import os
+import re
+import time
 
 from turbo_hipster.worker_manager import GearmanManager
 from turbo_hipster.task_plugins.gate_real_db_upgrade.task import Runner\
@@ -31,7 +34,7 @@ class FakeGearmanManager(GearmanManager):
     def setup_gearman(self):
         hostname = os.uname()[1]
         self.gearman_worker = FakeWorker('turbo-hipster-manager-%s'
-                                          % hostname, self.test)
+                                         % hostname, self.test)
         self.gearman_worker.addServer(
             self.config['zuul_server']['gearman_host'],
             self.config['zuul_server']['gearman_port']
@@ -166,6 +169,15 @@ class FakeRealDbUpgradeRunner(RealDbUpgradeRunner):
         self.register_functions()
 
 
+class BuildHistory(object):
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+    def __repr__(self):
+        return ("<Completed build, result: %s name: %s #%s changes: %s>" %
+                (self.result, self.name, self.number, self.changes))
+
+
 class FakeBuild(threading.Thread):
     def __init__(self, worker, job, number, node):
         threading.Thread.__init__(self)
@@ -295,4 +307,3 @@ class FakeGearmanServer(gear.Server):
         qlen = (len(self.high_queue) + len(self.normal_queue) +
                 len(self.low_queue))
         self.log.debug("done releasing queued jobs %s (%s)" % (regex, qlen))
-
