@@ -221,7 +221,7 @@ class Runner(threading.Thread):
                 self.job_datasets.append(dataset)
 
     def _get_project_command(self, db_type):
-        command = (self.job_arguments['ZUUL_PROJECT'].split('/')[:-1] + '_' +
+        command = (self.job_arguments['ZUUL_PROJECT'].split('/')[-1] + '_' +
                    db_type + '_migrations.sh')
         command = os.path.join(os.path.dirname(__file__), command)
         if os.path.isfile(command):
