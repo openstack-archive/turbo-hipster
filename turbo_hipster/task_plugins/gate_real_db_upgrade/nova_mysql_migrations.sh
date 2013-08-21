@@ -27,6 +27,7 @@
 
 pip_requires() {
   pip install -q mysql-python
+  pip install -q eventlet
   requires="tools/pip-requires"
   if [ ! -e $requires ]
   then
@@ -105,6 +106,7 @@ export PYTHONPATH=$PYTHONPATH:$3
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
+git branch -D working
 # zuul puts us in a headless mode, lets check it out into a working branch
 git checkout -b working
 
