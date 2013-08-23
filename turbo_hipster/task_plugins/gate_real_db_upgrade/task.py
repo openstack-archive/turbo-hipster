@@ -116,22 +116,26 @@ class Runner(threading.Thread):
                 # Send an initial WORK_DATA and WORK_STATUS packets
                 self._send_work_data()
 
-                # Step 1: Checkout updates from git!
+                # Step 1: Figure out which datasets to run
+                self._do_next_step()
+                self.job_datasets = self._get_job_datasets()
+
+                # Step 2: Checkout updates from git!
                 self._do_next_step()
                 git_path = self._grab_patchset(
                     self.job_arguments['ZUUL_PROJECT'],
                     self.job_arguments['ZUUL_REF']
                 )
 
-                # Step 2: Run migrations on datasets
+                # Step 3: Run migrations on datasets
                 self._do_next_step()
                 self._execute_migrations(git_path)
 
-                # Step 3: Analyse logs for errors
+                # Step 4: Analyse logs for errors
                 self._do_next_step()
                 self._check_all_dataset_logs_for_errors()
 
-                # Step 4: handle the results (and upload etc)
+                # Step 5: handle the results (and upload etc)
                 self._do_next_step()
                 self._handle_results()
 
@@ -152,7 +156,7 @@ class Runner(threading.Thread):
         """ pass over the results to handle_results.py for post-processing """
         self.log.debug("Process the resulting files (upload/push)")
         index_url = handle_results.generate_push_results(
-            self._get_job_datasets(),
+            self.job_datasets,
             self.job.unique,
             self.config['publish_logs']
         )
@@ -162,11 +166,11 @@ class Runner(threading.Thread):
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
         failed = False
-        for i, dataset in enumerate(self._get_job_datasets()):
+        for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
             result = \
                 handle_results.check_log_for_errors(dataset['log_file_path'])
-            self.datasets[i]['result'] = 'SUCCESS' if result else 'FAILURE'
+            self.job_datasets[i]['result'] = 'SUCCESS' if result else 'FAILURE'
             if not result:
                 failed = True
 
@@ -203,7 +207,7 @@ class Runner(threading.Thread):
         """ Take the applicable datasets for this job and set them up in
         self.job_datasets """
 
-        self.job_datasets = []
+        job_datasets = []
         for dataset in self._get_datasets():
             # Only load a dataset if it is the right project and we
             # know how to process the upgrade
@@ -219,9 +223,9 @@ class Runner(threading.Thread):
                 dataset['command'] = \
                     self._get_project_command(dataset['config']['type'])
 
-                self.job_datasets.append(dataset)
+                job_datasets.append(dataset)
 
-        return self.job_datasets
+        return job_datasets
 
     def _get_project_command(self, db_type):
         command = (self.job_arguments['ZUUL_PROJECT'].split('/')[-1] + '_' +
@@ -236,7 +240,7 @@ class Runner(threading.Thread):
 
         self.log.debug("Run the db sync upgrade script")
 
-        for dataset in self._get_job_datasets():
+        for dataset in self.job_datasets:
 
             cmd = dataset['command']
             # $1 is the unique id
