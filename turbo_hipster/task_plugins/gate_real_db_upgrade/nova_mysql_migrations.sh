@@ -99,7 +99,7 @@ source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
 rm -rf ~/.virtualenvs/$1
 mkvirtualenv $1
-#toggleglobalsitepackages
+toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
 
 # Some databases are from Folsom
