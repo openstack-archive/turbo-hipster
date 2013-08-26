@@ -97,10 +97,12 @@ class Runner(threading.Thread):
     def run(self):
         while True and not self.stopped():
             try:
-                # gearman_worker.getJob() blocks until a job is available
-                self.log.debug("Waiting for job")
+                # Reset job information:
                 self.current_step = 0
                 self.cancelled = False
+                self.work_data = None
+                # gearman_worker.getJob() blocks until a job is available
+                self.log.debug("Waiting for job")
                 self.job = self.gearman_worker.getJob()
                 self._handle_job()
             except:
