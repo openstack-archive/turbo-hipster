@@ -173,7 +173,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
 
     # Clean up
     for fd, descriptor in descriptors.items():
-        poll.unregister(fd)
+        p.unregister(fd)
         fd.close()
 
     logger.info('[script exit code = %d]' % p.returncode)
