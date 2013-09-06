@@ -69,8 +69,9 @@ class Server(object):
         for plugin in self.config['plugins']:
             self.plugins.append({
                 'module': __import__('turbo_hipster.task_plugins.' +
-                                     plugin['name'],
-                                     fromlist='turbo_hipster.task_plugins'),
+                                     plugin['name'] + '.task',
+                                     fromlist='turbo_hipster.task_plugins' +
+                                     plugin['name']),
                 'plugin_config': plugin
             })
 
