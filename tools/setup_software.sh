@@ -21,8 +21,6 @@ chown mysql.mysql /var/log/mysql/slow-queries.log
 chmod ugo+rx /var/log/mysql
 chmod ugo+r /var/log/syslog /var/log/mysql/slow-queries.log /var/log/mysql/error.log
 
-chown -R mysql.mysql /srv/mysql
-
 if [ -e /etc/logrotate.d/percona-server-server-5.5 ]
 then
   rm /etc/logrotate.d/percona-server-server-5.5
@@ -31,3 +29,9 @@ fi
 
 /etc/init.d/apparmor restart
 /etc/init.d/mysql restart
+
+mkdir -p /var/log/turbo-hipster
+chown turbo-hipster:turbo-hipster /var/log/turbo-hipster
+
+mkdir -p /var/lib/turbo-hipster
+chown turbo-hipster:turbo-hipster /var/log/turbo-hipster

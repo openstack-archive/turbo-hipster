@@ -165,19 +165,17 @@ class Runner(threading.Thread):
 
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
-        failed = False
+        success = False
         for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
-            result = \
+            success, message = \
                 handle_results.check_log_for_errors(dataset['log_file_path'])
-            self.job_datasets[i]['result'] = 'SUCCESS' if result else 'FAILURE'
-            if not result:
-                failed = True
+            self.job_datasets[i]['result'] = message
 
-        if failed:
-            self.work_data['result'] = "Failed: errors found in dataset log(s)"
-        else:
+        if success:
             self.work_data['result'] = "SUCCESS"
+        else:
+            self.work_data['result'] = "Failed: errors found in dataset log(s)"
 
     def _get_datasets(self):
         self.log.debug("Get configured datasets to run tests against")

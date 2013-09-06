@@ -70,7 +70,9 @@ def generate_push_results(datasets, job_unique_number, publish_config):
 
 
 def check_log_for_errors(logfile):
-    """ Run regex over the given logfile to find errors """
+    """ Run regex over the given logfile to find errors
+
+        :returns:   success (boolean), message (string)"""
     MIGRATION_START_RE = re.compile('([0-9]+) -\> ([0-9]+)\.\.\. $')
     MIGRATION_END_RE = re.compile('done$')
     #MIGRATION_COMMAND_START = '***** Start DB upgrade to state of'
@@ -79,11 +81,18 @@ def check_log_for_errors(logfile):
     with open(logfile, 'r') as fd:
         migration_started = False
         for line in fd:
-            if MIGRATION_START_RE.search(line):
+            if 'ERROR 1045' in line:
+                return False, "FAILURE: Could not setup seed database."
+            elif 'ERROR 1049' in line:
+                return False, "FAILURE: Could not find seed database."
+            elif 'ImportError' in line:
+                return False, "FAILURE: Could not import required module."
+            elif MIGRATION_START_RE.search(line):
                 if migration_started:
                     # We didn't see the last one finish,
                     # something must have failed
-                    return False
+                    return False, ("FAILURE: Did not find the end of a "
+                                   "migration after a start")
 
                 migration_started = True
             elif MIGRATION_END_RE.search(line):
@@ -94,6 +103,7 @@ def check_log_for_errors(logfile):
         if migration_started:
             # We never saw the end of a migration,
             # something must have failed
-            return False
+            return False, ("FAILURE: Did not find the end of a migration "
+                            "after a start")
 
-    return True
+    return True, "SUCCESS"
