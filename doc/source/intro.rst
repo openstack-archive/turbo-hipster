@@ -5,8 +5,8 @@ Turbo Hipster
 
 Turbo Hipster is a gearman worker designed to run tests using zuul
 as the gearman client. It is primarily aimed at running openstack
-continuous integration tests but can be used to automate any tests
-with zuul.
+continuous integration tests against pre-existing datasets but can
+be used to automate any tests with zuul.
 
 Overview
 --------
