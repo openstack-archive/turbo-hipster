@@ -12,7 +12,7 @@
         {
             "name": "gate_real_db_upgrade",
             "datasets_dir": "/var/lib/turbo-hipster/datasets",
-            "gate": "build:gate-real-db-upgrade_nova_mysql",
+            "gate": "build:gate-real-db-upgrade_nova_mysql"
         }
     ],
     "publish_logs": {

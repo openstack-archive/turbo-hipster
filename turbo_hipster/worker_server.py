@@ -71,7 +71,7 @@ class Server(object):
                 'module': __import__('turbo_hipster.task_plugins.' +
                                      plugin['name'],
                                      fromlist='turbo_hipster.task_plugins'),
-                'plugin_config': self.plugin
+                'plugin_config': plugin
             })
 
     def run_tasks(self):
