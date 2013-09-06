@@ -184,7 +184,7 @@ class Runner(threading.Thread):
         if len(self.datasets) > 0:
             return self.datasets
 
-        datasets_path = self.global_config['datasets_dir']
+        datasets_path = self.plugin_config['datasets_dir']
         for ent in os.listdir(datasets_path):
             dataset_dir = os.path.join(datasets_path, ent)
             if (os.path.isdir(dataset_dir) and os.path.isfile(
