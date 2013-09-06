@@ -1,0 +1,18 @@
+{
+    "zuul_server": {
+        "git_url": "/var/lib/zuul/git/",
+        "gearman_host": "localhost",
+        "gearman_port": 4730
+    },
+    "debug_log": "/var/log/turbo-hipster/debug.log",
+    "jobs_working_dir": "/var/lib/turbo-hipster/jobs",
+    "git_working_dir": "/var/lib/turbo-hipster/git",
+    "pip_download_cache": "/var/cache/pip",
+    "plugins": ["gate_real_db_upgrade"],
+    "publish_logs":
+    {
+        "type": "local",
+        "path": "/var/www/results/",
+        "prepend_url": "http://localhost/results/"
+    }
+}

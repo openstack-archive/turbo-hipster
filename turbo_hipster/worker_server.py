@@ -114,7 +114,7 @@ def main():
                         help='Run in the background.')
     parser.add_argument('-p', '--pidfile',
                         default='/var/run/turbo-hipster/'
-                                'sql-migrate-gearman-worker.pid',
+                                'turbo-hipster-worker-server.pid',
                         help='PID file to lock during daemonization.')
     args = parser.parse_args()
 
