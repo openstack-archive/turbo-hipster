@@ -13,6 +13,9 @@ Contents:
 
    intro
    structure
+   installation
+   configuration
+   running
 
 
 Indices and tables

@@ -1,7 +1,6 @@
 {
     "project": "openstack/nova",
     "type": "mysql",
-    "gate": "build:gate-real-db-upgrade_nova_mysql",
     "db_user": "nova",
     "db_pass": "tester",
     "database": "nova",

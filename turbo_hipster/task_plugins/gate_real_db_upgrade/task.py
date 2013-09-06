@@ -40,10 +40,11 @@ class Runner(threading.Thread):
 
     log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
 
-    def __init__(self, config):
+    def __init__(self, global_config, plugin_config):
         super(Runner, self).__init__()
         self._stop = threading.Event()
-        self.config = config
+        self.global_config = global_config
+        self.plugin_config = plugin_config
 
         # Set up the runner worker
         self.gearman_worker = None
@@ -65,16 +66,13 @@ class Runner(threading.Thread):
         self.log.debug("Set up real_db gearman worker")
         self.gearman_worker = gear.Worker(__worker_name__)
         self.gearman_worker.addServer(
-            self.config['zuul_server']['gearman_host'],
-            self.config['zuul_server']['gearman_port']
+            self.global_config['zuul_server']['gearman_host'],
+            self.global_config['zuul_server']['gearman_port']
         )
         self.register_functions()
 
     def register_functions(self):
-        """ Determine which functions to register based off available
-        datasets """
-        for dataset in self._get_datasets():
-            self.gearman_worker.registerFunction(dataset['config']['gate'])
+        self.gearman_worker.registerFunction(self.plugin_config['gate'])
 
     def stop(self):
         self._stop.set()
@@ -160,7 +158,7 @@ class Runner(threading.Thread):
         index_url = handle_results.generate_push_results(
             self.job_datasets,
             self.job.unique,
-            self.config['publish_logs']
+            self.global_config['publish_logs']
         )
         self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
@@ -186,8 +184,7 @@ class Runner(threading.Thread):
         if len(self.datasets) > 0:
             return self.datasets
 
-        datasets_path = os.path.join(os.path.dirname(__file__),
-                                     'datasets')
+        datasets_path = self.global_config['datasets_dir']
         for ent in os.listdir(datasets_path):
             dataset_dir = os.path.join(datasets_path, ent)
             if (os.path.isdir(dataset_dir) and os.path.isfile(
@@ -217,7 +214,7 @@ class Runner(threading.Thread):
                     dataset['config']['project'] and
                     self._get_project_command(dataset['config']['type'])):
                 dataset['log_file_path'] = os.path.join(
-                    self.config['jobs_working_dir'],
+                    self.global_config['jobs_working_dir'],
                     self.job.unique,
                     dataset['name'] + '.log'
                 )
@@ -262,7 +259,7 @@ class Runner(threading.Thread):
                 % {
                     'unique_id': self.job.unique,
                     'job_working_dir': os.path.join(
-                        self.config['jobs_working_dir'],
+                        self.global_config['jobs_working_dir'],
                         self.job.unique
                     ),
                     'git_path': git_path,
@@ -277,7 +274,7 @@ class Runner(threading.Thread):
                         dataset['dataset_dir'],
                         dataset['config']['logging_conf']
                     ),
-                    'pip_cache_dir': self.config['pip_download_cache']
+                    'pip_cache_dir': self.global_config['pip_download_cache']
                 }
             )
 
@@ -285,13 +282,13 @@ class Runner(threading.Thread):
             syslog = '/var/log/syslog'
             sqlslo = '/var/log/mysql/slow-queries.log'
             sqlerr = '/var/log/mysql/error.log'
-            if 'logs' in self.config:
-                if 'syslog' in self.config['logs']:
-                    syslog = self.config['logs']['syslog']
-                if 'sqlslo' in self.config['logs']:
-                    sqlslo = self.config['logs']['sqlslo']
-                if 'sqlerr' in self.config['logs']:
-                    sqlerr = self.config['logs']['sqlerr']
+            if 'logs' in self.global_config:
+                if 'syslog' in self.global_config['logs']:
+                    syslog = self.global_config['logs']['syslog']
+                if 'sqlslo' in self.global_config['logs']:
+                    sqlslo = self.global_config['logs']['sqlslo']
+                if 'sqlerr' in self.global_config['logs']:
+                    sqlerr = self.global_config['logs']['sqlerr']
 
             utils.execute_to_log(
                 cmd,
@@ -309,9 +306,9 @@ class Runner(threading.Thread):
         self.log.debug("Grab the patchset we want to test against")
 
         repo = utils.GitRepository(
-            self.config['zuul_server']['git_url'] + project_name + '/.git',
+            self.global_config['zuul_server']['git_url'] + project_name + '/.git',
             os.path.join(
-                self.config['git_working_dir'],
+                self.global_config['git_working_dir'],
                 __worker_name__,
                 project_name
             )

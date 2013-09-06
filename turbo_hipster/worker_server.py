@@ -67,19 +67,21 @@ class Server(object):
         """ Load the available plugins from task_plugins """
         # Load plugins
         for plugin in self.config['plugins']:
-            print
-            plugin_info = imp.find_module('task',
-                                          [(os.path.dirname(
-                                            os.path.realpath(__file__)) +
-                                            '/task_plugins/' + plugin)])
-            self.plugins.append(imp.load_module('task', *plugin_info))
+            self.plugins.append({
+                'module': __import__('turbo_hipster.task_plugins.' +
+                                     plugin['name'],
+                                     fromlist='turbo_hipster.task_plugins'),
+                'plugin_config': self.plugin
+            })
 
     def run_tasks(self):
         """ Run the tasks """
         for plugin in self.plugins:
-            self.tasks[plugin.__worker_name__] = plugin.Runner(self.config)
-            self.tasks[plugin.__worker_name__].daemon = True
-            self.tasks[plugin.__worker_name__].start()
+            module = plugin['module']
+            self.tasks[module.__worker_name__] = module.Runner(self.config,
+                                                               plugin['plugin_config'])
+            self.tasks[module.__worker_name__].daemon = True
+            self.tasks[module.__worker_name__].start()
 
         self.manager = worker_manager.GearmanManager(self.config, self.tasks)
         self.manager.daemon = True

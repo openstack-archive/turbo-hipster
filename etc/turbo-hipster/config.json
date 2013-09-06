@@ -8,9 +8,14 @@
     "jobs_working_dir": "/var/lib/turbo-hipster/jobs",
     "git_working_dir": "/var/lib/turbo-hipster/git",
     "pip_download_cache": "/var/cache/pip",
-    "plugins": ["gate_real_db_upgrade"],
-    "publish_logs":
-    {
+    "plugins": [
+        {
+            "name": "gate_real_db_upgrade",
+            "datasets_dir": "/var/lib/turbo-hipster/datasets",
+            "gate": "build:gate-real-db-upgrade_nova_mysql",
+        }
+    ],
+    "publish_logs": {
         "type": "local",
         "path": "/var/www/results/",
         "prepend_url": "http://localhost/results/"
