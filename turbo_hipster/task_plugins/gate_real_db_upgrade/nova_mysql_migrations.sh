@@ -86,8 +86,6 @@ echo "Restoring test database $6"
 set -x
 mysql -u root -e "drop database $6"
 mysql -u root -e "create database $6"
-mysql -u root -e "create user '$4'@'localhost' identified by '$5';"
-mysql -u root -e "grant all privileges on $6.* TO '$4'@'localhost';"
 mysql -u $4 --password=$5 $6 < /$7
 set +x
 

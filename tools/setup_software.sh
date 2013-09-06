@@ -35,3 +35,6 @@ chown turbo-hipster:turbo-hipster /var/log/turbo-hipster
 
 mkdir -p /var/lib/turbo-hipster
 chown turbo-hipster:turbo-hipster /var/log/turbo-hipster
+
+mysql -u root -e "create user 'nova'@'localhost' identified by 'tester';"
+mysql -u root -e "grant all privileges on nova.* TO 'nova'@'localhost';"
