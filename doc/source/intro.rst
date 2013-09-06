@@ -1,4 +1,4 @@
-:title:Introduction
+ :title:Introduction
 
 Turbo Hipster
 =============
@@ -52,7 +52,9 @@ Typical workflow diagram
             z006 [shape=box, label="receive response"];
             z007 [shape=box, label="send report"];
 
-            z000 -> z001 -> z002 -> z003 -> z004 -> z005;
+            z000 -> z001 -> z002;
+            z003 -> z004 -> z005;
+            z005 -> z006 [dir=none, style=dotted];
             z006 -> z007;
 
        }
@@ -73,6 +75,7 @@ Typical workflow diagram
             gms002 [label="register method"];
 
             gm001 -> gm002;
+            gm002 -> gm003 [dir=none, style=dotted];
             gm003 -> gm004;
        }
 
