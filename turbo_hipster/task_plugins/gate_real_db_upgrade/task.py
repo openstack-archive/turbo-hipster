@@ -122,14 +122,14 @@ class Runner(threading.Thread):
 
                 # Step 2: Checkout updates from git!
                 self._do_next_step()
-                git_path = self._grab_patchset(
+                self.git_path = self._grab_patchset(
                     self.job_arguments['ZUUL_PROJECT'],
                     self.job_arguments['ZUUL_REF']
                 )
 
                 # Step 3: Run migrations on datasets
                 self._do_next_step()
-                self._execute_migrations(git_path)
+                self._execute_migrations()
 
                 # Step 4: Analyse logs for errors
                 self._do_next_step()
@@ -169,7 +169,8 @@ class Runner(threading.Thread):
         for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
             success, message = \
-                handle_results.check_log_for_errors(dataset['log_file_path'])
+                handle_results.check_log_for_errors(dataset['log_file_path'],
+                                                    self.git_path)
             self.job_datasets[i]['result'] = message
 
         if success:
@@ -232,7 +233,7 @@ class Runner(threading.Thread):
             return command
         return False
 
-    def _execute_migrations(self, git_path):
+    def _execute_migrations(self):
         """ Execute the migration on each dataset in datasets """
 
         self.log.debug("Run the db sync upgrade script")
@@ -260,7 +261,7 @@ class Runner(threading.Thread):
                         self.global_config['jobs_working_dir'],
                         self.job.unique
                     ),
-                    'git_path': git_path,
+                    'git_path': self.git_path,
                     'dbuser': dataset['config']['db_user'],
                     'dbpassword': dataset['config']['db_pass'],
                     'db': dataset['config']['database'],

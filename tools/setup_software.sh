@@ -2,7 +2,7 @@
 
 # $1 is the db engine name, currently one of:
 #    mysql
-#    percona-server
+#    percona
 
 git pull
 

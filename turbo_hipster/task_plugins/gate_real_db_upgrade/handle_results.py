@@ -69,14 +69,22 @@ def generate_push_results(datasets, job_unique_number, publish_config):
     return index_file_url
 
 
-def check_log_for_errors(logfile):
+def check_log_for_errors(logfile, gitpath):
     """ Run regex over the given logfile to find errors
 
         :returns:   success (boolean), message (string)"""
+
+    # Find the schema versions
+    MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')
+    schemas = [int(MIGRATION_NUMBER_RE.findall(f)[0]) for f in os.listdir(
+        os.path.join(gitpath, 'nova/db/sqlalchemy/migrate_repo/versions'))
+        if MIGRATION_NUMBER_RE.match(f)]
+
     MIGRATION_START_RE = re.compile('([0-9]+) -\> ([0-9]+)\.\.\. $')
     MIGRATION_END_RE = re.compile('done$')
     #MIGRATION_COMMAND_START = '***** Start DB upgrade to state of'
     #MIGRATION_COMMAND_END = '***** Finished DB upgrade to state of'
+    MIGRATION_FINAL_SCHEMA_RE = re.compile('Final schema version is ([0-9]+)')
 
     with open(logfile, 'r') as fd:
         migration_started = False
@@ -99,6 +107,11 @@ def check_log_for_errors(logfile):
                 if migration_started:
                     # We found the end to this migration
                     migration_started = False
+            elif 'Final schema version is' in line:
+                # Check the final version is as expected
+                final_version = MIGRATION_FINAL_SCHEMA_RE.findall(line)[0]
+                if int(final_version) != max(schemas):
+                    return False, "Final schema version does not match expectation"
 
         if migration_started:
             # We never saw the end of a migration,
