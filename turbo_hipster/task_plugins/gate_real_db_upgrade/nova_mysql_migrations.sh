@@ -84,8 +84,8 @@ export PIP_DOWNLOAD_CACHE=$9
 # Restore database to known good state
 echo "Restoring test database $6"
 set -x
-mysql -u root -e "drop database $6"
-mysql -u root -e "create database $6"
+mysql -u $4 --password=$5 -e "drop database $6"
+mysql -u $4 --password=$5 -e "create database $6"
 mysql -u $4 --password=$5 $6 < /$7
 set +x
 
