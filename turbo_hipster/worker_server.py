@@ -113,8 +113,8 @@ def main():
                         default=
                         '/etc/turbo-hipster/config.json',
                         help='Path to json config file.')
-    parser.add_argument('--background', action='store_true',
-                        help='Run in the background.')
+    parser.add_argument('-b', '--background', action='store_true',
+                        help='Run as a daemon in the background.')
     parser.add_argument('-p', '--pidfile',
                         default='/var/run/turbo-hipster/'
                                 'turbo-hipster-worker-server.pid',

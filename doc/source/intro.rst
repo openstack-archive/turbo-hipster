@@ -20,6 +20,9 @@ build a report.
 Typical workflow diagram
 ------------------------
 
+**clearly this needs a lot of work, however I believe the structure
+is mostly there...**
+
 .. graphviz::
 
    digraph overview {
@@ -107,3 +110,10 @@ Typical workflow diagram
        ths003 -> gm003;
 
    }
+
+zuul integration
+----------------
+
+Explain how zuul triggers builds and gates etc and how turbo-hipster
+responds to them. Most of this is in the zuul documentation so don't
+duplicate.
