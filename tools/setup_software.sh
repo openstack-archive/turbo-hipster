@@ -38,3 +38,5 @@ chown turbo-hipster:turbo-hipster /var/log/turbo-hipster
 
 mysql -u root -e "create user 'nova'@'localhost' identified by 'tester';"
 mysql -u root -e "grant all privileges on nova.* TO 'nova'@'localhost';"
+
+# Fix log rotate for MySQL  to be other readable.

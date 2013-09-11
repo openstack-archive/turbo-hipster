@@ -21,7 +21,7 @@ Typical workflow diagram
 ------------------------
 
 **clearly this needs a lot of work, however I believe the structure
-is mostly there...**
+is mostly there... If you know graphviz please help!**
 
 .. graphviz::
 

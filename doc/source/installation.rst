@@ -109,6 +109,11 @@ exist and are writeable by your turbo-hipster user::
     mkdir -p /var/cache/pip
     chown turbo-hipster:turbo-hipster /var/cache/pip
 
+Edit MySQL's log rotate to ensure it is other writable::
+
+    vim /etc/logrotate.d/mysql-server
+    # edit create 640 to 644.
+
 
 Start turbo-hipster
 -------------------
