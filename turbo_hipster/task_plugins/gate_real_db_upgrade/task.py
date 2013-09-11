@@ -165,13 +165,14 @@ class Runner(threading.Thread):
 
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
-        success = False
+        success = True
         for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
-            success, message = \
+            dataset_success, message = \
                 handle_results.check_log_for_errors(dataset['log_file_path'],
                                                     self.git_path)
             self.job_datasets[i]['result'] = message
+            success = False if not dataset_success else success
 
         if success:
             self.work_data['result'] = "SUCCESS"
