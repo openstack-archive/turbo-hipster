@@ -21,7 +21,6 @@ task_plugins. """
 import argparse
 import daemon
 import extras
-import imp
 import json
 import logging
 import os
@@ -79,8 +78,10 @@ class Server(object):
         """ Run the tasks """
         for plugin in self.plugins:
             module = plugin['module']
-            self.tasks[module.__worker_name__] = module.Runner(self.config,
-                                                               plugin['plugin_config'])
+            self.tasks[module.__worker_name__] = module.Runner(
+                self.config,
+                plugin['plugin_config']
+            )
             self.tasks[module.__worker_name__].daemon = True
             self.tasks[module.__worker_name__].start()
 

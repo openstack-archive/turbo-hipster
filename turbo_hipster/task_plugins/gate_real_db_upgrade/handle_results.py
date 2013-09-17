@@ -111,12 +111,13 @@ def check_log_for_errors(logfile, gitpath):
                 # Check the final version is as expected
                 final_version = MIGRATION_FINAL_SCHEMA_RE.findall(line)[0]
                 if int(final_version) != max(schemas):
-                    return False, "Final schema version does not match expectation"
+                    return False, ("Final schema version does not match "
+                                   "expectation")
 
         if migration_started:
             # We never saw the end of a migration,
             # something must have failed
             return False, ("FAILURE: Did not find the end of a migration "
-                            "after a start")
+                           "after a start")
 
     return True, "SUCCESS"
