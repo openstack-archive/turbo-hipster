@@ -154,17 +154,18 @@ class FakeWorker(gear.Worker):
 
 
 class FakeRealDbUpgradeRunner(RealDbUpgradeRunner):
-    def __init__(self, config, test):
+    def __init__(self, global_config, plugin_config, test):
         self.test = test
-        super(FakeRealDbUpgradeRunner, self).__init__(config)
+        super(FakeRealDbUpgradeRunner, self).__init__(global_config,
+                                                      plugin_config)
 
     def setup_gearman(self):
         self.log.debug("Set up real_db gearman worker")
         self.gearman_worker = FakeWorker('FakeRealDbUpgradeRunner_worker',
                                          self.test)
         self.gearman_worker.addServer(
-            self.config['zuul_server']['gearman_host'],
-            self.config['zuul_server']['gearman_port']
+            self.global_config['zuul_server']['gearman_host'],
+            self.global_config['zuul_server']['gearman_port']
         )
         self.register_functions()
 

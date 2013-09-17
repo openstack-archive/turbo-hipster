@@ -35,7 +35,8 @@ class TestGearmanManager(testtools.TestCase):
             self.config['zuul_server']['gearman_port'])
         self.config['zuul_server']['gearman_port'] = self.gearman_server.port
 
-        self.task = FakeRealDbUpgradeRunner(self.config, self)
+        self.task = FakeRealDbUpgradeRunner(self.config,
+                                            self.config['plugins'][0], self)
         self.tasks = dict(FakeRealDbUpgradeRunner_worker=self.task)
 
         self.gearman_manager = FakeGearmanManager(self.config,
