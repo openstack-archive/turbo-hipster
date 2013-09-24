@@ -169,8 +169,8 @@ class Runner(threading.Thread):
         for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
             dataset_success, message = \
-                handle_results.check_log_for_errors(dataset['log_file_path'],
-                                                    self.git_path)
+                handle_results.check_log_for_errors(
+                    dataset['job_log_file_path'], self.git_path)
             self.job_datasets[i]['result'] = message
             success = False if not dataset_success else success
 
@@ -217,7 +217,7 @@ class Runner(threading.Thread):
                     self.job_arguments, self.plugin_config['job'],
                     self.job.unique
                 )
-                dataset['log_file_path'] = os.path.join(
+                dataset['job_log_file_path'] = os.path.join(
                     self.global_config['jobs_working_dir'],
                     dataset['determined_path'],
                     dataset['name'] + '.log'
@@ -296,7 +296,7 @@ class Runner(threading.Thread):
 
             utils.execute_to_log(
                 cmd,
-                dataset['log_file_path'],
+                dataset['job_log_file_path'],
                 watch_logs=[
                     ('[syslog]', syslog),
                     ('[sqlslo]', sqlslo),

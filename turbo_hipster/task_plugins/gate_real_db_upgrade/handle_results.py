@@ -56,8 +56,7 @@ def generate_push_results(datasets, publish_config):
     """ Generates and pushes results """
 
     for i, dataset in enumerate(datasets):
-        result_uri = push_file(dataset['determined_path'],
-                               dataset['log_file_path'],
+        result_uri = push_file(dataset['job_log_file_path'],
                                publish_config)
         datasets[i]['result_uri'] = result_uri
 
