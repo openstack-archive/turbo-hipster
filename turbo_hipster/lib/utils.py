@@ -186,17 +186,17 @@ def execute_to_log(cmd, logfile, timeout=-1,
     log_hanlder.close()
 
 
-def push_file(job_unique_number, file_path, publish_config):
+def push_file(dest_dir, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
     if method in globals() and hasattr(globals()[method], '__call__'):
-        return globals()[method](job_unique_number, file_path, publish_config)
+        return globals()[method](dest_dir, file_path, publish_config)
 
 
-def swift_push_file(job_unique_number, file_path, swift_config):
+def swift_push_file(dest_dir, file_path, swift_config):
     """ Push a log file to a swift server. """
     with open(file_path, 'r') as fd:
-        name = job_unique_number + '_' + os.path.basename(file_path)
+        name = dest_dir + '_' + os.path.basename(file_path)
         con = swiftclient.client.Connection(swift_config['authurl'],
                                             swift_config['user'],
                                             swift_config['apikey'])
@@ -204,9 +204,9 @@ def swift_push_file(job_unique_number, file_path, swift_config):
         return obj
 
 
-def local_push_file(job_unique_number, file_path, local_config):
+def local_push_file(dest_dir, file_path, local_config):
     """ Copy the file locally somewhere sensible """
-    dest_dir = os.path.join(local_config['path'], job_unique_number)
+    dest_dir = os.path.join(local_config['path'], dest_dir)
     dest_filename = os.path.basename(file_path)
     if not os.path.isdir(dest_dir):
         os.makedirs(dest_dir)
@@ -214,10 +214,18 @@ def local_push_file(job_unique_number, file_path, local_config):
     dest_file = os.path.join(dest_dir, dest_filename)
 
     shutil.copyfile(file_path, dest_file)
-    return local_config['prepend_url'] + os.path.join(job_unique_number,
-                                                      dest_filename)
+    return local_config['prepend_url'] + os.path.join(dest_dir, dest_filename)
 
 
-def scp_push_file(job_unique_number, file_path, local_config):
+def scp_push_file(dest_dir, file_path, local_config):
     """ Copy the file remotely over ssh """
     pass
+
+
+def determine_job_identifier(zuul_arguments, job, unique):
+    return os.path.join(zuul_arguments['ZUUL_CHANGE'][:2],
+                        zuul_arguments['ZUUL_CHANGE'],
+                        zuul_arguments['ZUUL_PATCHSET'],
+                        zuul_arguments['ZUUL_PIPELINE'],
+                        job,
+                        unique[:7])

@@ -72,7 +72,8 @@ class Runner(threading.Thread):
         self.register_functions()
 
     def register_functions(self):
-        self.gearman_worker.registerFunction(self.plugin_config['gate'])
+        self.gearman_worker.registerFunction(
+            'build:' + self.plugin_config['job'])
 
     def stop(self):
         self._stop.set()
@@ -157,7 +158,6 @@ class Runner(threading.Thread):
         self.log.debug("Process the resulting files (upload/push)")
         index_url = handle_results.generate_push_results(
             self.job_datasets,
-            self.job.unique,
             self.global_config['publish_logs']
         )
         self.log.debug("Index URL found at %s" % index_url)
@@ -213,9 +213,13 @@ class Runner(threading.Thread):
             if (self.job_arguments['ZUUL_PROJECT'] ==
                     dataset['config']['project'] and
                     self._get_project_command(dataset['config']['type'])):
+                dataset['determined_path'] = utils.determine_job_identifier(
+                    self.job_arguments, self.plugin_config['job'],
+                    self.job.unique
+                )
                 dataset['log_file_path'] = os.path.join(
                     self.global_config['jobs_working_dir'],
-                    self.job.unique,
+                    dataset['determined_path'],
                     dataset['name'] + '.log'
                 )
                 dataset['result'] = 'UNTESTED'

@@ -52,18 +52,17 @@ def make_index_file(datasets, index_filename):
     return os.path.join(tempdir, index_filename)
 
 
-def generate_push_results(datasets, job_unique_number, publish_config):
+def generate_push_results(datasets, publish_config):
     """ Generates and pushes results """
 
     for i, dataset in enumerate(datasets):
-        result_uri = push_file(job_unique_number,
+        result_uri = push_file(dataset['determined_path'],
                                dataset['log_file_path'],
                                publish_config)
         datasets[i]['result_uri'] = result_uri
 
     index_file = make_index_file(datasets, 'index.html')
-    index_file_url = push_file(job_unique_number,
-                               index_file,
+    index_file_url = push_file(dataset['determined_path'], index_file,
                                publish_config)
 
     return index_file_url
