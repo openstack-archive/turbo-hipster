@@ -190,7 +190,7 @@ def push_file(job_log_dir, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
     if method in globals() and hasattr(globals()[method], '__call__'):
-        return globals()[method](dest_dir, file_path, publish_config)
+        return globals()[method](job_log_dir, file_path, publish_config)
 
 
 def swift_push_file(job_log_dir, file_path, swift_config):
