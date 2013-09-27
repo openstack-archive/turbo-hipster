@@ -264,7 +264,7 @@ class Runner(threading.Thread):
                     'unique_id': self.job.unique,
                     'job_working_dir': os.path.join(
                         self.global_config['jobs_working_dir'],
-                        self.job.unique
+                        dataset['determined_path']
                     ),
                     'git_path': self.git_path,
                     'dbuser': dataset['config']['db_user'],
