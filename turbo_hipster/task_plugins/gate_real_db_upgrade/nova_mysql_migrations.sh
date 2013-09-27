@@ -129,15 +129,15 @@ db_sync "patchset" $2 $3 $4 $5 $6 $8
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
-#echo "Now downgrade all the way back to Folsom"
-#db_sync "patchset" $2 $3 $4 $5 $6 $8 "--version 133"
+echo "Now downgrade all the way back to Folsom"
+db_sync "patchset" $2 $3 $4 $5 $6 $8 "--version 133"
 
 # Determine the schema version
-#version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-#echo "Schema version is $version"
+version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+echo "Schema version is $version"
 
-#echo "And now back up to head from Folsom"
-#db_sync "patchset" $2 $3 $4 $5 $6 $8
+echo "And now back up to head from Folsom"
+db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the final schema version
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
