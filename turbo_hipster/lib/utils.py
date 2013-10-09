@@ -123,7 +123,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
     cmd += ' 2>&1'
     start_time = time.time()
     p = subprocess.Popen(
-        cmd, shell=True, stderr=subprocess.STDOUT)
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     descriptors[p.stdout.fileno()] = dict(
         name='[output]',
