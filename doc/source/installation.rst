@@ -34,7 +34,7 @@ Edit config
 -----------
 
 Turbo-hipsters configuration is currently stored in json format.
-Modify the config.json appropriately:
+Modify the config.json appropriately::
 
     **zuul_server**
         A dictionary containing details about how to communicate
