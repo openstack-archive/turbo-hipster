@@ -34,7 +34,7 @@ Edit config
 -----------
 
 Turbo-hipsters configuration is currently stored in json format.
-Modify the config.json appropriately:
+Modify the config.json appropriately::
 
     **zuul_server**
         A dictionary containing details about how to communicate
@@ -122,9 +122,18 @@ turbo hipster can be ran by executing::
 
     ./turbo-hipster/worker_server.py
 
-and optionally takes the following parameters:
+and optionally takes the following parameters::
 
-    .. program-output:: ../../turbo_hipster/worker_server.py --help
+    ./turbo_hipster/worker_server.py --help
+    usage: worker_server.py [-h] [-c CONFIG] [-b] [-p PIDFILE]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -c CONFIG, --config CONFIG
+                            Path to json config file.
+      -b, --background      Run as a daemon in the background.
+      -p PIDFILE, --pidfile PIDFILE
+                            PID file to lock during daemonization.
 
 By default turbo-hipster will look for
 */etc/turbo-hipster/config.json*
