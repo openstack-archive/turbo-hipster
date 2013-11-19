@@ -25,7 +25,6 @@ from turbo_hipster.lib import utils
 import turbo_hipster.task_plugins.gate_real_db_upgrade.handle_results\
     as handle_results
 
-__worker_name__ = 'sql-migrate-test-runner-%s' % os.uname()[1]
 
 # Regex for log checking
 MIGRATION_START_RE = re.compile('([0-9]+) -&gt; ([0-9]+)\.\.\.$')
@@ -40,11 +39,13 @@ class Runner(threading.Thread):
 
     log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
 
-    def __init__(self, global_config, plugin_config):
+    def __init__(self, global_config, plugin_config, worker_name):
         super(Runner, self).__init__()
         self._stop = threading.Event()
         self.global_config = global_config
         self.plugin_config = plugin_config
+
+        self.worker_name = worker_name
 
         # Set up the runner worker
         self.gearman_worker = None
@@ -64,7 +65,7 @@ class Runner(threading.Thread):
 
     def setup_gearman(self):
         self.log.debug("Set up real_db gearman worker")
-        self.gearman_worker = gear.Worker(__worker_name__)
+        self.gearman_worker = gear.Worker(self.worker_name)
         self.gearman_worker.addServer(
             self.global_config['zuul_server']['gearman_host'],
             self.global_config['zuul_server']['gearman_port']
@@ -314,7 +315,7 @@ class Runner(threading.Thread):
             project_name + '/.git',
             os.path.join(
                 self.global_config['git_working_dir'],
-                __worker_name__,
+                self.worker_name,
                 project_name
             )
         )
@@ -332,7 +333,7 @@ class Runner(threading.Thread):
         if self.work_data is None:
             hostname = os.uname()[1]
             self.work_data = dict(
-                name=__worker_name__,
+                name=self.worker_name,
                 number=self.job.unique,
                 manager='turbo-hipster-manager-%s' % hostname,
                 url='http://localhost',

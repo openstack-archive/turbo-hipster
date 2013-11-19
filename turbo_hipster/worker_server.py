@@ -76,14 +76,17 @@ class Server(object):
 
     def run_tasks(self):
         """ Run the tasks """
-        for plugin in self.plugins:
+        for thread_number, plugin in enumerate(self.plugins):
             module = plugin['module']
-            self.tasks[module.__worker_name__] = module.Runner(
+            worker_name = '%s-%s-%s' % (plugin['plugin_config']['name'],
+                                        os.uname()[1], thread_number)
+            self.tasks[worker_name] = module.Runner(
                 self.config,
-                plugin['plugin_config']
+                plugin['plugin_config'],
+                worker_name
             )
-            self.tasks[module.__worker_name__].daemon = True
-            self.tasks[module.__worker_name__].start()
+            self.tasks[worker_name].daemon = True
+            self.tasks[worker_name].start()
 
         self.manager = worker_manager.GearmanManager(self.config, self.tasks)
         self.manager.daemon = True
