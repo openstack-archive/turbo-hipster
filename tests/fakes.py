@@ -154,10 +154,11 @@ class FakeWorker(gear.Worker):
 
 
 class FakeRealDbUpgradeRunner(RealDbUpgradeRunner):
-    def __init__(self, global_config, plugin_config, test):
+    def __init__(self, global_config, plugin_config, worker_name, test):
         self.test = test
         super(FakeRealDbUpgradeRunner, self).__init__(global_config,
-                                                      plugin_config)
+                                                      plugin_config,
+                                                      worker_name)
 
     def setup_gearman(self):
         self.log.debug("Set up real_db gearman worker")
