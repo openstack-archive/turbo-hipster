@@ -28,7 +28,7 @@ class ZuulManager(threading.Thread):
         To do this it implements its own gearman worker waiting for events on
         that manager. """
 
-    log = logging.getLogger("worker_manager.GearmanManager")
+    log = logging.getLogger("worker_manager.ZuulManager")
 
     def __init__(self, config, tasks):
         super(ZuulManager, self).__init__()
@@ -115,10 +115,12 @@ class ZuulClient(threading.Thread):
         self.register_functions()
 
     def register_functions(self):
+        self.debug.log("Register functions with gearman")
         for function_name, plugin in self.functions.items():
             self.gearman_worker.registerFunction(function_name)
 
     def add_function(self, function_name, plugin):
+        self.debug.log("Add function, %s, to list" % function_name)
         self.functions[function_name] = plugin
 
     def stop(self):
@@ -144,4 +146,5 @@ class ZuulClient(threading.Thread):
 
     def _handle_job(self):
         """ We have a job, give it to the right plugin """
+        self.log.debug("We have a job, we'll launch the task now.")
         self.functions[self.job.name].start_job(self.job)

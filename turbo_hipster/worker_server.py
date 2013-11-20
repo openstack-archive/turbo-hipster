@@ -66,6 +66,7 @@ class Server(object):
 
     def load_plugins(self):
         """ Load the available plugins from task_plugins """
+        self.log.debug('Loading plugins')
         # Load plugins
         for plugin in self.config['plugins']:
             self.plugins.append({
@@ -75,9 +76,11 @@ class Server(object):
                                      plugin['name']),
                 'plugin_config': plugin
             })
+            self.log.debug('Plugin %s loaded' % plugin['name'])
 
     def start_gearman_workers(self):
         """ Run the tasks """
+        self.log.debug('Starting gearman workers')
         self.zuul_client = worker_manager.ZuulClient(self.config,
                                                      self.worker_name)
 
@@ -102,6 +105,7 @@ class Server(object):
         self.zuul_manager.start()
 
     def exit_handler(self, signum):
+        self.log.debug('Exiting...')
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         for task_name, task in self.tasks.items():
             task.stop()
