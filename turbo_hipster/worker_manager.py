@@ -115,12 +115,12 @@ class ZuulClient(threading.Thread):
         self.register_functions()
 
     def register_functions(self):
-        self.debug.log("Register functions with gearman")
+        self.log.debug("Register functions with gearman")
         for function_name, plugin in self.functions.items():
             self.gearman_worker.registerFunction(function_name)
 
     def add_function(self, function_name, plugin):
-        self.debug.log("Add function, %s, to list" % function_name)
+        self.log.debug("Add function, %s, to list" % function_name)
         self.functions[function_name] = plugin
 
     def stop(self):
