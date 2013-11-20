@@ -40,11 +40,11 @@ class Server(object):
     log = logging.getLogger("worker_server.Server")
 
     def __init__(self, config):
+        self.config = config
         # Python logging output file.
         self.debug_log = self.config['debug_log']
 
         # Config init
-        self.config = config
         self.zuul_manager = None
         self.zuul_client = None
         self.plugins = []
