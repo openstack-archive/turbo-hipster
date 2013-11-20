@@ -19,7 +19,7 @@ import json
 import os
 import testtools
 import time
-from fakes import FakeGearmanManager, FakeGearmanServer,\
+from fakes import FakeZuulManager, FakeGearmanServer,\
     FakeRealDbUpgradeRunner
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'etc')
@@ -40,9 +40,7 @@ class TestGearmanManager(testtools.TestCase):
                                             'test-worker-1', self)
         self.tasks = dict(FakeRealDbUpgradeRunner_worker=self.task)
 
-        self.gearman_manager = FakeGearmanManager(self.config,
-                                                  self.tasks,
-                                                  self)
+        self.gearman_manager = FakeZuulManager(self.config, self.tasks, self)
 
     def test_manager_function_registered(self):
         """ Check the manager is set up correctly and registered with the

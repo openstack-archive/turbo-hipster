@@ -21,15 +21,15 @@ import os
 import re
 import time
 
-from turbo_hipster.worker_manager import GearmanManager
+from turbo_hipster.worker_manager import ZuulManager
 from turbo_hipster.task_plugins.gate_real_db_upgrade.task import Runner\
     as RealDbUpgradeRunner
 
 
-class FakeGearmanManager(GearmanManager):
+class FakeZuulManager(ZuulManager):
     def __init__(self, config, tasks, test):
         self.test = test
-        super(FakeGearmanManager, self).__init__(config, tasks)
+        super(FakeZuulManager, self).__init__(config, tasks)
 
     def setup_gearman(self):
         hostname = os.uname()[1]
@@ -159,16 +159,6 @@ class FakeRealDbUpgradeRunner(RealDbUpgradeRunner):
         super(FakeRealDbUpgradeRunner, self).__init__(global_config,
                                                       plugin_config,
                                                       worker_name)
-
-    def setup_gearman(self):
-        self.log.debug("Set up real_db gearman worker")
-        self.gearman_worker = FakeWorker('FakeRealDbUpgradeRunner_worker',
-                                         self.test)
-        self.gearman_worker.addServer(
-            self.global_config['zuul_server']['gearman_host'],
-            self.global_config['zuul_server']['gearman_port']
-        )
-        self.register_functions()
 
 
 class BuildHistory(object):

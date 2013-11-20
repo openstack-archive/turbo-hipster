@@ -224,6 +224,8 @@ def scp_push_file(job_log_dir, file_path, local_config):
 
 
 def determine_job_identifier(zuul_arguments, job, unique):
+    if 'build:' in job:
+        job = job.split('build:')[1]
     return os.path.join(zuul_arguments['ZUUL_CHANGE'][:2],
                         zuul_arguments['ZUUL_CHANGE'],
                         zuul_arguments['ZUUL_PATCHSET'],

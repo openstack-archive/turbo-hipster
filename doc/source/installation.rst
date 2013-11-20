@@ -67,10 +67,11 @@ Modify the config.json appropriately::
         for projects. This is the cache directory used by pip.
     **plugins**
         A list of enabled plugins and their settings in a dictionary.
-        The only required parameter is *name* which should be the
-        same as the folder containing the plugin module. Any other
-        parameters are specified by the plugin themselves as
-        required.
+        The only required parameters are *name*, which should be the
+        same as the folder containing the plugin module, and
+        *function*, which is the function registered with zuul.
+        Any other parameters are specified by the plugin themselves
+        as required.
     **publish_logs**
         Log results from plugins can be published using multiple
         methods. Currently only a local copy is fully implemented.

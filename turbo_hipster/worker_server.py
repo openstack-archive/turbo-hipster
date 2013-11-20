@@ -40,16 +40,18 @@ class Server(object):
     log = logging.getLogger("worker_server.Server")
 
     def __init__(self, config):
-        # Config init
-        self.config = config
-        self.manager = None
-        self.plugins = []
-        self.load_plugins()
-
         # Python logging output file.
         self.debug_log = self.config['debug_log']
 
+        # Config init
+        self.config = config
+        self.zuul_manager = None
+        self.zuul_client = None
+        self.plugins = []
+        self.worker_name = os.uname()[1]
+
         self.tasks = {}
+        self.load_plugins()
 
     def setup_logging(self):
         if self.debug_log:
@@ -74,23 +76,30 @@ class Server(object):
                 'plugin_config': plugin
             })
 
-    def run_tasks(self):
+    def start_gearman_workers(self):
         """ Run the tasks """
-        for thread_number, plugin in enumerate(self.plugins):
+        self.zuul_client = worker_manager.ZuulClient(self.config,
+                                                     self.worker_name)
+
+        for task_number, plugin in enumerate(self.plugins):
             module = plugin['module']
-            worker_name = '%s-%s-%s' % (plugin['plugin_config']['name'],
-                                        os.uname()[1], thread_number)
-            self.tasks[worker_name] = module.Runner(
+            job_name = '%s-%s-%s' % (plugin['plugin_config']['name'],
+                                     self.worker_name, task_number)
+            self.tasks[job_name] = module.Runner(
                 self.config,
                 plugin['plugin_config'],
-                worker_name
+                job_name
             )
-            self.tasks[worker_name].daemon = True
-            self.tasks[worker_name].start()
+            self.zuul_client.add_function(plugin['plugin_config']['function'],
+                                          self.tasks[job_name])
 
-        self.manager = worker_manager.GearmanManager(self.config, self.tasks)
-        self.manager.daemon = True
-        self.manager.start()
+        self.zuul_client.register_functions()
+        self.zuul_client.daemon = True
+        self.zuul_client.start()
+
+        self.zuul_manager = worker_manager.ZuulManager(self.config, self.tasks)
+        self.zuul_manager.daemon = True
+        self.zuul_manager.start()
 
     def exit_handler(self, signum):
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
@@ -101,7 +110,7 @@ class Server(object):
 
     def main(self):
         self.setup_logging()
-        self.run_tasks()
+        self.start_gearman_workers()
 
         while True:
             try:

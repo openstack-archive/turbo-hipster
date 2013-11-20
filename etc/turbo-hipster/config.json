@@ -11,8 +11,8 @@
     "plugins": [
         {
             "name": "gate_real_db_upgrade",
-            "datasets_dir": "/var/lib/turbo-hipster/datasets",
-            "job": "gate-real-db-upgrade_nova_mysql"
+            "function": "build:gate-real-db-upgrade_nova_mysql",
+            "datasets_dir": "/var/lib/turbo-hipster/datasets"
         }
     ],
     "publish_logs": {

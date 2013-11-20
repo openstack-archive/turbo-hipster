@@ -13,12 +13,10 @@
 # under the License.
 
 
-import gear
 import json
 import logging
 import os
 import re
-import threading
 
 from turbo_hipster.lib import utils
 
@@ -31,7 +29,7 @@ MIGRATION_START_RE = re.compile('([0-9]+) -&gt; ([0-9]+)\.\.\.$')
 MIGRATION_END_RE = re.compile('^done$')
 
 
-class Runner(threading.Thread):
+class Runner(object):
 
     """ This thread handles the actual sql-migration tests.
         It pulls in a gearman job from the  build:gate-real-db-upgrade
@@ -39,16 +37,12 @@ class Runner(threading.Thread):
 
     log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
 
-    def __init__(self, global_config, plugin_config, worker_name):
-        super(Runner, self).__init__()
-        self._stop = threading.Event()
+    def __init__(self, global_config, plugin_config, job_name):
         self.global_config = global_config
         self.plugin_config = plugin_config
-
-        self.worker_name = worker_name
+        self.job_name = job_name
 
         # Set up the runner worker
-        self.gearman_worker = None
         self.datasets = []
 
         self.job = None
@@ -61,31 +55,6 @@ class Runner(threading.Thread):
         self.current_step = 0
         self.total_steps = 4
 
-        self.setup_gearman()
-
-    def setup_gearman(self):
-        self.log.debug("Set up real_db gearman worker")
-        self.gearman_worker = gear.Worker(self.worker_name)
-        self.gearman_worker.addServer(
-            self.global_config['zuul_server']['gearman_host'],
-            self.global_config['zuul_server']['gearman_port']
-        )
-        self.register_functions()
-
-    def register_functions(self):
-        self.gearman_worker.registerFunction(
-            'build:' + self.plugin_config['job'])
-
-    def stop(self):
-        self._stop.set()
-        # Unblock gearman
-        self.log.debug("Telling gearman to stop waiting for jobs")
-        self.gearman_worker.stopWaitingForJobs()
-        self.gearman_worker.shutdown()
-
-    def stopped(self):
-        return self._stop.isSet()
-
     def stop_worker(self, number):
         # Check the number is for this job instance
         # (makes it possible to run multiple workers with this task
@@ -93,22 +62,10 @@ class Runner(threading.Thread):
         if number == self.job.unique:
             self.log.debug("We've been asked to stop by our gearman manager")
             self.cancelled = True
+            # TODO: Work out how to kill current step
 
-    def run(self):
-        while True and not self.stopped():
-            try:
-                # Reset job information:
-                self.current_step = 0
-                self.cancelled = False
-                self.work_data = None
-                # gearman_worker.getJob() blocks until a job is available
-                self.log.debug("Waiting for job")
-                self.job = self.gearman_worker.getJob()
-                self._handle_job()
-            except:
-                self.log.exception('Exception retrieving log event.')
-
-    def _handle_job(self):
+    def start_job(self, job):
+        self.job = job
         if self.job is not None:
             try:
                 self.job_arguments = \
@@ -215,7 +172,7 @@ class Runner(threading.Thread):
                     dataset['config']['project'] and
                     self._get_project_command(dataset['config']['type'])):
                 dataset['determined_path'] = utils.determine_job_identifier(
-                    self.job_arguments, self.plugin_config['job'],
+                    self.job_arguments, self.plugin_config['function'],
                     self.job.unique
                 )
                 dataset['job_log_file_path'] = os.path.join(
@@ -315,7 +272,7 @@ class Runner(threading.Thread):
             project_name + '/.git',
             os.path.join(
                 self.global_config['git_working_dir'],
-                self.worker_name,
+                self.job_name,
                 project_name
             )
         )
@@ -333,7 +290,7 @@ class Runner(threading.Thread):
         if self.work_data is None:
             hostname = os.uname()[1]
             self.work_data = dict(
-                name=self.worker_name,
+                name=self.job_name,
                 number=self.job.unique,
                 manager='turbo-hipster-manager-%s' % hostname,
                 url='http://localhost',
