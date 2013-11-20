@@ -308,11 +308,7 @@ class Runner(object):
         This can provide a progress bar. """
 
         # Each opportunity we should check if we need to stop
-        if self.stopped():
-            self.work_data['result'] = "Failed: Worker interrupted/stopped"
-            self.job.sendWorkStatus(self.current_step, self.total_steps)
-            raise Exception('Thread stopped')
-        elif self.cancelled:
+        if self.cancelled:
             self.work_data['result'] = "Failed: Job cancelled"
             self.job.sendWorkStatus(self.current_step, self.total_steps)
             self.job.sendWorkFail()
