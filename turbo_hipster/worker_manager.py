@@ -112,12 +112,13 @@ class ZuulClient(threading.Thread):
             self.global_config['zuul_server']['gearman_host'],
             self.global_config['zuul_server']['gearman_port']
         )
-        self.register_functions()
+        self.gearman_worker.waitForServer()
 
     def register_functions(self):
         self.log.debug("Register functions with gearman")
         for function_name, plugin in self.functions.items():
             self.gearman_worker.registerFunction(function_name)
+        self.log.debug(self.gearman_worker.functions)
 
     def add_function(self, function_name, plugin):
         self.log.debug("Add function, %s, to list" % function_name)

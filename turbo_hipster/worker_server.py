@@ -48,6 +48,9 @@ class Server(object):
         self.zuul_manager = None
         self.zuul_client = None
         self.plugins = []
+
+        # TODO: Make me unique (random?) and we should be able to run multiple
+        # instances of turbo-hipster on the one host
         self.worker_name = os.uname()[1]
 
         self.tasks = {}
