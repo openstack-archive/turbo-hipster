@@ -57,10 +57,10 @@ class Server(object):
         if self.debug_log:
             if not os.path.isdir(os.path.dirname(self.debug_log)):
                 os.makedirs(os.path.dirname(self.debug_log))
-            logging.basicConfig(format='%(asctime)s %(message)s',
+            logging.basicConfig(format='%(asctime)s %(name)s %(message)s',
                                 filename=self.debug_log, level=logging.DEBUG)
         else:
-            logging.basicConfig(format='%(asctime)s %(message)s',
+            logging.basicConfig(format='%(asctime)s %(name)s %(message)s',
                                 level=logging.WARN)
         self.log.debug('Log pusher starting.')
 
