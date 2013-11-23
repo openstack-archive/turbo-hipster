@@ -128,7 +128,8 @@ class Runner(object):
             # Look for the beginning of the migration start
             dataset_success, message = \
                 handle_results.check_log_for_errors(
-                    dataset['job_log_file_path'], self.git_path)
+                    dataset['job_log_file_path'], self.git_path,
+                    dataset['config'])
             self.job_datasets[i]['result'] = message
             success = False if not dataset_success else success
 

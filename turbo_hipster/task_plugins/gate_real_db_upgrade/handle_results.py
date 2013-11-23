@@ -18,10 +18,14 @@
 Primarily place the log files somewhere useful and optionally email
 somebody """
 
-from turbo_hipster.lib.utils import push_file
+import calendar
+import time
 import tempfile
 import os
 import re
+
+
+from turbo_hipster.lib.utils import push_file
 
 
 def generate_log_index(datasets):
@@ -68,16 +72,17 @@ def generate_push_results(datasets, publish_config):
     return index_file_url
 
 
-def check_log_for_errors(logfile, gitpath):
+def find_schemas(gitpath):
+    MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')
+    return [int(MIGRATION_NUMBER_RE.findall(f)[0]) for f in os.listdir(
+            os.path.join(gitpath, 'nova/db/sqlalchemy/migrate_repo/versions'))
+            if MIGRATION_NUMBER_RE.match(f)]
+
+
+def check_log_for_errors(logfile, gitpath, dataset_config):
     """ Run regex over the given logfile to find errors
 
         :returns:   success (boolean), message (string)"""
-
-    # Find the schema versions
-    MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')
-    schemas = [int(MIGRATION_NUMBER_RE.findall(f)[0]) for f in os.listdir(
-        os.path.join(gitpath, 'nova/db/sqlalchemy/migrate_repo/versions'))
-        if MIGRATION_NUMBER_RE.match(f)]
 
     MIGRATION_START_RE = re.compile('([0-9]+) -\> ([0-9]+)\.\.\. $')
     MIGRATION_END_RE = re.compile('done$')
@@ -87,6 +92,7 @@ def check_log_for_errors(logfile, gitpath):
 
     with open(logfile, 'r') as fd:
         migration_started = False
+        warnings = []
         for line in fd:
             if 'ERROR 1045' in line:
                 return False, "FAILURE: Could not setup seed database."
@@ -102,14 +108,25 @@ def check_log_for_errors(logfile, gitpath):
                                    "migration after a start")
 
                 migration_started = True
+                migration_start_time = line_to_time(line)
+                migration_number_from = MIGRATION_START_RE.findall(line)[0][0]
+                migration_number_to = MIGRATION_START_RE.findall(line)[0][1]
             elif MIGRATION_END_RE.search(line):
                 if migration_started:
                     # We found the end to this migration
                     migration_started = False
+                    if migration_number_to > migration_number_from:
+                        migration_end_time = line_to_time(line)
+                        if not migration_time_passes(migration_number_to,
+                                                     migration_start_time,
+                                                     migration_end_time,
+                                                     dataset_config):
+                            warnings.append("WARNING: Migration %s took too "
+                                            "long" % migration_number_to)
             elif 'Final schema version is' in line:
                 # Check the final version is as expected
                 final_version = MIGRATION_FINAL_SCHEMA_RE.findall(line)[0]
-                if int(final_version) != max(schemas):
+                if int(final_version) != max(find_schemas(gitpath)):
                     return False, ("Final schema version does not match "
                                    "expectation")
 
@@ -118,5 +135,34 @@ def check_log_for_errors(logfile, gitpath):
             # something must have failed
             return False, ("FAILURE: Did not find the end of a migration "
                            "after a start")
+        elif len(warnings) > 0:
+            return False, ', '.join(warnings)
 
     return True, "SUCCESS"
+
+
+def line_to_time(line):
+    """Extract a timestamp from a log line"""
+    return calendar.timegm(time.strptime(line[:23], '%Y-%m-%d %H:%M:%S,%f'))
+
+
+def migration_time_passes(migration_number, migration_start_time,
+                          migration_end_time, dataset_config):
+    """Determines if the difference between the migration_start_time and
+    migration_end_time is acceptable.
+
+    The dataset configuration should specify a default maximum time and any
+    migration specific times in the maximum_migration_times dictionary.
+
+    Returns True if okay, False if it takes too long."""
+
+    if migration_number in dataset_config['maximum_migration_times']:
+        allowed_time = \
+            dataset_config['maximum_migration_times'][migration_number]
+    else:
+        allowed_time = dataset_config['maximum_migration_times']['default']
+
+    if (migration_end_time - migration_start_time) > allowed_time:
+        return False
+
+    return True
