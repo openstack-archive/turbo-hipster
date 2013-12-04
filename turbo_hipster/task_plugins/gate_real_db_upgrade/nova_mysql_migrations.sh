@@ -106,8 +106,8 @@ export PYTHONPATH=$PYTHONPATH:$3
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
-git branch -D working
 # zuul puts us in a headless mode, lets check it out into a working branch
+git branch -D working 2> /dev/null
 git checkout -b working
 
 # Make sure the test DB is up to date with trunk
@@ -145,12 +145,14 @@ db_sync "patchset" $2 $3 $4 $5 $6 $8
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Final schema version is $version"
 
-# cleanup branches
-git checkout master
-git branch -D working
+if [ "%$NOCLEANUP%" == "%%" ]
+then
+  # cleanup branches
+  git checkout master
+  git branch -D working
 
-# Cleanup virtual env
-
-echo "Cleaning up virtual env"
-deactivate
-rmvirtualenv $1
+  # Cleanup virtual env
+  echo "Cleaning up virtual env"
+  deactivate
+  rmvirtualenv $1
+fi
