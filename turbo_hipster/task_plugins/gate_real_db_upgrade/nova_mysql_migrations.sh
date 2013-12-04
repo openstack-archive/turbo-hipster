@@ -69,10 +69,12 @@ EOF
     set -x
     nova-manage --config-file $2/nova-$1.conf db sync $8
   fi
+  echo "nova-manage returned exit code $?"
   set +x
   echo "***** Finished DB upgrade to state of $1 *****"
 }
 
+echo "Test running on "`hostname`
 echo "To execute this script manually, run this:"
 echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
 
