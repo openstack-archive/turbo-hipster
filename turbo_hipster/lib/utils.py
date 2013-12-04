@@ -104,10 +104,10 @@ def execute_to_log(cmd, logfile, timeout=-1,
         os.makedirs(os.path.dirname(logfile))
 
     logger = logging.getLogger(logfile)
-    log_hanlder = logging.FileHandler(logfile)
+    log_handler = logging.FileHandler(logfile)
     log_formatter = logging.Formatter('%(asctime)s %(message)s')
-    log_hanlder.setFormatter(log_formatter)
-    logger.addHandler(log_hanlder)
+    log_handler.setFormatter(log_formatter)
+    logger.addHandler(log_handler)
 
     descriptors = {}
 
@@ -181,9 +181,9 @@ def execute_to_log(cmd, logfile, timeout=-1,
         pass
 
     logger.info('[script exit code = %d]' % p.returncode)
-    logger.removeHandler(log_hanlder)
-    log_hanlder.flush()
-    log_hanlder.close()
+    logger.removeHandler(log_handler)
+    log_handler.flush()
+    log_handler.close()
 
 
 def push_file(job_log_dir, file_path, publish_config):
