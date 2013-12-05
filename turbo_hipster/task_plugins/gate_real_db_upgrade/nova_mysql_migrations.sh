@@ -66,13 +66,13 @@ EOF
   if [ -e $nova_manage ]
   then
     set -x
-    python $nova_manage --config-file $2/nova-$1.conf db sync $8
+    python $nova_manage --config-file $2/nova-$1.conf --verbose db sync $8
   else
     python setup.py -q clean
     python setup.py -q develop
     python setup.py -q install
     set -x
-    nova-manage --config-file $2/nova-$1.conf db sync $8
+    nova-manage --config-file $2/nova-$1.conf --verbose db sync $8
   fi
   mange_exit=$?
   set +x
