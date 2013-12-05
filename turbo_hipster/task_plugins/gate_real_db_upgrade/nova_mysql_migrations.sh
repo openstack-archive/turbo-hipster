@@ -57,7 +57,7 @@ EOF
 
   find $3 -type f -name "*.pyc" -exec rm -f {} \;
   echo "***** Start DB upgrade to state of $1 *****"
-  nova_manage="$3/bin/nova-manage"
+  nova_manage="$3/nova/bin/nova-manage"
   if [ -e $nova_manage ]
   then
     set -x
