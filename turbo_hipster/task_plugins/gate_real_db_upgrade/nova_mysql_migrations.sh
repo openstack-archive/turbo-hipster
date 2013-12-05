@@ -39,14 +39,14 @@ pip_requires() {
 }
 
 db_sync() {
-# $1 is the test target
-# $2 is the working dir path
-# $3 is the path to the git repo path
-# $4 is the nova db user
-# $5 is the nova db password
-# $6 is the nova db name
-# $7 is the logging.conf for openstack
-# $8 is any sync options
+  # $1 is the test target
+  # $2 is the working dir path
+  # $3 is the path to the git repo path
+  # $4 is the nova db user
+  # $5 is the nova db password
+  # $6 is the nova db name
+  # $7 is the logging.conf for openstack
+  # $8 is any sync options
 
   # Create a nova.conf file
   cat - > $2/nova-$1.conf <<EOF
@@ -72,6 +72,36 @@ EOF
   echo "nova-manage returned exit code $?"
   set +x
   echo "***** Finished DB upgrade to state of $1 *****"
+}
+
+stable_release_db_sync() {
+  # $1 is the working dir path
+  # $2 is the path to the git repo path
+  # $3 is the nova db user
+  # $4 is the nova db password
+
+  version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+
+  # Some databases are from Folsom
+  echo "Schema version is $version"
+  if [ $version == "133" ]
+  then
+    echo "Database is from Folsom! Upgrade via Grizzly"
+    git checkout stable/grizzly
+    pip_requires
+    db_sync "grizzly" $1 $2 $3 $4
+  fi
+
+  version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Grizzly
+  echo "Schema version is $version"
+  if [ $version == "161" ]
+  then
+    echo "Database is from Grizzly! Upgrade via Havana"
+    git checkout stable/grizzly
+    pip_requires
+    db_sync "grizzly" $1 $2 $3 $4
+  fi
 }
 
 echo "Test running on "`hostname`
@@ -102,13 +132,11 @@ mkvirtualenv $1
 toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
 
-# Some databases are from Folsom
-version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-echo "Schema version is $version"
-
 # zuul puts us in a headless mode, lets check it out into a working branch
 git branch -D working 2> /dev/null
 git checkout -b working
+
+stable_release_db_sync $2 $3 $4 $5
 
 # Make sure the test DB is up to date with trunk
 if [ `git show | grep "^\-\-\-" | grep "migrate_repo/versions" | wc -l` -gt 0 ]
@@ -139,6 +167,8 @@ version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | gr
 echo "Schema version is $version"
 
 echo "And now back up to head from Folsom"
+stable_release_db_sync $2 $3 $4 $5
+git checkout working
 db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the final schema version
