@@ -119,9 +119,9 @@ stable_release_db_sync() {
   if [ $version == "161" ]
   then
     echo "Database is from Grizzly! Upgrade via Havana"
-    git checkout stable/grizzly
+    git checkout stable/havana
     pip_requires
-    db_sync "grizzly" $1 $2 $3 $4
+    db_sync "havana" $1 $2 $3 $4
   fi
 }
 
