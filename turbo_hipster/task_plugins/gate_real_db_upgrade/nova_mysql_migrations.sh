@@ -194,10 +194,6 @@ echo "Final schema version is $version"
 
 if [ "%$NOCLEANUP%" == "%%" ]
 then
-  # cleanup branches
-  git checkout master
-  git branch -D working
-
   # Cleanup virtual env
   echo "Cleaning up virtual env"
   deactivate
