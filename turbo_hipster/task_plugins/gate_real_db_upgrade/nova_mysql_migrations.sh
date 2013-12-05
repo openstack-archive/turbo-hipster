@@ -101,7 +101,7 @@ stable_release_db_sync() {
 
   # Some databases are from Folsom
   echo "Schema version is $version"
-  if [ $version == "133" ]
+  if [ $version == "133" ] # I think this should be [ $version lt "133" ]
   then
     echo "Database is from Folsom! Upgrade via Grizzly"
     git checkout stable/grizzly
@@ -112,7 +112,7 @@ stable_release_db_sync() {
   version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
   # Some databases are from Grizzly
   echo "Schema version is $version"
-  if [ $version == "161" ]
+  if [ $version == "161" ] # I think this should be [ $version lt "161" ]
   then
     echo "Database is from Grizzly! Upgrade via Havana"
     git checkout stable/havana
@@ -185,7 +185,7 @@ version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | gr
 echo "Schema version is $version"
 
 echo "And now back up to head from the start of trunk"
-git checkout working
+git checkout working  # I think this line is redundant
 db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the final schema version
