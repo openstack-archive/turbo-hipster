@@ -65,9 +65,12 @@ EOF
   nova_manage="$3/nova/bin/nova-manage"
   if [ -e $nova_manage ]
   then
+    echo "Running nova-manage that pre-dates entry points"
     set -x
     python $nova_manage --config-file $2/nova-$1.conf --verbose db sync $8
   else
+    echo "No such file: $nova_manage"
+    echo "Setting up the nova-manage entry point"
     python setup.py -q clean
     python setup.py -q develop
     python setup.py -q install
