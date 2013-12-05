@@ -79,8 +79,9 @@ stable_release_db_sync() {
   # $2 is the path to the git repo path
   # $3 is the nova db user
   # $4 is the nova db password
+  # $5 is the nova db name
 
-  version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 
   # Some databases are from Folsom
   echo "Schema version is $version"
@@ -92,7 +93,7 @@ stable_release_db_sync() {
     db_sync "grizzly" $1 $2 $3 $4
   fi
 
-  version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
   # Some databases are from Grizzly
   echo "Schema version is $version"
   if [ $version == "161" ]
@@ -136,7 +137,7 @@ export PYTHONPATH=$PYTHONPATH:$3
 git branch -D working 2> /dev/null
 git checkout -b working
 
-stable_release_db_sync $2 $3 $4 $5
+stable_release_db_sync $2 $3 $4 $5 $6
 
 # Make sure the test DB is up to date with trunk
 if [ `git show | grep "^\-\-\-" | grep "migrate_repo/versions" | wc -l` -gt 0 ]
@@ -167,7 +168,7 @@ version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | gr
 echo "Schema version is $version"
 
 echo "And now back up to head from Folsom"
-stable_release_db_sync $2 $3 $4 $5
+stable_release_db_sync $2 $3 $4 $5 $6
 git checkout working
 db_sync "patchset" $2 $3 $4 $5 $6 $8
 
