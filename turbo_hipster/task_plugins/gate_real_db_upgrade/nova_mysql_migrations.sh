@@ -27,8 +27,6 @@
 
 # We also support the following environment variables to tweak our behavour:
 #   NOCLEANUP: if set to anything, don't cleanup at the end of the run
-#   ABORTEARLY: if set to anything, exit after the first nova-manage error
-#               without cleaning up
 
 pip_requires() {
   pip install -q mysql-python
@@ -77,17 +75,14 @@ EOF
     set -x
     nova-manage --config-file $2/nova-$1.conf --verbose db sync $8
   fi
-  mange_exit=$?
+  manage_exit=$?
   set +x
 
   echo "nova-manage returned exit code $manage_exit"
   if [ $manage_exit -gt 0 ]
   then
-    if [ "%$ABORTEARLY%" != "%%" ]
-    then
-      echo "Aborting early"
-      exit $manage_exit
-    fi
+    echo "Aborting early"
+    exit $manage_exit
   fi
 
 
@@ -100,6 +95,7 @@ stable_release_db_sync() {
   # $3 is the nova db user
   # $4 is the nova db password
   # $5 is the nova db name
+  # $6 is the logging.conf for openstack
 
   version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 
@@ -110,7 +106,7 @@ stable_release_db_sync() {
     echo "Database is from Folsom! Upgrade via Grizzly"
     git checkout stable/grizzly
     pip_requires
-    db_sync "grizzly" $1 $2 $3 $4
+    db_sync "grizzly" $1 $2 $3 $4 $5 $6
   fi
 
   version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
@@ -121,7 +117,7 @@ stable_release_db_sync() {
     echo "Database is from Grizzly! Upgrade via Havana"
     git checkout stable/havana
     pip_requires
-    db_sync "havana" $1 $2 $3 $4
+    db_sync "havana" $1 $2 $3 $4 $5 $6
   fi
 }
 
@@ -157,7 +153,7 @@ export PYTHONPATH=$PYTHONPATH:$3
 git branch -D working 2> /dev/null
 git checkout -b working
 
-stable_release_db_sync $2 $3 $4 $5 $6
+stable_release_db_sync $2 $3 $4 $5 $6 $8
 
 # Make sure the test DB is up to date with trunk
 if [ `git show | grep "^\-\-\-" | grep "migrate_repo/versions" | wc -l` -gt 0 ]
