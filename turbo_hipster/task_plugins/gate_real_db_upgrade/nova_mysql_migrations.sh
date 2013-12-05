@@ -25,6 +25,11 @@
 # $8 is the logging.conf for openstack
 # $9 is the pip cache dir
 
+# We also support the following environment variables to tweak our behavour:
+#   NOCLEANUP: if set to anything, don't cleanup at the end of the run
+#   ABORTEARLY: if set to anything, exit after the first nova-manage error
+#               without cleaning up
+
 pip_requires() {
   pip install -q mysql-python
   pip install -q eventlet
@@ -69,8 +74,20 @@ EOF
     set -x
     nova-manage --config-file $2/nova-$1.conf db sync $8
   fi
-  echo "nova-manage returned exit code $?"
+  mange_exit=$?
   set +x
+
+  echo "nova-manage returned exit code $manage_exit"
+  if [ $manage_exit -gt 0 ]
+  then
+    if [ "%$ABORTEARLY%" != "%%" ]
+    then
+      echo "Aborting early"
+      exit $manage_exit
+    fi
+  fi
+
+
   echo "***** Finished DB upgrade to state of $1 *****"
 }
 
