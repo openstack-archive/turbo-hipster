@@ -38,8 +38,7 @@ def generate_push_results(datasets, publish_config):
                                dataset['job_log_file_path'],
                                publish_config)
         datasets[i]['result_uri'] = result_uri
-        if not link_uri:
-            link_uri = result_uri
+        link_uri = result_uri
 
     return link_uri
 
