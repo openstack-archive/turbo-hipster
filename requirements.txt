@@ -1,9 +1,10 @@
 pbr>=0.5.21,<1.0
 gear
 python-swiftclient
+python-keystoneclient
 
 lockfile
 python-daemon
 extras
 GitPython>=0.3.2.RC1
-sphinxcontrib-programoutput 
+sphinxcontrib-programoutput
