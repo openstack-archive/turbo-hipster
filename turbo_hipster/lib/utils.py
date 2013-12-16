@@ -205,7 +205,7 @@ def swift_push_file(job_log_dir, file_path, swift_config):
             tenant_name=swift_config['tenant'],
             auth_version=2.0)
         obj = con.put_object(swift_config['container'], name, fd)
-        return obj
+        return local_config['prepend_url'] + name
 
 
 def local_push_file(job_log_dir, file_path, local_config):
