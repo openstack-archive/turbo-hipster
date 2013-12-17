@@ -127,7 +127,7 @@ def check_log_for_errors(logfile, gitpath, dataset_config):
                                                      migration_start_time,
                                                      migration_end_time,
                                                      dataset_config):
-                            warnings.append("WARNING: Migration %s took too "
+                            warnings.append("WARNING - Migration %s took too "
                                             "long" % migration_number_to)
             elif 'Final schema version is' in line:
                 # Check the final version is as expected
