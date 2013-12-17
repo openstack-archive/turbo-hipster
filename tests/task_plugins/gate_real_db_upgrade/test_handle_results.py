@@ -77,8 +77,8 @@ class TestHandleResults(testtools.TestCase):
         result, msg = handle_results.check_log_for_errors(logfile, gitpath,
                                                           dataset_config)
         self.assertFalse(result)
-        self.assertEqual(msg, ('WARNING: Migration 152 took too long, '
-                               'WARNING: Migration 152 took too long'))
+        self.assertEqual(msg, ('WARNING - Migration 152 took too long, '
+                               'WARNING - Migration 152 took too long'))
 
         dataset_config['maximum_migration_times']['152'] = 10
         result, msg = handle_results.check_log_for_errors(logfile, gitpath,
