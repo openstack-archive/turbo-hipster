@@ -124,6 +124,7 @@ class Runner(object):
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
         success = True
+        messages = []
         for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
             dataset_success, message = \
@@ -131,12 +132,13 @@ class Runner(object):
                     dataset['job_log_file_path'], self.git_path,
                     dataset['config'])
             self.job_datasets[i]['result'] = message
+            messages.append(message)
             success = False if not dataset_success else success
 
         if success:
             self.work_data['result'] = "SUCCESS"
         else:
-            self.work_data['result'] = "Failed: errors found in dataset log(s)"
+            self.work_data['result'] = "\n".join(messages)
 
     def _get_datasets(self):
         self.log.debug("Get configured datasets to run tests against")
