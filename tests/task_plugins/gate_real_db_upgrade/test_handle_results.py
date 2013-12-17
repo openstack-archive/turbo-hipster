@@ -64,7 +64,7 @@ class TestHandleResults(testtools.TestCase):
                                                           dataset_config)
         self.assertFalse(result)
         self.assertEqual(msg,
-                         'FAILURE: Final schema version does not match '
+                         'FAILURE - Final schema version does not match '
                          'expectation')
 
         handle_results.find_schemas = lambda x: [228]

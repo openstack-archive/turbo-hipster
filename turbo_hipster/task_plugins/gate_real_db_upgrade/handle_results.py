@@ -101,16 +101,16 @@ def check_log_for_errors(logfile, gitpath, dataset_config):
         warnings = []
         for line in fd:
             if 'ERROR 1045' in line:
-                return False, "FAILURE: Could not setup seed database."
+                return False, "FAILURE - Could not setup seed database."
             elif 'ERROR 1049' in line:
-                return False, "FAILURE: Could not find seed database."
+                return False, "FAILURE - Could not find seed database."
             elif 'ImportError' in line:
-                return False, "FAILURE: Could not import required module."
+                return False, "FAILURE - Could not import required module."
             elif MIGRATION_START_RE.search(line):
                 if migration_started:
                     # We didn't see the last one finish,
                     # something must have failed
-                    return False, ("FAILURE: Did not find the end of a "
+                    return False, ("FAILURE - Did not find the end of a "
                                    "migration after a start")
 
                 migration_started = True
@@ -133,13 +133,13 @@ def check_log_for_errors(logfile, gitpath, dataset_config):
                 # Check the final version is as expected
                 final_version = MIGRATION_FINAL_SCHEMA_RE.findall(line)[0]
                 if int(final_version) != max(find_schemas(gitpath)):
-                    return False, ("FAILURE: Final schema version does not "
+                    return False, ("FAILURE - Final schema version does not "
                                    "match expectation")
 
         if migration_started:
             # We never saw the end of a migration,
             # something must have failed
-            return False, ("FAILURE: Did not find the end of a migration "
+            return False, ("FAILURE - Did not find the end of a migration "
                            "after a start")
         elif len(warnings) > 0:
             return False, ', '.join(warnings)
