@@ -155,7 +155,7 @@ git checkout -b working
 
 stable_release_db_sync $2 $3 $4 $5 $6 $8
 
-last_stable_version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+last_stable_version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema after stable_release_db_sync version is $last_stable_version"
 
 # Make sure the test DB is up to date with trunk
@@ -180,7 +180,7 @@ version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | gr
 echo "Schema version is $version"
 
 #target_version=`ls $3/nova/db/sqlalchemy/migrate_repo/versions | head -1 | cut -f 1 -d "_"`
-echo "Now downgrade all the way back to the start of trunk (v$last_stable_version)"
+echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
 db_sync "patchset" $2 $3 $4 $5 $6 $8 "--version $last_stable_version"
 
 # Determine the schema version
