@@ -54,7 +54,7 @@ db_sync() {
   # Create a nova.conf file
   cat - > $2/nova-$1.conf <<EOF
 [DEFAULT]
-sql_connection = mysql://$4:$5@localhost/$6?charset=utf8
+sql_connection = mysql://$4:$5@172.16.0.1/$6?charset=utf8
 log_config = $7
 EOF
 
@@ -65,7 +65,7 @@ EOF
   then
     echo "Running nova-manage that pre-dates entry points"
     set -x
-    python $nova_manage --config-file $2/nova-$1.conf --verbose db sync $8
+    sudo ip netns exec nonet python $nova_manage --config-file $2/nova-$1.conf --verbose db sync $8
   else
     echo "No such file: $nova_manage"
     echo "Setting up the nova-manage entry point"
@@ -73,7 +73,7 @@ EOF
     python setup.py -q develop
     python setup.py -q install
     set -x
-    nova-manage --config-file $2/nova-$1.conf --verbose db sync $8
+    sudo ip netns exec nonet nova-manage --config-file $2/nova-$1.conf --verbose db sync $8
   fi
   manage_exit=$?
   set +x
@@ -97,7 +97,7 @@ stable_release_db_sync() {
   # $5 is the nova db name
   # $6 is the logging.conf for openstack
 
-  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  version=`mysql -u $3 -host 172.16.0.1 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 
   # Some databases are from Folsom
   echo "Schema version is $version"
@@ -125,10 +125,11 @@ echo "Test running on "`hostname`
 echo "To execute this script manually, run this:"
 echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
 
-
 # Setup the environment
 export PATH=/usr/lib/ccache:$PATH
 export PIP_DOWNLOAD_CACHE=$9
+export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
+export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
 
 # Restore database to known good state
 echo "Restoring test database $6"
@@ -136,6 +137,8 @@ set -x
 mysql -u $4 --password=$5 -e "drop database $6"
 mysql -u $4 --password=$5 -e "create database $6"
 mysql -u $4 --password=$5 $6 < $7
+mysql -u $4 --password=$5 -e "create user '$4'@'172.16.0.2' identified by '$5';"
+mysql -u $4 --password=$5 -e "grant all privileges on $6.* to '$4'@'172.16.0.2' with grant option;"
 set +x
 
 echo "Build test environment"
