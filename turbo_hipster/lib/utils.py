@@ -184,6 +184,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
     logger.removeHandler(log_handler)
     log_handler.flush()
     log_handler.close()
+    return p.returncode
 
 
 def push_file(job_log_dir, file_path, publish_config):

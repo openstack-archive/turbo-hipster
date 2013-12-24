@@ -66,6 +66,9 @@ class Runner(object):
 
     def start_job(self, job):
         self.job = job
+        self.success = True
+        self.messages = []
+
         if self.job is not None:
             try:
                 self.job_arguments = \
@@ -88,7 +91,10 @@ class Runner(object):
 
                 # Step 3: Run migrations on datasets
                 self._do_next_step()
-                self._execute_migrations()
+                if self._execute_migrations() > 0:
+                    self.success = False
+                    self.messages.append('Return code from test script was '
+                                         'non-zero')
 
                 # Step 4: Analyse logs for errors
                 self._do_next_step()
@@ -123,22 +129,30 @@ class Runner(object):
 
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug("Check logs for errors")
-        success = True
-        messages = []
         for i, dataset in enumerate(self.job_datasets):
             # Look for the beginning of the migration start
             dataset_success, message = \
                 handle_results.check_log_for_errors(
                     dataset['job_log_file_path'], self.git_path,
                     dataset['config'])
-            self.job_datasets[i]['result'] = message
-            messages.append(message)
-            success = False if not dataset_success else success
 
-        if success:
+            if self.success:
+                if dataset_success:
+                    self.job_datasets[i]['result'] = 'SUCCESS'
+                else:
+                    self.success = False
+                    self.job_datasets[i]['result'] = message
+                    self.messages.append(message)
+
+            else:
+                self.job_datasets[i]['result'] = self.messages[0]
+                if not dataset_success:
+                    self.messages.append(message)
+
+        if self.success:
             self.work_data['result'] = "SUCCESS"
         else:
-            self.work_data['result'] = "\n".join(messages)
+            self.work_data['result'] = "\n".join(self.messages)
 
     def _get_datasets(self):
         self.log.debug("Get configured datasets to run tests against")
@@ -255,7 +269,7 @@ class Runner(object):
                 if 'sqlerr' in self.global_config['logs']:
                     sqlerr = self.global_config['logs']['sqlerr']
 
-            utils.execute_to_log(
+            rc = utils.execute_to_log(
                 cmd,
                 dataset['job_log_file_path'],
                 watch_logs=[
@@ -264,6 +278,7 @@ class Runner(object):
                     ('[sqlerr]', sqlerr)
                 ],
             )
+            return rc
 
     def _grab_patchset(self, project_name, zuul_ref):
         """ Checkout the reference into config['git_working_dir'] """
