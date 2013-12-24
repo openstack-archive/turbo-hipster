@@ -54,27 +54,18 @@ db_sync() {
   # Create a nova.conf file
   cat - > $2/nova-$1.conf <<EOF
 [DEFAULT]
-sql_connection = mysql://$4:$5@localhost/$6?charset=utf8
+sql_connection = mysql://$4:$5@172.16.0.1/$6?charset=utf8
 log_config = $7
 EOF
 
   find $3 -type f -name "*.pyc" -exec rm -f {} \;
   echo "***** Start DB upgrade to state of $1 *****"
-  nova_manage="$3/nova/bin/nova-manage"
-  if [ -e $nova_manage ]
-  then
-    echo "Running nova-manage that pre-dates entry points"
-    set -x
-    python $nova_manage --config-file $2/nova-$1.conf --verbose db sync $8
-  else
-    echo "No such file: $nova_manage"
-    echo "Setting up the nova-manage entry point"
-    python setup.py -q clean
-    python setup.py -q develop
-    python setup.py -q install
-    set -x
-    nova-manage --config-file $2/nova-$1.conf --verbose db sync $8
-  fi
+  echo "Setting up the nova-manage entry point"
+  python setup.py -q clean
+  python setup.py -q develop
+  python setup.py -q install
+  set -x
+  sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper $VENV_PATH --config-file $2/nova-$1.conf --verbose db sync $8
   manage_exit=$?
   set +x
 
@@ -121,14 +112,15 @@ stable_release_db_sync() {
   fi
 }
 
-echo "Test running on "`hostname`
+echo "Test running on "`hostname`" as "`whoami`" ("`echo ~`", $HOME)"
 echo "To execute this script manually, run this:"
 echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
-
 
 # Setup the environment
 export PATH=/usr/lib/ccache:$PATH
 export PIP_DOWNLOAD_CACHE=$9
+export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
+export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
 
 # Restore database to known good state
 echo "Restoring test database $6"
@@ -144,7 +136,8 @@ cd $3
 echo "Setting up virtual env"
 source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
-rm -rf ~/.virtualenvs/$1
+VENV_PATH=~/.virtualenvs/$1
+rm -rf $VENV_PATH
 mkvirtualenv $1
 toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
