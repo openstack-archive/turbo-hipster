@@ -142,6 +142,12 @@ mkvirtualenv $1
 toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
 
+if [ ! -e $VENV_PATH ]
+then
+  echo "Error: making the virtual env failed"
+  exit 1
+fi
+
 # zuul puts us in a headless mode, lets check it out into a working branch
 git branch -D working 2> /dev/null
 git checkout -b working
