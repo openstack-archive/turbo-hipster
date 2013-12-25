@@ -58,30 +58,39 @@ class TestHandleResults(testtools.TestCase):
                   'r') as config_stream:
             dataset_config = json.load(config_stream)
 
-        gitpath = ''
-        handle_results.find_schemas = lambda x: [123]
-        result, msg = handle_results.check_log_for_errors(logfile, gitpath,
-                                                          dataset_config)
-        self.assertFalse(result)
-        self.assertEqual(msg,
-                         'FAILURE - Final schema version does not match '
-                         'expectation')
+        def fake_find_schemas_230():
+            return [230]
 
-        handle_results.find_schemas = lambda x: [228]
-        result, msg = handle_results.check_log_for_errors(logfile, gitpath,
-                                                          dataset_config)
-        self.assertTrue(result)
-        self.assertEqual(msg, 'SUCCESS')
+        lp = handle_results.LogParser(logfile, '/tmp/foo')
+        lp.find_schemas = fake_find_schemas_230
+        lp.process_log()
+        self.assertEqual(['FAILURE - Final schema version does not match '
+                         'expectation'], lp.errors)
+        self.assertEqual([], lp.warnings)
 
-        dataset_config['maximum_migration_times']['152'] = 3
-        result, msg = handle_results.check_log_for_errors(logfile, gitpath,
-                                                          dataset_config)
-        self.assertFalse(result)
-        self.assertEqual(msg, ('WARNING - Migration 152 took too long, '
-                               'WARNING - Migration 152 took too long'))
+        def fake_find_schemas_228():
+            return [228]
 
-        dataset_config['maximum_migration_times']['152'] = 10
-        result, msg = handle_results.check_log_for_errors(logfile, gitpath,
-                                                          dataset_config)
-        self.assertTrue(result)
-        self.assertEqual(msg, 'SUCCESS')
+        lp = handle_results.LogParser(logfile, '/tmp/foo')
+        lp.find_schemas = fake_find_schemas_228
+        lp.process_log()
+        self.assertEqual([], lp.errors)
+        self.assertEqual([], lp.warnings)
+
+    def test_parse_log(self):
+        # This is a regression test for a log which didn't used to parse.
+        logfile = os.path.join(TESTS_DIR, 'assets/logcontent')
+        lp = handle_results.LogParser(logfile, None)
+        lp.process_log()
+
+        self.assertEqual([], lp.errors)
+        self.assertEqual([], lp.warnings)
+
+        migrations = []
+        for migration in lp.migrations:
+            migrations.append(migration[0])
+        
+        for migration in range(134, 229):
+            self.assertTrue(migration in migrations,
+                            'Migration %d missing from %s'
+                            % (migration, migrations))
