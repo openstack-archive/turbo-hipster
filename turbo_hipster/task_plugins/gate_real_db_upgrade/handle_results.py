@@ -78,73 +78,77 @@ def generate_push_results(datasets, publish_config):
         return last_link_uri
 
 
-def find_schemas(gitpath):
-    MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')
-    return [int(MIGRATION_NUMBER_RE.findall(f)[0]) for f in os.listdir(
-            os.path.join(gitpath, 'nova/db/sqlalchemy/migrate_repo/versions'))
-            if MIGRATION_NUMBER_RE.match(f)]
+MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')
+MIGRATION_START_RE = re.compile('.* ([0-9]+) -\> ([0-9]+)\.\.\..*$')
+MIGRATION_END_RE = re.compile('done$')
+MIGRATION_FINAL_SCHEMA_RE = re.compile('Final schema version is ([0-9]+)')
 
 
-def check_log_for_errors(logfile, gitpath, dataset_config):
-    """ Run regex over the given logfile to find errors
+class LogParser(object):
+    def __init__(self, logpath, gitpath):
+        self.logpath = logpath
+        self.gitpath = gitpath
 
-        :returns:   success (boolean), message (string)"""
+    def find_schemas(self):
+        """Return a list of the schema numbers present in git."""
+        return [int(MIGRATION_NUMBER_RE.findall(f)[0]) for f in os.listdir(
+            os.path.join(self.gitpath,
+                         'nova/db/sqlalchemy/migrate_repo/versions'))
+                if MIGRATION_NUMBER_RE.match(f)]
 
-    MIGRATION_START_RE = re.compile('([0-9]+) -\> ([0-9]+)\.\.\. $')
-    MIGRATION_END_RE = re.compile('done$')
-    #MIGRATION_COMMAND_START = '***** Start DB upgrade to state of'
-    #MIGRATION_COMMAND_END = '***** Finished DB upgrade to state of'
-    MIGRATION_FINAL_SCHEMA_RE = re.compile('Final schema version is ([0-9]+)')
+    def process_log(self):
+        """Analyse a log for errors."""
+        self.errors = []
+        self.warnings = []
+        self.migrations = []
 
-    with open(logfile, 'r') as fd:
-        migration_started = False
-        warnings = []
-        for line in fd:
-            if 'ERROR 1045' in line:
-                return False, "FAILURE - Could not setup seed database."
-            elif 'ERROR 1049' in line:
-                return False, "FAILURE - Could not find seed database."
-            elif 'ImportError' in line:
-                return False, "FAILURE - Could not import required module."
-            elif MIGRATION_START_RE.search(line):
-                if migration_started:
-                    # We didn't see the last one finish,
-                    # something must have failed
-                    return False, ("FAILURE - Did not find the end of a "
-                                   "migration after a start")
+        with open(self.logpath, 'r') as fd:
+            migration_started = False
 
-                migration_started = True
-                migration_start_time = line_to_time(line)
-                migration_number_from = MIGRATION_START_RE.findall(line)[0][0]
-                migration_number_to = MIGRATION_START_RE.findall(line)[0][1]
-            elif MIGRATION_END_RE.search(line):
-                if migration_started:
-                    # We found the end to this migration
-                    migration_started = False
-                    if migration_number_to > migration_number_from:
-                        migration_end_time = line_to_time(line)
-                        if not migration_time_passes(migration_number_to,
-                                                     migration_start_time,
-                                                     migration_end_time,
-                                                     dataset_config):
-                            warnings.append("WARNING - Migration %s took too "
-                                            "long" % migration_number_to)
-            elif 'Final schema version is' in line:
-                # Check the final version is as expected
-                final_version = MIGRATION_FINAL_SCHEMA_RE.findall(line)[0]
-                if int(final_version) != max(find_schemas(gitpath)):
-                    return False, ("FAILURE - Final schema version does not "
-                                   "match expectation")
+            for line in fd:
+                if 'ERROR 1045' in line:
+                    return False, "FAILURE - Could not setup seed database."
+                elif 'ERROR 1049' in line:
+                    return False, "FAILURE - Could not find seed database."
+                elif 'ImportError' in line:
+                    return False, "FAILURE - Could not import required module."
+                elif MIGRATION_START_RE.search(line):
+                    if migration_started:
+                        # We didn't see the last one finish,
+                        # something must have failed
+                        self.errors.append('FAILURE - Migration started '
+                                           'but did not end')
 
-        if migration_started:
-            # We never saw the end of a migration,
-            # something must have failed
-            return False, ("FAILURE - Did not find the end of a migration "
-                           "after a start")
-        elif len(warnings) > 0:
-            return False, ', '.join(warnings)
+                    migration_started = True
+                    migration_start_time = line_to_time(line)
 
-    return True, "SUCCESS"
+                    m = MIGRATION_START_RE.match(line)
+                    migration_number_from = int(m.group(1))
+                    migration_number_to = int(m.group(2))
+
+                elif MIGRATION_END_RE.search(line):
+                    if migration_started:
+                        # We found the end to this migration
+                        migration_started = False
+                        if migration_number_to > migration_number_from:
+                            migration_end_time = line_to_time(line)
+                            data = (migration_number_to,
+                                    migration_start_time,
+                                    migration_end_time)
+                            self.migrations.append(data)
+
+                elif 'Final schema version is' in line and self.gitpath:
+                    # Check the final version is as expected
+                    final_version = MIGRATION_FINAL_SCHEMA_RE.findall(line)[0]
+                    if int(final_version) != max(self.find_schemas()):
+                        self.errors.append('FAILURE - Final schema version '
+                                           'does not match expectation')
+
+            if migration_started:
+                # We never saw the end of a migration, something must have
+                # failed
+                self.errors.append('FAILURE - Did not find the end of a '
+                                   'migration after a start')
 
 
 def line_to_time(line):

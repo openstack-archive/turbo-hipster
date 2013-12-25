@@ -128,31 +128,42 @@ class Runner(object):
         self.work_data['url'] = index_url
 
     def _check_all_dataset_logs_for_errors(self):
-        self.log.debug("Check logs for errors")
+        self.log.debug('Check logs for errors')
         for i, dataset in enumerate(self.job_datasets):
-            # Look for the beginning of the migration start
-            dataset_success, message = \
-                handle_results.check_log_for_errors(
-                    dataset['job_log_file_path'], self.git_path,
-                    dataset['config'])
+            lp = handle_results.LogParser(dataset['job_log_file_path'],
+                                          self.git_path)
+            lp.process_log()
+
+            if not lp.migrations:
+                self.success = False
+                self.messages.append('No migrations run')
+            if lp.errors:
+                self.success = False
+                for err in lp.errors:
+                    self.messages.append(err)
+            if lp.warnings:
+                self.success = False
+                for warn in lp.warnings:
+                    self.messages.append(warn)
+
+            for migration in lp.migrations:
+                if not handle_results.migration_time_passes(migration[0],
+                                                            migration[1],
+                                                            migration[2],
+                                                            dataset['config']):
+                    self.success = False
+                    self.messages.append('WARNING - Migration %s took too long'
+                                         % migration[1])
 
             if self.success:
-                if dataset_success:
-                    self.job_datasets[i]['result'] = 'SUCCESS'
-                else:
-                    self.success = False
-                    self.job_datasets[i]['result'] = message
-                    self.messages.append(message)
-
+                self.job_datasets[i]['result'] = 'SUCCESS'
             else:
                 self.job_datasets[i]['result'] = self.messages[0]
-                if not dataset_success:
-                    self.messages.append(message)
 
         if self.success:
-            self.work_data['result'] = "SUCCESS"
+            self.work_data['result'] = 'SUCCESS'
         else:
-            self.work_data['result'] = "\n".join(self.messages)
+            self.work_data['result'] = '\n'.join(self.messages)
 
     def _get_datasets(self):
         self.log.debug("Get configured datasets to run tests against")
