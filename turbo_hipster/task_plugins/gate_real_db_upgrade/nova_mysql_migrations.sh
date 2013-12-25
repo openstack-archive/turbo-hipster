@@ -136,7 +136,12 @@ cd $3
 echo "Setting up virtual env"
 source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
+<<<<<<< HEAD
 VENV_PATH=~/.virtualenvs/$1
+=======
+export WORKON_HOME=/var/lib/turbo-hipster/envs
+VENV_PATH=$WORKON_HOME/$1
+>>>>>>> 00c7343... More worker build documentation.
 rm -rf $VENV_PATH
 mkvirtualenv $1
 toggleglobalsitepackages

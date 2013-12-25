@@ -19,7 +19,7 @@ DAEMON=/usr/local/bin/turbo-hipster
 PIDFILE=/var/run/$NAME/$NAME.pid
 DAEMON_ARGS="--background -c /etc/turbo-hipster/config.json -p $PIDFILE"
 SCRIPTNAME=/etc/init.d/$NAME
-USER=turbo-hipster
+USER=th
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
