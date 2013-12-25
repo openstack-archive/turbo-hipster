@@ -144,10 +144,18 @@ cd $3
 echo "Setting up virtual env"
 source ~/.bashrc
 source /etc/bash_completion.d/virtualenvwrapper
-rm -rf ~/.virtualenvs/$1
+export WORKON_HOME=/var/lib/turbo-hipster/envs
+VENV_PATH=$WORKON_HOME/$1
+rm -rf $VENV_PATH
 mkvirtualenv $1
 toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
+
+if [ ! -e $VENV_PATH ]
+then
+  echo "Error: making the virtual env failed"
+  exit 1
+fi
 
 # zuul puts us in a headless mode, lets check it out into a working branch
 git branch -D working 2> /dev/null
