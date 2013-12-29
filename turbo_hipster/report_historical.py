@@ -25,32 +25,51 @@ def main():
     with open('results.json') as f:
         results = json.loads(f.read())
 
-    for migration in sorted(results['mysql']['user_001']):
-        times = []
-        for time in results['mysql']['user_001'][migration]:
-            for i in range(results['mysql']['user_001'][migration][time]):
-                times.append(int(time))
-        times = sorted(times)
+    migrations = {}
+    for engine in ['mysql', 'percona']:
+        print
+        print 'Engine: %s' % engine
+        print
 
-        np_times = numpy.array(times)
-        mean = np_times.mean()
-        stddev = np_times.std()
-        failed_threshold = int(max(30.0, mean + stddev * 2))
+        for migration in sorted(results[engine]['user_001']):
+            times = []
+            for time in results[engine]['user_001'][migration]:
+                for i in range(results[engine]['user_001'][migration][time]):
+                    times.append(int(time))
+            times = sorted(times)
 
-        failed = 0
-        for time in times:
-            if time > failed_threshold:
-                failed += 1
+            np_times = numpy.array(times)
+            mean = np_times.mean()
+            stddev = np_times.std()
+            failed_threshold = int(max(30.0, mean + stddev * 2))
 
-        if failed_threshold != 30 or failed > 0:
-            print ('%s: Values range from %s to %s seconds. %d values. '
-                   'Mean is %.02f, stddev is %.02f.\n    '
-                   'Recommend max of %d. With this value %.02f%% of tests '
-                   'would have failed.'
-                   % (migration, np_times.min(), np_times.max(), len(times),
-                      mean, stddev, failed_threshold,
-                      failed * 100.0 / len(times)))
+            failed = 0
+            for time in times:
+                if time > failed_threshold:
+                    failed += 1
 
+            migrations.setdefault(migration, {})
+            migrations[migration][engine] = ('%.02f;%0.2f;%.02f'
+                                             % (mean - 2 * stddev,
+                                                mean,
+                                                mean + 2 * stddev))
+
+            if failed_threshold != 30 or failed > 0:
+                print ('%s: Values range from %s to %s seconds. %d values. '
+                       'Mean is %.02f, stddev is %.02f.\n    '
+                       'Recommend max of %d. With this value %.02f%% of tests '
+                       'would have failed.'
+                       % (migration, np_times.min(), np_times.max(),
+                          len(times), mean, stddev, failed_threshold,
+                          failed * 100.0 / len(times)))
+
+    with open('results.txt', 'w') as f:
+        f.write('Migration,mysql,percona\n')
+        for migration in sorted(migrations.keys()):
+            f.write('%s' % migration)
+            for engine in ['mysql', 'percona']:
+                f.write(',%s' % migrations[migration][engine])
+            f.write('\n')
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.abspath(
