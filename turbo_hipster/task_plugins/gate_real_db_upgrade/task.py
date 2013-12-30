@@ -290,7 +290,7 @@ class Runner(object):
             project_name + '/.git',
             os.path.join(
                 self.global_config['git_working_dir'],
-                self.job_name,
+                self.job.unique,
                 project_name
             )
         )
