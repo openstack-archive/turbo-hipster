@@ -86,7 +86,7 @@ class Runner(object):
                 self._do_next_step()
                 self.git_path = self._grab_patchset(
                     self.job_arguments['ZUUL_PROJECT'],
-                    self.job_arguments['ZUUL_REF']
+                    self.job_arguments['ZUUL_CHANGES'].split(':')[-1]
                 )
 
                 # Step 3: Run migrations on datasets
@@ -297,16 +297,15 @@ class Runner(object):
         self.log.debug("Grab the patchset we want to test against")
 
         repo = utils.GitRepository(
-            self.global_config['zuul_server']['git_url'] +
-            project_name + '/.git',
+            'https://review.openstack.org/' + project_name,
             os.path.join(
                 self.global_config['git_working_dir'],
-                self.job.unique,
+                self.job_name,
                 project_name
             )
         )
 
-        # reset to zuul's master
+        # reset to git's master
         repo.reset()
 
         # Fetch patchset and checkout
