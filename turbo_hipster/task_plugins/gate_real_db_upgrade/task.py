@@ -297,16 +297,15 @@ class Runner(object):
         self.log.debug("Grab the patchset we want to test against")
 
         repo = utils.GitRepository(
-            self.global_config['zuul_server']['git_url'] +
-            project_name + '/.git',
+            'http://git.openstack.org/' + project_name,
             os.path.join(
                 self.global_config['git_working_dir'],
-                self.job.unique,
+                self.job_name,
                 project_name
             )
         )
 
-        # reset to zuul's master
+        # reset to git's master
         repo.reset()
 
         # Fetch patchset and checkout
