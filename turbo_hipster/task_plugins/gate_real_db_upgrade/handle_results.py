@@ -166,6 +166,7 @@ def migration_time_passes(migration_number, migration_start_time,
 
     Returns True if okay, False if it takes too long."""
 
+    migration_number = str(migration_number)
     if migration_number in dataset_config['maximum_migration_times']:
         allowed_time = \
             dataset_config['maximum_migration_times'][migration_number]
