@@ -1,0 +1,13 @@
+{
+    "project": "openstack/nova",
+    "type": "mysql",
+    "db_user": "nova",
+    "db_pass": "tester",
+    "database": "nova_dataset_trivial_500",
+    "seed_data": "nova_trivial_500.sql",
+    "logging_conf": "logging.conf",
+    "maximum_migration_times": {
+        "default": 30
+    }
+}
+

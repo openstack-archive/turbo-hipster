@@ -1,0 +1,23 @@
+{
+    "project": "openstack/nova",
+    "type": "mysql",
+    "db_user": "nova",
+    "db_pass": "tester",
+    "database": "nova_datasets_user_001",
+    "seed_data": "nova_user_001.sql",
+    "logging_conf": "logging.conf",
+    "maximum_migration_times": {
+        "default": 30,
+        "135": 120,
+        "138": 180,
+        "_138_bugs": [1263835],
+        "149": 240,
+        "_149_bugs": [1263836],
+        "152": 300,
+        "159": 120,
+        "205": 120,
+        "_205_bugs": [1263868],
+        "216": 180
+    }
+}
+
