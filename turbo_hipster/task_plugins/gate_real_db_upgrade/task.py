@@ -153,7 +153,7 @@ class Runner(object):
                                                             dataset['config']):
                     self.success = False
                     self.messages.append('WARNING - Migration %s took too long'
-                                         % migration[1])
+                                         % migration[0])
 
             if self.success:
                 self.job_datasets[i]['result'] = 'SUCCESS'
