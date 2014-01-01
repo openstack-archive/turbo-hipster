@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: Michael Still <mikal@stillhq.com>
+Code-Review+2: Michael Still <mikal@stillhq.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 01 Jan 2014 12:37:31 +0000
+Reviewed-on: https://review.openstack.org/64604
+Project: stackforge/turbo-hipster
+Branch: refs/heads/master
