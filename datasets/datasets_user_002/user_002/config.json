@@ -1,0 +1,12 @@
+{
+    "database": "nova_dataset_user_002", 
+    "db_pass": "tester", 
+    "db_user": "nova", 
+    "logging_conf": "logging.conf", 
+    "maximum_migration_times": {
+        "default": 30
+    }, 
+    "project": "openstack/nova", 
+    "seed_data": "nova_user_002.sql", 
+    "type": "mysql"
+}
