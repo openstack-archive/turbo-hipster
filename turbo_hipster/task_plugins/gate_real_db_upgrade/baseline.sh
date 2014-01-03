@@ -6,6 +6,6 @@
 
 echo "Instance flavor: $1"
 echo "IO test starts"
-time dd if=/dev/zero bs=1024000 count=1024 of=test.dd
-rm -f test.dd
+time dd if=/dev/zero bs=1024000 count=1024 of=/tmp/test-$$.dd
+rm -f /tmp/test-$$.dd
 echo "IO test ends"
