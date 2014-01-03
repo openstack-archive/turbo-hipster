@@ -230,6 +230,13 @@ class Runner(object):
         self.log.debug("Run the db sync upgrade script")
 
         for dataset in self.job_datasets:
+            cmd = os.path.join(os.path.join(os.path.dirname(__file__),
+                               (self.global_config['baseline_command']
+                                % self.global_config['flavor'])))
+            rc = utils.execute_to_log(
+                cmd,
+                dataset['job_log_file_path'],
+            )
 
             cmd = dataset['command']
             # $1 is the unique id
