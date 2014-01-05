@@ -25,7 +25,7 @@ import sys
 
 import swiftclient
 
-from task_plugins.gate_real_db_upgrade import handle_results
+from turbo_hipster.task_plugins.gate_real_db_upgrade import handle_results
 
 
 def main():
