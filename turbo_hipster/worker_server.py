@@ -18,20 +18,12 @@
 """ worker_server.py is an executable worker server that loads and runs
 task_plugins. """
 
-import argparse
 import daemon
-import extras
-import json
 import logging
 import os
 import signal
-import sys
 
 import worker_manager
-
-# as of python-daemon 1.6 it doesn't bundle pidlockfile anymore
-# instead it depends on lockfile-0.9.1 which uses pidfile.
-PID_FILE_MODULE = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
 
 
 class Server(object):
@@ -125,36 +117,3 @@ class Server(object):
             except KeyboardInterrupt:
                 print "Ctrl + C: asking tasks to exit nicely...\n"
                 self.exit_handler(signal.SIGINT)
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config',
-                        default=
-                        '/etc/turbo-hipster/config.json',
-                        help='Path to json config file.')
-    parser.add_argument('-b', '--background', action='store_true',
-                        help='Run as a daemon in the background.')
-    parser.add_argument('-p', '--pidfile',
-                        default='/var/run/turbo-hipster/'
-                                'turbo-hipster-worker-server.pid',
-                        help='PID file to lock during daemonization.')
-    args = parser.parse_args()
-
-    with open(args.config, 'r') as config_stream:
-        config = json.load(config_stream)
-
-    server = Server(config)
-
-    if args.background:
-        pidfile = PID_FILE_MODULE.TimeoutPIDLockFile(args.pidfile, 10)
-        with daemon.DaemonContext(pidfile=pidfile):
-            server.main()
-    else:
-        server.main()
-
-
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '../')))
-    main()
