@@ -64,6 +64,8 @@ class ZuulManager(threading.Thread):
         while True and not self.stopped():
             try:
                 # gearman_worker.getJob() blocks until a job is available
+                self.log.debug("Waiting for server")
+                self.gearman_worker.waitForServer()
                 logging.debug("Waiting for job")
                 self.current_step = 0
                 job = self.gearman_worker.getJob()
@@ -79,7 +81,7 @@ class ZuulManager(threading.Thread):
                 job_arguments['number'])
             job.sendWorkComplete()
         except Exception as e:
-            self.log.exception('Exception handling log event.')
+            self.log.exception('Exception waiting for management job.')
             job.sendWorkException(str(e).encode('utf-8'))
 
 
@@ -112,7 +114,6 @@ class ZuulClient(threading.Thread):
             self.global_config['zuul_server']['gearman_host'],
             self.global_config['zuul_server']['gearman_port']
         )
-        self.gearman_worker.waitForServer()
 
     def register_functions(self):
         self.log.debug("Register functions with gearman")
@@ -139,11 +140,13 @@ class ZuulClient(threading.Thread):
             try:
                 self.cancelled = False
                 # gearman_worker.getJob() blocks until a job is available
+                self.log.debug("Waiting for server")
+                self.gearman_worker.waitForServer()
                 self.log.debug("Waiting for job")
                 self.job = self.gearman_worker.getJob()
                 self._handle_job()
             except:
-                self.log.exception('Exception retrieving log event.')
+                self.log.exception('Exception waiting for job.')
 
     def _handle_job(self):
         """ We have a job, give it to the right plugin """
