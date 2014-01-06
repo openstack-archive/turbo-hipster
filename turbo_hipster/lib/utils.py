@@ -112,13 +112,21 @@ def execute_to_log(cmd, logfile, timeout=-1,
     descriptors = {}
 
     for watch_file in watch_logs:
-        fd = os.open(watch_file[1], os.O_RDONLY)
-        os.lseek(fd, 0, os.SEEK_END)
-        descriptors[fd] = dict(
-            name=watch_file[0],
-            poll=select.POLLIN,
-            lines=''
-        )
+        if not os.path.exists(watch_file[1]):
+            logger.warning('Failed to monitor log file %s: file not found'
+                           % watch_file[1])
+            continue
+
+        try:
+            fd = os.open(watch_file[1], os.O_RDONLY)
+            os.lseek(fd, 0, os.SEEK_END)
+            descriptors[fd] = dict(
+                name=watch_file[0],
+                poll=select.POLLIN,
+                lines='')
+        except Exception as e:
+            logger.warning('Failed to monitor log file %s: %s'
+                           % (watch_file[1], e))
 
     cmd += ' 2>&1'
     start_time = time.time()
