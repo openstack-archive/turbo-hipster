@@ -85,9 +85,8 @@ class Runner(object):
                 # Step 2: Checkout updates from git!
                 self._do_next_step()
                 self.git_path = self._grab_patchset(
-                    self.job_arguments['ZUUL_PROJECT'],
-                    self.job_arguments['ZUUL_CHANGES'].split(':')[-1]
-                )
+                    self.job_arguments,
+                    self.job_datasets[0]['job_log_file_path'])
 
                 # Step 3: Run migrations on datasets
                 self._do_next_step()
@@ -298,28 +297,22 @@ class Runner(object):
             )
             return rc
 
-    def _grab_patchset(self, project_name, zuul_ref):
+    def _grab_patchset(self, job_args, job_log_file_path):
         """ Checkout the reference into config['git_working_dir'] """
 
         self.log.debug("Grab the patchset we want to test against")
+        local_path = os.path.join(self.global_config['git_working_dir'],
+                                  self.job_name, job_args['ZUUL_PROJECT'])
+        if not os.path.exists(local_path):
+            os.makedirs(local_path)
 
-        repo = utils.GitRepository(
-            'https://review.openstack.org/' + project_name,
-            os.path.join(
-                self.global_config['git_working_dir'],
-                self.job_name,
-                project_name
-            )
-        )
-
-        # reset to git's master
-        repo.reset()
-
-        # Fetch patchset and checkout
-        repo.fetch(zuul_ref)
-        repo.checkout('FETCH_HEAD')
-
-        return repo.local_path
+        cmd = os.path.join(os.path.join(os.path.dirname(__file__),
+                                        'gerrit-git-prep.sh'))
+        cmd += ' https://review.openstack.org'
+        cmd += ' http://zuul.rcbops.com'
+        utils.execute_to_log(cmd, job_log_file_path,
+                             env=job_args, cwd=local_path)
+        return local_path
 
     def _get_work_data(self):
         if self.work_data is None:

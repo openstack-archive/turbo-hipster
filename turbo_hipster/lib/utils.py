@@ -93,7 +93,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
                        ('[sqlslo]', '/var/log/mysql/slow-queries.log'),
                        ('[sqlerr]', '/var/log/mysql/error.log')
                    ],
-                   heartbeat=True
+                   heartbeat=True, env=None, cwd=None
                    ):
     """ Executes a command and logs the STDOUT/STDERR and output of any
     supplied watch_logs from logs into a new logfile
@@ -130,7 +130,8 @@ def execute_to_log(cmd, logfile, timeout=-1,
     cmd += ' 2>&1'
     start_time = time.time()
     p = subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env=env, cwd=cwd)
 
     descriptors[p.stdout.fileno()] = dict(
         name='[output]',
