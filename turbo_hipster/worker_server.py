@@ -49,15 +49,15 @@ class Server(object):
         self.load_plugins()
 
     def setup_logging(self):
-        if self.debug_log:
-            if not os.path.isdir(os.path.dirname(self.debug_log)):
-                os.makedirs(os.path.dirname(self.debug_log))
-            logging.basicConfig(format='%(asctime)s %(name)s %(message)s',
-                                filename=self.debug_log, level=logging.DEBUG)
-        else:
-            logging.basicConfig(format='%(asctime)s %(name)s %(message)s',
-                                level=logging.WARN)
-        self.log.debug('Log pusher starting.')
+        if not self.debug_log:
+            raise Exception('Debug log not configured')
+
+        # NOTE(mikal): debug logging _must_ be enabled for the log writing
+        # in lib.utils.execute_to_log to work correctly.
+        if not os.path.isdir(os.path.dirname(self.debug_log)):
+            os.makedirs(os.path.dirname(self.debug_log))
+        logging.basicConfig(format='%(asctime)s %(name)s %(message)s',
+                            filename=self.debug_log, level=logging.DEBUG)
 
     def load_plugins(self):
         """ Load the available plugins from task_plugins """
