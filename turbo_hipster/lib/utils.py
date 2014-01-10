@@ -23,6 +23,9 @@ import swiftclient
 import time
 
 
+log = logging.getLogger('lib.utils')
+
+
 class GitRepository(object):
 
     """ Manage a git repository for our uses """
@@ -239,9 +242,13 @@ def scp_push_file(job_log_dir, file_path, local_config):
 def determine_job_identifier(zuul_arguments, job, unique):
     if 'build:' in job:
         job = job.split('build:')[1]
-    return os.path.join(zuul_arguments['ZUUL_CHANGE'][:2],
+
+    path = os.path.join(zuul_arguments['ZUUL_CHANGE'][:2],
                         zuul_arguments['ZUUL_CHANGE'],
                         zuul_arguments['ZUUL_PATCHSET'],
                         zuul_arguments['ZUUL_PIPELINE'],
                         job,
                         unique[:7])
+    log.info('Converted args: %s, job: %s and unique: %s to %s'
+             % (zuul_arguments, job, unique, path))
+    return path
