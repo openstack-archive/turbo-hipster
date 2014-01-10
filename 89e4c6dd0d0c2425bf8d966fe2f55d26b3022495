@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Approved+1: Michael Still <mikal@stillhq.com>
+Code-Review+2: Michael Still <mikal@stillhq.com>
+Code-Review+2: Joshua Hesketh <joshua.hesketh@rackspace.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 10 Jan 2014 03:30:19 +0000
+Reviewed-on: https://review.openstack.org/65630
+Project: stackforge/turbo-hipster
+Branch: refs/heads/master
