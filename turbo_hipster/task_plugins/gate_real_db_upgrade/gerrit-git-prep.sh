@@ -90,4 +90,4 @@ then
     git submodule init
     git submodule sync
     git submodule update --init
-fi`
+fi
