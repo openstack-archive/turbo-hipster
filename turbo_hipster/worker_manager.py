@@ -47,6 +47,7 @@ class ZuulManager(threading.Thread):
             self.config['zuul_server']['gearman_host'],
             self.config['zuul_server']['gearman_port']
         )
+        self.gearman_worker.waitForServer()
         self.gearman_worker.registerFunction(
             'stop:turbo-hipster-manager-%s' % hostname)
 
@@ -118,6 +119,7 @@ class ZuulClient(threading.Thread):
     def register_functions(self):
         self.log.debug("Register functions with gearman")
         for function_name, plugin in self.functions.items():
+            self.gearman_worker.waitForServer()
             self.gearman_worker.registerFunction(function_name)
         self.log.debug(self.gearman_worker.functions)
 
