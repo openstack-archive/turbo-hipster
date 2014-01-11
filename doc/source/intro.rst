@@ -20,94 +20,41 @@ build a report.
 Typical workflow diagram
 ------------------------
 
-**clearly this needs a lot of work, however I believe the structure
-is mostly there... If you know graphviz please help!**
+.. seqdiag::
 
-.. graphviz::
+   seqdiag admin {
+      # define order of elements
+      # seqdiag sorts elements by order they appear
+      humanoid; gerrit; zuul; gearman; turbo-hipster1; turbo-hipster2;
 
-   digraph overview {
-       subgraph cluster_1 {
-            label = "Gerrit"
-            style = filled;
-            color = lightgrey;
-            node [style=filled,color=white];
+      humanoid -> gerrit [leftnote = "Patchset uploaded"];
 
-            g000 [shape=Mdiamond label="start"];
-            g001 [shape=box, label="receive event"];
-            g002 [shape=box, label="notify listeners"];
+      zuul -> gearman [label = "register-server"];
+      zuul <-- gearman;
 
-            g000 -> g001;
-            g001 -> g002;
-            g002 -> g001;
-       }
+      turbo-hipster1 -> gearman [label = "add server"];
+      turbo-hipster1 <-- gearman;
+      turbo-hipster1 -> gearman [label = "register functions"];
+      turbo-hipster1 <-- gearman;
 
-       subgraph cluster_2 {
-            label = "Zuul pipeline";
-            color = blue
-            node [style=filled];
+      turbo-hipster2 -> gearman [label = "add server"];
+      turbo-hipster2 <-- gearman;
+      turbo-hipster2 -> gearman [label = "register functions"];
+      turbo-hipster2 <-- gearman;
 
-            z000 [shape=Mdiamond label="start"];
-            z001 [shape=box, label="register gearman server"];
-            z002 [shape=box, label="register launchers"];
-            z003 [shape=box, label="listen for events"];
-            z004 [shape=box, label="receive event"];
-            z005 [shape=box, label="request jobs"];
-            z006 [shape=box, label="receive response"];
-            z007 [shape=box, label="send report"];
 
-            z000 -> z001 -> z002;
-            z003 -> z004 -> z005;
-            z005 -> z006 [dir=none, style=dotted];
-            z006 -> z007;
+      gerrit -> zuul [label = "patchset-uploaded"];
+      zuul -> gearman [label = "request worker"];
+      zuul -> gearman [label = "request worker"];
+      gearman -> turbo-hipster1 [label = "run function"];
+      gearman -> turbo-hipster2 [label = "run function"];
+      gearman <- turbo-hipster1 [label = "return result"];
+      gearman <- turbo-hipster2 [label = "return result"];
+      zuul <- gearman [label = "return result"];
+      zuul <- gearman [label = "return result"];
+      gerrit <- zuul [label = "voting results"];
 
-       }
-
-       subgraph cluster_3 {
-            label = "Gearman";
-            style = filled;
-            color = lightgrey;
-            node [style=filled,color=white];
-
-            gm001 [shape=box, label="receive job method"];
-            gm002 [shape=box, label="request worker do method"];
-            gm003 [shape=box, label="receive results"];
-            gm004 [shape=box, label="return results"];
-
-            gms000 [label="register client"];
-            gms001 [label="register worker"];
-            gms002 [label="register method"];
-
-            gm001 -> gm002;
-            gm002 -> gm003 [dir=none, style=dotted];
-            gm003 -> gm004;
-       }
-
-       subgraph cluster_4 {
-            label = "Turbo Hipster";
-            color = blue
-            node [style=filled];
-
-            th000 [shape=Mdiamond label="start"];
-            th001 [shape=box, label="register as worker"];
-            th002 [shape=box, label="find available tasks"];
-            th003 [shape=box, label="register available job methods"];
-
-            ths001 [shape=box, label="receive method request"];
-            ths002 [shape=box, label="run task"];
-            ths003 [shape=box, label="send results"];
-
-            th000 -> th001 -> th002 -> th003;
-            ths001 -> ths002 -> ths003;
-       }
-
-       z001 -> gms000;
-       z005 -> gm001;
-       gm004 -> z006;
-       z003 -> g002 [dir=both, style=dotted];
-       th001 -> gms001;
-       th003 -> gms002;
-       gm002 -> ths001;
-       ths003 -> gm003;
+      humanoid <-- gerrit;
 
    }
 
