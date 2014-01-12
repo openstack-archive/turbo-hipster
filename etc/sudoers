@@ -27,6 +27,7 @@ root	ALL=(ALL:ALL) ALL
 
 # Turbo Hipster
 th ALL=(root) NOPASSWD: /sbin/ip netns exec nonet *
+th ALL=(root) NOPASSWD: /usr/sbin/service mysql
 
 # See sudoers(5) for more information on "#include" directives:
 
