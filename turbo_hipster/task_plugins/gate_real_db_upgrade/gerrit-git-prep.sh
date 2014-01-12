@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# Stolen from http://git.openstack.org/cgit/openstack-infra/config/plain/modules/jenkins/files/slave_scripts/gerrit-git-prep.sh
+# Stolen from http://git.openstack.org/cgit/openstack-infra/config/plain/modules/jenkins/files/slave_scripts/gerrit-git-prep.sh but has been hacked to be AWESOME!
 
 GERRIT_SITE=$1
 ZUUL_SITE=$2
@@ -49,6 +49,7 @@ then
     fi
 fi
 git checkout master
+git pull
 git branch -D working || true
 git remote set-url origin $GIT_ORIGIN/$ZUUL_PROJECT
 
@@ -83,6 +84,7 @@ else
         git clean -x -f -d -q
     fi
 fi
+git branch -D working || true
 git checkout -b working
 
 if [ -f .gitmodules ]

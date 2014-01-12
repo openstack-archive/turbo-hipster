@@ -13,6 +13,7 @@
 # under the License.
 
 
+import copy
 import json
 import logging
 import os
@@ -306,12 +307,15 @@ class Runner(object):
         if not os.path.exists(local_path):
             os.makedirs(local_path)
 
+        git_args = copy.deepcopy(job_args)
+        git_args['GIT_ORIGIN'] = 'git://git.openstack.org/'
+
         cmd = os.path.join(os.path.join(os.path.dirname(__file__),
                                         'gerrit-git-prep.sh'))
         cmd += ' https://review.openstack.org'
         cmd += ' http://zuul.rcbops.com'
-        utils.execute_to_log(cmd, job_log_file_path,
-                             env=job_args, cwd=local_path)
+        utils.execute_to_log(cmd, job_log_file_path, env=git_args,
+                             cwd=local_path)
         return local_path
 
     def _get_work_data(self):
