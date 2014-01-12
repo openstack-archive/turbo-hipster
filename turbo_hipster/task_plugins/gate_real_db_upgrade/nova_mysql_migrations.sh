@@ -49,7 +49,7 @@ db_sync() {
   # $5 is the nova db password
   # $6 is the nova db name
   # $7 is the logging.conf for openstack
-  # $8 is any sync options
+  # $8 is an (optional) destination version number
 
   # Create a nova.conf file
   cat - > $2/nova-$1.conf <<EOF
@@ -64,18 +64,52 @@ EOF
   python setup.py -q clean
   python setup.py -q develop
   python setup.py -q install
-  set -x
-  sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper $VENV_PATH --config-file $2/nova-$1.conf --verbose db sync $8
-  manage_exit=$?
-  set +x
 
-  echo "nova-manage returned exit code $manage_exit"
-  if [ $manage_exit -gt 0 ]
+  # Log the migrations present
+  echo "Migrations present:"
+  ls $3/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | 
+
+  # Flush innodb's caches
+  echo "Restarting mysql"
+  sudo service mysql stop
+  sudo service mysql start
+
+  echo "MySQL counters before upgrade:"
+  mysql -u $4 --password=$5 $6 -e "show status like 'innodb%';"
+
+  start_version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+
+  if [ "%$8%" == "%%" ]
   then
-    echo "Aborting early"
-    exit $manage_exit
+    end_version=`ls $3/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
+  else
+    end_version=$8
   fi
 
+  echo "Test will migrate from $start_version to $end_version"
+  increment=1
+  if [ $end_version -lt $start_version ]
+  then
+    increment=-1
+  fi
+
+  for i in `seq $(( $start_version + 1 )) $increment $end_version`
+  do
+    set -x
+    sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper $VENV_PATH --config-file $2/nova-$1.conf --verbose db sync $8 --version $i
+    manage_exit=$?
+    set +x
+
+    echo "MySQL counters after upgrade:"
+    mysql -u $4 --password=$5 $6 -e "show status like 'innodb%';"
+
+    echo "nova-manage returned exit code $manage_exit"
+    if [ $manage_exit -gt 0 ]
+    then
+      echo "Aborting early"
+      exit $manage_exit
+    fi
+  done
 
   echo "***** Finished DB upgrade to state of $1 *****"
 }
@@ -96,6 +130,7 @@ stable_release_db_sync() {
   then
     echo "Database is from Folsom! Upgrade via Grizzly"
     git checkout stable/grizzly
+    git pull
     pip_requires
     db_sync "grizzly" $1 $2 $3 $4 $5 $6
   fi
@@ -107,6 +142,7 @@ stable_release_db_sync() {
   then
     echo "Database is from Grizzly! Upgrade via Havana"
     git checkout stable/havana
+    git pull
     pip_requires
     db_sync "havana" $1 $2 $3 $4 $5 $6
   fi
@@ -179,9 +215,8 @@ db_sync "patchset" $2 $3 $4 $5 $6 $8
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
-#target_version=`ls $3/nova/db/sqlalchemy/migrate_repo/versions | head -1 | cut -f 1 -d "_"`
 echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
-db_sync "patchset" $2 $3 $4 $5 $6 $8 "--version $last_stable_version"
+db_sync "patchset" $2 $3 $4 $5 $6 $8 $last_stable_version
 
 # Determine the schema version
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
