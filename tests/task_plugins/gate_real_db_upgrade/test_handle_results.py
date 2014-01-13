@@ -24,30 +24,26 @@ TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
 class TestHandleResults(testtools.TestCase):
     def test_line_to_time(self):
         test_line = '2013-11-22 21:42:45,908 [output] 141 -> 142...  '
-        result = handle_results.line_to_time(test_line)
+        logfile = os.path.join(TESTS_DIR, 'assets/logcontent')
+        lp = handle_results.LogParser(logfile, None)
+        result = lp.line_to_time(test_line)
         self.assertEqual(result, 1385156565)
 
-    def test_migration_time_passes(self):
+    def test_check_migration(self):
         with open(os.path.join(TESTS_DIR,
                                'datasets/some_dataset_example/config.json'),
                   'r') as config_stream:
             dataset_config = json.load(config_stream)
+        duration = 120
 
-        migration_start_time = 1385116665.0
-        migration_end_time = 1385116865.0
-
-        migration_number = '151'
-        result = handle_results.migration_time_passes(migration_number,
-                                                      migration_start_time,
-                                                      migration_end_time,
-                                                      dataset_config)
+        result = handle_results.check_migration({'to': '151'},
+                                                'maximum_migration_times',
+                                                duration, dataset_config)
         self.assertFalse(result)
 
-        migration_number = '152'
-        result = handle_results.migration_time_passes(migration_number,
-                                                      migration_start_time,
-                                                      migration_end_time,
-                                                      dataset_config)
+        result = handle_results.check_migration({'to': '152'},
+                                                'maximum_migration_times',
+                                                duration, dataset_config)
         self.assertTrue(result)
 
     def test_check_log_for_errors(self):
@@ -84,7 +80,7 @@ class TestHandleResults(testtools.TestCase):
 
         migrations = []
         for migration in lp.migrations:
-            migrations.append(migration[0])
+            migrations.append(migration['to'])
 
         for migration in range(134, 229):
             self.assertTrue(migration in migrations,
