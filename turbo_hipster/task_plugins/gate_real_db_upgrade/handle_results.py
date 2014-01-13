@@ -82,12 +82,19 @@ MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')
 MIGRATION_START_RE = re.compile('.* ([0-9]+) -\> ([0-9]+)\.\.\..*$')
 MIGRATION_END_RE = re.compile('done$')
 MIGRATION_FINAL_SCHEMA_RE = re.compile('Final schema version is ([0-9]+)')
+INNODB_STATISTIC_RE = re.compile('.* (Innodb_.*)\t([0-9]+)')
 
 
 class LogParser(object):
     def __init__(self, logpath, gitpath):
         self.logpath = logpath
         self.gitpath = gitpath
+        self._init()
+
+    def _init(self):
+        self.errors = []
+        self.warnings = []
+        self.migrations = []
 
     def find_schemas(self):
         """Return a list of the schema numbers present in git."""
@@ -98,9 +105,10 @@ class LogParser(object):
 
     def process_log(self):
         """Analyse a log for errors."""
-        self.errors = []
-        self.warnings = []
-        self.migrations = []
+        self._init()
+        innodb_stats = {}
+        migration_stats = {}
+        current_migration = {}
 
         with open(self.logpath, 'r') as fd:
             migration_started = False
@@ -113,6 +121,12 @@ class LogParser(object):
                 elif 'ImportError' in line:
                     return False, "FAILURE - Could not import required module."
                 elif MIGRATION_START_RE.search(line):
+                    if current_migration:
+                        current_migration['stats'] = migration_stats
+                        self.migrations.append(current_migration)
+                        current_migration = {}
+                        migration_stats = {}
+
                     if migration_started:
                         # We didn't see the last one finish,
                         # something must have failed
@@ -120,22 +134,33 @@ class LogParser(object):
                                            'but did not end')
 
                     migration_started = True
-                    migration_start_time = line_to_time(line)
+                    current_migration['start'] = line_to_time(line)
 
                     m = MIGRATION_START_RE.match(line)
-                    migration_number_from = int(m.group(1))
-                    migration_number_to = int(m.group(2))
+                    current_migration['from'] = int(m.group(1))
+                    current_migration['to'] = int(m.group(2))
 
                 elif MIGRATION_END_RE.search(line):
                     if migration_started:
-                        # We found the end to this migration
+                        # NOTE(mikal): we found the end to this migration
                         migration_started = False
-                        if migration_number_to > migration_number_from:
-                            migration_end_time = line_to_time(line)
-                            data = (migration_number_to,
-                                    migration_start_time,
-                                    migration_end_time)
-                            self.migrations.append(data)
+                        current_migration['end'] = line_to_time(line)
+
+                elif INNODB_STATISTIC_RE.search(line):
+                    # NOTE(mikal): the stats for a migration step come after
+                    # the migration has ended, because they're the next
+                    # command in the script. We don't record them until the
+                    # next migration starts (or we hit the end of the file).
+                    m = INNODB_STATISTIC_RE.match(line)
+                    name = m.group(1)
+                    value = int(m.group(2))
+
+                    if name in innodb_stats:
+                        delta = value - innodb_stats[name]
+                        if delta > 0:
+                            migration_stats[name] = delta
+
+                    innodb_stats[name] = value
 
                 elif 'Final schema version is' in line and self.gitpath:
                     # Check the final version is as expected
@@ -150,30 +175,24 @@ class LogParser(object):
                 self.errors.append('FAILURE - Did not find the end of a '
                                    'migration after a start')
 
+            if current_migration:
+                current_migration['stats'] = migration_stats
+                self.migrations.append(current_migration)
+
 
 def line_to_time(line):
     """Extract a timestamp from a log line"""
     return calendar.timegm(time.strptime(line[:23], '%Y-%m-%d %H:%M:%S,%f'))
 
 
-def migration_time_passes(migration_number, migration_start_time,
-                          migration_end_time, dataset_config):
-    """Determines if the difference between the migration_start_time and
-    migration_end_time is acceptable.
-
-    The dataset configuration should specify a default maximum time and any
-    migration specific times in the maximum_migration_times dictionary.
+def check_migration(migration, attribute, value, dataset_config):
+    """Checks if a given migration is within its allowed parameters.
 
     Returns True if okay, False if it takes too long."""
 
-    migration_number = str(migration_number)
-    if migration_number in dataset_config['maximum_migration_times']:
-        allowed_time = \
-            dataset_config['maximum_migration_times'][migration_number]
-    else:
-        allowed_time = dataset_config['maximum_migration_times']['default']
-
-    if (migration_end_time - migration_start_time) > allowed_time:
+    migration_number = str(migration['to'])
+    allowed = dataset_config[attribute].get(
+        migration_number, dataset_config[attribute]['default'])
+    if value > allowed:
         return False
-
     return True

@@ -59,6 +59,7 @@ class TestGearmanManager(testtools.TestCase):
 
     def test_task_registered_with_manager(self):
         """ Check the FakeRealDbUpgradeRunner_worker task is registered """
+        self.skip('bug/1268767')
         self.assertIn('FakeRealDbUpgradeRunner_worker',
                       self.gearman_manager.tasks.keys())
 
