@@ -147,10 +147,10 @@ class Runner(object):
                     self.messages.append(warn)
 
             for migration in lp.migrations:
-                if not handle_results.migration_time_passes(migration[0],
-                                                            migration[1],
-                                                            migration[2],
-                                                            dataset['config']):
+                duration = migration['end'] - migration['start']
+                if not (handle_results.check_migration(
+                        migration, 'maximum_migration_times', duration,
+                        dataset['config'])):
                     self.success = False
                     self.messages.append('WARNING - Migration %s took too long'
                                          % migration[0])

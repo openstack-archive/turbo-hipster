@@ -117,13 +117,15 @@ class Analyser(object):
             self.log.warn('Log %s contained no migrations' % name)
 
         for migration in lp.migrations:
-            duration = migration[2] - migration[1]
+            duration = migration['end'] - migration['start']
             self.results.setdefault(engine_name, {})
             self.results[engine_name].setdefault(test_name, {})
-            self.results[engine_name][test_name].setdefault(migration[0], {})
-            self.results[engine_name][test_name][migration[0]]\
+            self.results[engine_name][test_name].setdefault(migration['to'],
+                                                            {})
+            self.results[engine_name][test_name][migration['to']]\
                 .setdefault(duration, 0)
-            self.results[engine_name][test_name][migration[0]][duration] += 1
+            self.results[engine_name][test_name][migration['to']][duration] \
+                += 1
 
 
 if __name__ == '__main__':
