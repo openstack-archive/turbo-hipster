@@ -19,6 +19,7 @@ import argparse
 import datetime
 import json
 import logging
+import MySQLdb
 import os
 import re
 import sys
@@ -56,7 +57,12 @@ def main():
         auth_version=2.0)
     log.info('Got connection to swift')
 
-    a = Analyser()
+    # Open the results database
+    db = MySQLdb.connect(host=config['results']['host'],
+                         user=config['results']['username'],
+                         passwd=config['results']['password'],
+                         db=config['results']['database'])
+    cursor = db.cursor(MySQLdb.cursors.DictCursor)
 
     # Iterate through the logs and determine timing information. This probably
     # should be done in a "more cloudy" way, but this is good enough for now.
@@ -69,9 +75,26 @@ def main():
 
         for item in items:
             log.info('Processing %s' % item['name'])
-            a.process(connection, swift_config['container'], item['name'])
+            cursor.execute('select count(*) from summary where path="%s";'
+                           % item['name'])
+            if cursor.rowcount == 0:
+                for engine, dataset, migration in process(
+                      connection, swift_config['container'], item['name']):
+                    if not 'duration' in migration:
+                        continue
 
-        a.dump()
+                    cursor.execute('insert ignore into summary'
+                                   '(path, parsed_at, engine, dataset, '
+                                   'migration, duration, stats_json) '
+                                   'values("%s", now(), "%s", '
+                                   '"%s", "%s", %d, "%s");'
+                                   % (item['name'], engine, dataset,
+                                      '%s->%s' %(migration['from'],
+                                                 migration['to']),
+                                      migration['duration'],
+                                      migration['stats']))
+                cursor.execute('commit;')
+
         items = connection.get_container(swift_config['container'],
                                          marker=item['name'], limit=1000)[1]
 
@@ -79,53 +102,40 @@ TEST_NAME1_RE = re.compile('.*/gate-real-db-upgrade_nova_([^_]+)_([^/]*)/.*')
 TEST_NAME2_RE = re.compile('.*/gate-real-db-upgrade_nova_([^_]+)/.*/(.*).log')
 
 
-class Analyser(object):
+def process(connection, container, name):
     log = logging.getLogger(__name__)
+    engine_name = None
+    test_name = None
 
-    def __init__(self):
-        self.results = {}
-
-    def dump(self):
-        with open('results.json', 'w') as f:
-            f.write(json.dumps(self.results, indent=4, sort_keys=True))
-
-    def process(self, connection, container, name):
-        engine_name = None
-        test_name = None
-
-        m = TEST_NAME1_RE.match(name)
+    m = TEST_NAME1_RE.match(name)
+    if m:
+        engine_name = m.group(1)
+        test_name = m.group(2)
+    else:
+        m = TEST_NAME2_RE.match(name)
         if m:
             engine_name = m.group(1)
             test_name = m.group(2)
-        else:
-            m = TEST_NAME2_RE.match(name)
-            if m:
-                engine_name = m.group(1)
-                test_name = m.group(2)
 
-        if not engine_name or not test_name:
-            self.log.warn('Log name %s does not match regexp' % name)
-            return
+    if not engine_name or not test_name:
+        log.warn('Log name %s does not match regexp' % name)
+        return
 
-        content = connection.get_object(container, name)[1]
-        with open('/tmp/logcontent', 'w') as f:
-            f.write(content)
+    content = connection.get_object(container, name)[1]
+    with open('/tmp/logcontent', 'w') as f:
+        f.write(content)
 
-        lp = handle_results.LogParser('/tmp/logcontent', None)
-        lp.process_log()
-        if not lp.migrations:
-            self.log.warn('Log %s contained no migrations' % name)
+    lp = handle_results.LogParser('/tmp/logcontent', None)
+    lp.process_log()
+    if not lp.migrations:
+        log.warn('Log %s contained no migrations' % name)
 
-        for migration in lp.migrations:
-            duration = migration['end'] - migration['start']
-            self.results.setdefault(engine_name, {})
-            self.results[engine_name].setdefault(test_name, {})
-            self.results[engine_name][test_name].setdefault(migration['to'],
-                                                            {})
-            self.results[engine_name][test_name][migration['to']]\
-                .setdefault(duration, 0)
-            self.results[engine_name][test_name][migration['to']][duration] \
-                += 1
+    for migration in lp.migrations:
+        if not 'start' in migration:
+            continue
+        if not 'end' in migration:
+            continue
+        yield (engine_name, test_name, migration)
 
 
 if __name__ == '__main__':
