@@ -123,6 +123,11 @@ class LogParser(object):
                 elif MIGRATION_START_RE.search(line):
                     if current_migration:
                         current_migration['stats'] = migration_stats
+                        if (('start' in current_migration and
+                             'end' in current_migration)):
+                            current_migration['duration'] = (
+                                current_migration['end'] -
+                                current_migration['start'])
                         self.migrations.append(current_migration)
                         current_migration = {}
                         migration_stats = {}
@@ -176,6 +181,10 @@ class LogParser(object):
 
             if current_migration:
                 current_migration['stats'] = migration_stats
+                if (('start' in current_migration and
+                     'end' in current_migration)):
+                    current_migration['duration'] = (
+                        current_migration['end'] - current_migration['start'])
                 self.migrations.append(current_migration)
 
 
