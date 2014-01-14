@@ -8,3 +8,5 @@ python-daemon
 extras
 GitPython>=0.3.2.RC1
 sphinxcontrib-programoutput
+
+mysql-python
