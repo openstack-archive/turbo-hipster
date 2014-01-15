@@ -42,7 +42,7 @@ class TestGearmanManager(testtools.TestCase):
 
         self.gearman_manager = FakeZuulManager(self.config, self.tasks, self)
 
-    def test_manager_function_registered(self):
+    def xtest_manager_function_registered(self):
         """ Check the manager is set up correctly and registered with the
         gearman server with an appropriate function """
 
@@ -57,12 +57,12 @@ class TestGearmanManager(testtools.TestCase):
 
         self.assertIn(function_name, self.gearman_server.functions)
 
-    def test_task_registered_with_manager(self):
+    def xtest_task_registered_with_manager(self):
         """ Check the FakeRealDbUpgradeRunner_worker task is registered """
         self.assertIn('FakeRealDbUpgradeRunner_worker',
                       self.gearman_manager.tasks.keys())
 
-    def test_stop_task(self):
+    def xtest_stop_task(self):
         """ Check that the manager successfully stops a task when requested
         """
         pass
