@@ -1,0 +1,743 @@
+2014-01-16 06:57:33,961 [output] Triggered by: https://review.openstack.org/65615
+2014-01-16 06:57:33,961 [output] + [[ ! -e .git ]]
+2014-01-16 06:57:33,961 [output] + git checkout master
+2014-01-16 06:57:36,767 [output] Switched to branch 'master'
+2014-01-16 06:57:36,794 [output] + git pull
+2014-01-16 06:57:45,964 [output] Already up-to-date.
+2014-01-16 06:57:45,965 [output] + git remote set-url origin https://review.openstack.org/p/openstack/nova
+2014-01-16 06:57:45,970 [output] + git remote update
+2014-01-16 06:57:45,983 [output] Fetching origin
+2014-01-16 06:57:54,415 [output] + git reset --hard
+2014-01-16 06:57:54,478 [output] HEAD is now at b77282d Merge "baremetal: stop deployment if block devices are not available"
+2014-01-16 06:57:54,480 [output] + git clean -x -f -d -q
+2014-01-16 06:57:55,081 [output] + '[' -z '' ']'
+2014-01-16 06:57:55,082 [output] + git fetch http://zuul.rcbops.com/p/openstack/nova refs/zuul/master/Zfa8228d022314ccd967a79ca3f853198
+2014-01-16 06:58:03,651 [output] From http://zuul.rcbops.com/p/openstack/nova
+2014-01-16 06:58:03,652 [output]  * branch            refs/zuul/master/Zfa8228d022314ccd967a79ca3f853198 -> FETCH_HEAD
+2014-01-16 06:58:03,660 [output] + git checkout FETCH_HEAD
+2014-01-16 06:58:03,825 [output] Note: checking out 'FETCH_HEAD'.
+2014-01-16 06:58:03,826 [output] You are in 'detached HEAD' state. You can look around, make experimental
+2014-01-16 06:58:03,826 [output] changes and commit them, and you can discard any commits you make in this
+2014-01-16 06:58:03,826 [output] state without impacting any branches by performing another checkout.
+2014-01-16 06:58:03,826 [output] If you want to create a new branch to retain commits you create, you may
+2014-01-16 06:58:03,826 [output] do so (now or later) by using -b with the checkout command again. Example:
+2014-01-16 06:58:03,826 [output]   git checkout -b new_branch_name
+2014-01-16 06:58:03,826 [output] HEAD is now at b1856cf... Merge commit 'refs/changes/15/65615/7' of ssh://review.openstack.org:29418/openstack/nova
+2014-01-16 06:58:03,828 [output] + git reset --hard FETCH_HEAD
+2014-01-16 06:58:03,891 [output] HEAD is now at b1856cf Merge commit 'refs/changes/15/65615/7' of ssh://review.openstack.org:29418/openstack/nova
+2014-01-16 06:58:03,893 [output] + git clean -x -f -d -q
+2014-01-16 06:58:03,918 [output] + git branch -D working
+2014-01-16 06:58:03,924 [output] Deleted branch working (was 888c8c4).
+2014-01-16 06:58:03,924 [output] + git checkout -b working
+2014-01-16 06:58:03,955 [heartbeat]
+2014-01-16 06:58:03,996 [output] Switched to a new branch 'working'
+2014-01-16 06:58:03,999 [output] + '[' -f .gitmodules ']'
+2014-01-16 06:58:04,000 [script exit code = 0]
+2014-01-16 06:58:04,022 [output] Instance flavor: rackspace_standard_2cpu_2gb
+2014-01-16 06:58:04,023 [output] IO test starts
+2014-01-16 06:58:12,972 [output] 1024+0 records in
+2014-01-16 06:58:13,049 [output] 1024+0 records out
+2014-01-16 06:58:13,054 [output] 1048576000 bytes (1.0 GB) copied, 9.02551 s, 116 MB/s
+2014-01-16 06:58:13,055 [output] real	0m9.033s
+2014-01-16 06:58:13,055 [output] user	0m0.000s
+2014-01-16 06:58:13,055 [output] sys	0m2.398s
+2014-01-16 06:58:14,069 [output] IO test ends
+2014-01-16 06:58:14,070 [script exit code = 0]
+2014-01-16 06:58:14,529 [output] Test running on thw-percona-007 as th (/home/th, /home/th), using log processing profile full
+2014-01-16 06:58:14,530 [output] To execute this script manually, run this:
+2014-01-16 06:58:14,530 [output] .../task_plugins/gate_real_db_upgrade/nova_mysql_migrations.sh bc1198bacf884c0295037e8e32c0ec17 .../jobs/65/65615/7/check/gate-real-db-upgrade_nova_percona_user_001/bc1198b .../git/gate_real_db_upgrade-thw-percona-007-4/openstack/nova nova tester nova_datasets_user_001 .../datasets_user_001/user_001/nova_user_001.sql .../datasets_user_001/user_001/logging.conf /var/cache/pip
+2014-01-16 06:58:14,530 [output] Restoring test database nova_datasets_user_001
+2014-01-16 06:58:14,530 [output] + mysql -u nova --password=... -e 'drop database nova_datasets_user_001'
+2014-01-16 06:58:17,395 [output] + mysql -u nova --password=... -e 'create database nova_datasets_user_001'
+2014-01-16 06:58:17,410 [output] + mysql -u nova --password=... nova_datasets_user_001
+2014-01-16 06:58:44,133 [heartbeat]
+2014-01-16 06:59:14,134 [heartbeat]
+2014-01-16 06:59:42,044 [output] + set +x
+2014-01-16 06:59:42,044 [output] Build test environment
+2014-01-16 06:59:42,044 [output] Setting up virtual env
+2014-01-16 06:59:44,134 [heartbeat]
+2014-01-16 06:59:44,204 [output] New python executable in bc1198bacf884c0295037e8e32c0ec17/bin/python
+2014-01-16 06:59:44,914 [output] Installing Setuptools..............................................................................................................................................................................................................................done.
+2014-01-16 06:59:45,678 [output] Installing Pip.....................................................................................................................................................................................................................................................................................................................................done.
+2014-01-16 06:59:45,840 [output] virtualenvwrapper.user_scripts creating .../envs/bc1198bacf884c0295037e8e32c0ec17/bin/predeactivate
+2014-01-16 06:59:45,841 [output] virtualenvwrapper.user_scripts creating .../envs/bc1198bacf884c0295037e8e32c0ec17/bin/postdeactivate
+2014-01-16 06:59:45,841 [output] virtualenvwrapper.user_scripts creating .../envs/bc1198bacf884c0295037e8e32c0ec17/bin/preactivate
+2014-01-16 06:59:45,841 [output] virtualenvwrapper.user_scripts creating .../envs/bc1198bacf884c0295037e8e32c0ec17/bin/postactivate
+2014-01-16 06:59:45,842 [output] virtualenvwrapper.user_scripts creating .../envs/bc1198bacf884c0295037e8e32c0ec17/bin/get_env_details
+2014-01-16 06:59:46,608 [output] Enabled global site-packages
+2014-01-16 06:59:46,831 [output] Schema version is 133
+2014-01-16 06:59:46,833 [output] Database is from Folsom! Upgrade via Grizzly
+2014-01-16 06:59:46,949 [output] Deleted branch stable/grizzly (was 3e451f1).
+2014-01-16 06:59:47,123 [output] Fetching origin
+2014-01-16 07:00:01,867 [output] Switched to a new branch 'stable/grizzly'
+2014-01-16 07:00:03,409 [output] HEAD is now at 3e451f1 use 'os_type' in ephemeral filename only if mkfs defined
+2014-01-16 07:00:04,297 [output] Install pip requirements from tools/pip-requires
+2014-01-16 07:00:14,135 [heartbeat]
+2014-01-16 07:00:44,135 [heartbeat]
+2014-01-16 07:01:14,135 [heartbeat]
+2014-01-16 07:01:44,136 [heartbeat]
+2014-01-16 07:02:14,136 [heartbeat]
+2014-01-16 07:02:44,136 [heartbeat]
+2014-01-16 07:03:14,137 [heartbeat]
+2014-01-16 07:03:26,278 [output] Requirements installed
+2014-01-16 07:03:26,303 [output] ***** Start DB upgrade to state of grizzly *****
+2014-01-16 07:03:26,303 [output] HEAD of branch under test is:
+2014-01-16 07:03:26,312 [output] commit 3e451f1bac57d24e47171cffb3ad59bb1610d836
+2014-01-16 07:03:26,312 [output] Author: Ryan Moore <ryan.moore@hp.com>
+2014-01-16 07:03:26,312 [output] Date:   Fri Nov 29 14:21:19 2013 +0000
+2014-01-16 07:03:26,312 [output]     use 'os_type' in ephemeral filename only if mkfs defined
+2014-01-16 07:03:26,313 [output]
+2014-01-16 07:03:26,313 [output]     Currently for undefined os-types it will use the default mkfs
+2014-01-16 07:03:26,313 [output]     command, but use the meta 'os_type' in the name of the
+2014-01-16 07:03:26,313 [output]     ephemeral file (e.g. ephemeral_20_abcdef). Which can result
+2014-01-16 07:03:26,313 [output]     in a lot of files (DoS?)
+2014-01-16 07:03:26,313 [output]     This change will only use 'os_type' in the ephemeral filename
+2014-01-16 07:03:26,313 [output]     if there is a specific mkfs command defined, otherwise it will
+2014-01-16 07:03:26,313 [output]     use 'default' (e.g. ephemeral_20_default)
+2014-01-16 07:03:26,313 [output]
+2014-01-16 07:03:26,314 [output]     Modifed the tests to test for:
+2014-01-16 07:03:26,314 [output]       os_type=''
+2014-01-16 07:03:26,314 [output]       os_type=None
+2014-01-16 07:03:26,314 [output]       os_type='test' - with no mkfs command specified
+2014-01-16 07:03:26,314 [output]       os_type='test' - with a mkfs command specified
+2014-01-16 07:03:26,314 [output]
+2014-01-16 07:03:26,314 [output]     Closes-Bug: 1253980
+2014-01-16 07:03:26,315 [output]
+2014-01-16 07:03:26,315 [output]     Backport of Original Change-Id: Ie4c10f99ce690c5e4ef181624bd688c38923855c
+2014-01-16 07:03:26,315 [output]     to stable/grizzly
+2014-01-16 07:03:26,315 [output]
+2014-01-16 07:03:26,315 [output]     Change-Id: Ia040910e90861a2987eff345ad1c01863655b124
+2014-01-16 07:03:26,315 [output] Setting up the nova-manage entry point
+2014-01-16 07:03:30,974 [output] warning: no files found matching 'AUTHORS'
+2014-01-16 07:03:30,982 [output] warning: no files found matching 'ChangeLog'
+2014-01-16 07:03:31,009 [output] warning: no previously-included files matching '*.pyc' found anywhere in distribution
+2014-01-16 07:03:32,636 [output] warning: no files found matching 'AUTHORS'
+2014-01-16 07:03:32,644 [output] warning: no files found matching 'ChangeLog'
+2014-01-16 07:03:32,671 [output] warning: no previously-included files matching '*.pyc' found anywhere in distribution
+2014-01-16 07:03:37,629 [output] zip_safe flag not set; analyzing archive contents...
+2014-01-16 07:03:37,634 [output] nova.crypto: module references __file__
+2014-01-16 07:03:37,636 [output] nova.loadables: module references __path__
+2014-01-16 07:03:37,637 [output] nova.service: module MAY be using inspect.stack
+2014-01-16 07:03:37,639 [output] nova.utils: module references __file__
+2014-01-16 07:03:37,639 [output] nova.paths: module references __file__
+2014-01-16 07:03:37,648 [output] nova.db.sqlalchemy.migration: module references __file__
+2014-01-16 07:03:37,682 [output] nova.api.openstack.compute.contrib.__init__: module references __path__
+2014-01-16 07:03:37,692 [output] nova.openstack.common.setup: module references __file__
+2014-01-16 07:03:37,693 [output] nova.openstack.common.log: module MAY be using inspect.stack
+2014-01-16 07:03:37,694 [output] nova.openstack.common.db.sqlalchemy.session: module references __file__
+2014-01-16 07:03:37,700 [output] nova.openstack.common.rpc.__init__: module MAY be using inspect.stack
+2014-01-16 07:03:37,711 [output] nova.network.linux_net: module MAY be using inspect.stack
+2014-01-16 07:03:37,735 [output] nova.tests.test_nova_manage: module references __file__
+2014-01-16 07:03:37,738 [output] nova.tests.test_misc: module references __file__
+2014-01-16 07:03:37,747 [output] nova.tests.test_wsgi: module references __file__
+2014-01-16 07:03:37,768 [output] nova.tests.test_xenapi: module references __file__
+2014-01-16 07:03:37,776 [output] nova.tests.test_migrations: module references __file__
+2014-01-16 07:03:37,787 [output] nova.tests.api.ec2.test_cloud: module references __file__
+2014-01-16 07:03:37,844 [output] nova.tests.integrated.test_api_samples: module references __file__
+2014-01-16 07:03:37,889 [output] nova.tests.image.test_s3: module references __file__
+2014-01-16 07:03:37,900 [output] nova.tests.baremetal.test_nova_baremetal_deploy_helper: module references __file__
+2014-01-16 07:03:37,900 [output] nova.tests.baremetal.test_nova_baremetal_manage: module references __file__
+2014-01-16 07:03:37,962 [output] nova.virt.baremetal.db.sqlalchemy.migration: module references __file__
+2014-01-16 07:03:43,411 [output] Migrations present:
+2014-01-16 07:03:43,424 [output] 133_folsom.py
+2014-01-16 07:03:43,424 [output] 134_add_counters_to_bw_usage_cache.py
+2014-01-16 07:03:43,425 [output] 135_add_node_to_instances.py
+2014-01-16 07:03:43,425 [output] 136_add_index_to_instances.py
+2014-01-16 07:03:43,425 [output] 137_add_indexes_to_migrations.py
+2014-01-16 07:03:43,425 [output] 138_drop_server_name_from_instances.py
+2014-01-16 07:03:43,425 [output] 139_add_indexes_to_fixed_ips.py
+2014-01-16 07:03:43,425 [output] 140_drop_unused_postgresql_volume_sequences.py
+2014-01-16 07:03:43,425 [output] 141_update_migrations_instance_uuid.py
+2014-01-16 07:03:43,425 [output] 142_add_migrations_instance_status_index.py
+2014-01-16 07:03:43,425 [output] 143_rename_instance_info_cache_sequence.py
+2014-01-16 07:03:43,426 [output] 144_add_node_to_migrations.py
+2014-01-16 07:03:43,426 [output] 145_add_volume_usage_cache.py
+2014-01-16 07:03:43,426 [output] 146_aggregate_zones.py
+2014-01-16 07:03:43,426 [output] 147_no_service_zones.py
+2014-01-16 07:03:43,426 [output] 148_add_instance_actions.py
+2014-01-16 07:03:43,426 [output] 149_inet_datatype_for_postgres.py
+2014-01-16 07:03:43,426 [output] 150_add_host_to_instance_faults.py
+2014-01-16 07:03:43,426 [output] 151_change_task_log_column_type.py
+2014-01-16 07:03:43,427 [output] 152_change_type_of_deleted_column.py
+2014-01-16 07:03:43,427 [output] 153_instance_type_in_system_metadata.py
+2014-01-16 07:03:43,427 [output] 154_add_shadow_tables.py
+2014-01-16 07:03:43,427 [output] 155_add_task_log_uc.py
+2014-01-16 07:03:43,427 [output] 156_cidr_column_length.py
+2014-01-16 07:03:43,427 [output] 157_add_security_group_default_rules.py
+2014-01-16 07:03:43,427 [output] 158_add_networks_uc.py
+2014-01-16 07:03:43,427 [output] 159_revert_ip_column_length.py
+2014-01-16 07:03:43,427 [output] 160_fix_system_metadata_deleted.py
+2014-01-16 07:03:43,428 [output] 161_fix_system_metadata_none_strings.py
+2014-01-16 07:03:43,428 [output] Restarting mysql
+2014-01-16 07:03:44,137 [heartbeat]
+2014-01-16 07:03:44,307 [sqlerr] 140116  7:03:44 [Note] /usr/sbin/mysqld: Normal shutdown
+2014-01-16 07:03:44,308 [sqlerr] 140116  7:03:44 [Note] Event Scheduler: Purging the queue. 0 events
+2014-01-16 07:03:44,440 [sqlerr] 140116  7:03:44  InnoDB: Starting shutdown...
+2014-01-16 07:03:46,242 [sqlerr] 140116  7:03:46  InnoDB: Shutdown completed; log sequence number 727562614175
+2014-01-16 07:03:46,244 [sqlerr] 140116  7:03:46 [Note] /usr/sbin/mysqld: Shutdown complete
+2014-01-16 07:03:46,260 [output] mysql stop/waiting
+2014-01-16 07:03:46,435 [syslog] Jan 16 07:03:46 thw-percona-007 kernel: [1470247.788188] type=1400 audit(1389855826.428:528): apparmor="STATUS" operation="profile_replace" parent=10171 profile="unconfined" name="/usr/sbin/mysqld" pid=10175 comm="apparmor_parser"
+2014-01-16 07:03:46,941 [sqlerr] 140116  7:03:46 [Warning] Using unique option prefix myisam-recover instead of myisam-recover-options is deprecated and will be removed in a future release. Please use the full name instead.
+2014-01-16 07:03:46,941 [sqlerr] 140116  7:03:46 [Note] Plugin 'FEDERATED' is disabled.
+2014-01-16 07:03:46,942 [sqlerr] 140116  7:03:46 InnoDB: The InnoDB memory heap is disabled
+2014-01-16 07:03:46,942 [sqlerr] 140116  7:03:46 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2014-01-16 07:03:46,942 [sqlerr] 140116  7:03:46 InnoDB: Compressed tables use zlib 1.2.3
+2014-01-16 07:03:46,943 [sqlerr] 140116  7:03:46 InnoDB: Using Linux native AIO
+2014-01-16 07:03:46,960 [sqlerr] 140116  7:03:46 InnoDB: Initializing buffer pool, size = 128.0M
+2014-01-16 07:03:46,983 [sqlerr] 140116  7:03:46 InnoDB: Completed initialization of buffer pool
+2014-01-16 07:03:47,001 [sqlerr] 140116  7:03:46 InnoDB: highest supported file format is Barracuda.
+2014-01-16 07:03:47,107 [sqlerr] 140116  7:03:47  InnoDB: Waiting for the background threads to start
+2014-01-16 07:03:48,108 [sqlerr] 140116  7:03:48 Percona XtraDB (http://www.percona.com) 5.5.35-rel33.0 started; log sequence number 727562614175
+2014-01-16 07:03:48,113 [sqlerr] 140116  7:03:48 [Note] Event Scheduler: Loaded 0 events
+2014-01-16 07:03:48,114 [sqlerr] 140116  7:03:48 [Note] /usr/sbin/mysqld: ready for connections.
+2014-01-16 07:03:48,114 [sqlerr] Version: '5.5.35-33.0'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  Percona Server (GPL), Release 33.0
+2014-01-16 07:03:48,867 [output] mysql start/running, process 10179
+2014-01-16 07:03:48,870 [output] MySQL counters before upgrade:
+2014-01-16 07:03:48,881 [syslog] Jan 16 07:03:48 thw-percona-007 /etc/mysql/debian-start[10268]: Upgrading MySQL tables if necessary.
+2014-01-16 07:03:48,899 [output] Variable_name	Value
+2014-01-16 07:03:48,900 [output] Innodb_adaptive_hash_cells	276671
+2014-01-16 07:03:48,900 [output] Innodb_adaptive_hash_heap_buffers	0
+2014-01-16 07:03:48,900 [output] Innodb_adaptive_hash_hash_searches	0
+2014-01-16 07:03:48,900 [output] Innodb_adaptive_hash_non_hash_searches	6949
+2014-01-16 07:03:48,900 [output] Innodb_background_log_sync	1
+2014-01-16 07:03:48,900 [output] Innodb_buffer_pool_pages_data	366
+2014-01-16 07:03:48,900 [output] Innodb_buffer_pool_bytes_data	5996544
+2014-01-16 07:03:48,900 [output] Innodb_buffer_pool_pages_dirty	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_bytes_dirty	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_flushed	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_LRU_flushed	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_free	7824
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_made_not_young	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_made_young	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_misc	1
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_old	0
+2014-01-16 07:03:48,901 [output] Innodb_buffer_pool_pages_total	8191
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_read_ahead_rnd	0
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_read_ahead	0
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_read_ahead_evicted	0
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_read_requests	27689
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_reads	367
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_wait_free	0
+2014-01-16 07:03:48,902 [output] Innodb_buffer_pool_write_requests	0
+2014-01-16 07:03:48,902 [output] Innodb_checkpoint_age	0
+2014-01-16 07:03:48,906 [output] Innodb_checkpoint_max_age	7782360
+2014-01-16 07:03:48,906 [output] Innodb_checkpoint_target_age	7539162
+2014-01-16 07:03:48,906 [output] Innodb_data_fsyncs	3
+2014-01-16 07:03:48,906 [output] Innodb_data_pending_fsyncs	0
+2014-01-16 07:03:48,907 [output] Innodb_data_pending_reads	0
+2014-01-16 07:03:48,907 [output] Innodb_data_pending_writes	0
+2014-01-16 07:03:48,907 [output] Innodb_data_read	8196096
+2014-01-16 07:03:48,907 [output] Innodb_data_reads	377
+2014-01-16 07:03:48,907 [output] Innodb_data_writes	3
+2014-01-16 07:03:48,907 [output] Innodb_data_written	1536
+2014-01-16 07:03:48,907 [output] Innodb_dblwr_pages_written	0
+2014-01-16 07:03:48,907 [output] Innodb_dblwr_writes	0
+2014-01-16 07:03:48,907 [output] Innodb_deadlocks	0
+2014-01-16 07:03:48,908 [output] Innodb_dict_tables	10
+2014-01-16 07:03:48,908 [output] Innodb_have_atomic_builtins	ON
+2014-01-16 07:03:48,908 [output] Innodb_history_list_length	871
+2014-01-16 07:03:48,908 [output] Innodb_ibuf_discarded_delete_marks	0
+2014-01-16 07:03:48,908 [output] Innodb_ibuf_discarded_deletes	0
+2014-01-16 07:03:48,908 [output] Innodb_ibuf_discarded_inserts	0
+2014-01-16 07:03:48,908 [output] Innodb_ibuf_free_list	5
+2014-01-16 07:03:48,908 [output] Innodb_ibuf_merged_delete_marks	0
+2014-01-16 07:03:48,908 [output] Innodb_ibuf_merged_deletes	0
+2014-01-16 07:03:48,909 [output] Innodb_ibuf_merged_inserts	0
+2014-01-16 07:03:48,909 [output] Innodb_ibuf_merges	0
+2014-01-16 07:03:48,909 [output] Innodb_ibuf_segment_size	7
+2014-01-16 07:03:48,909 [output] Innodb_ibuf_size	1
+2014-01-16 07:03:48,909 [output] Innodb_log_waits	0
+2014-01-16 07:03:48,909 [output] Innodb_log_write_requests	0
+2014-01-16 07:03:48,909 [output] Innodb_log_writes	1
+2014-01-16 07:03:48,909 [output] Innodb_lsn_current	727562614175
+2014-01-16 07:03:48,909 [output] Innodb_lsn_flushed	727562614175
+2014-01-16 07:03:48,909 [output] Innodb_lsn_last_checkpoint	727562614175
+2014-01-16 07:03:48,910 [output] Innodb_master_thread_1_second_loops	1
+2014-01-16 07:03:48,910 [output] Innodb_master_thread_10_second_loops	0
+2014-01-16 07:03:48,910 [output] Innodb_master_thread_background_loops	1
+2014-01-16 07:03:48,910 [output] Innodb_master_thread_main_flush_loops	1
+2014-01-16 07:03:48,910 [output] Innodb_master_thread_sleeps	1
+2014-01-16 07:03:48,910 [output] Innodb_max_trx_id	1636096
+2014-01-16 07:03:48,910 [output] Innodb_mem_adaptive_hash	2233968
+2014-01-16 07:03:48,910 [output] Innodb_mem_dictionary	614330
+2014-01-16 07:03:48,910 [output] Innodb_mem_total	137756672
+2014-01-16 07:03:48,911 [output] Innodb_mutex_os_waits	0
+2014-01-16 07:03:48,911 [output] Innodb_mutex_spin_rounds	0
+2014-01-16 07:03:48,911 [output] Innodb_mutex_spin_waits	0
+2014-01-16 07:03:48,911 [output] Innodb_oldest_view_low_limit_trx_id	1636096
+2014-01-16 07:03:48,911 [output] Innodb_os_log_fsyncs	3
+2014-01-16 07:03:48,911 [output] Innodb_os_log_pending_fsyncs	0
+2014-01-16 07:03:48,911 [output] Innodb_os_log_pending_writes	0
+2014-01-16 07:03:48,911 [output] Innodb_os_log_written	512
+2014-01-16 07:03:48,912 [output] Innodb_page_size	16384
+2014-01-16 07:03:48,912 [output] Innodb_pages_created	0
+2014-01-16 07:03:48,912 [output] Innodb_pages_read	366
+2014-01-16 07:03:48,912 [output] Innodb_pages_written	0
+2014-01-16 07:03:48,912 [output] Innodb_purge_trx_id	1635160
+2014-01-16 07:03:48,912 [output] Innodb_purge_undo_no	0
+2014-01-16 07:03:48,912 [output] Innodb_row_lock_current_waits	0
+2014-01-16 07:03:48,912 [output] Innodb_current_row_locks	0
+2014-01-16 07:03:48,913 [output] Innodb_row_lock_time	0
+2014-01-16 07:03:48,913 [output] Innodb_row_lock_time_avg	0
+2014-01-16 07:03:48,913 [output] Innodb_row_lock_time_max	0
+2014-01-16 07:03:48,913 [output] Innodb_row_lock_waits	0
+2014-01-16 07:03:48,913 [output] Innodb_rows_deleted	0
+2014-01-16 07:03:48,913 [output] Innodb_rows_inserted	0
+2014-01-16 07:03:48,913 [output] Innodb_rows_read	0
+2014-01-16 07:03:48,913 [output] Innodb_rows_updated	0
+2014-01-16 07:03:48,913 [output] Innodb_read_views_memory	88
+2014-01-16 07:03:48,913 [output] Innodb_descriptors_memory	8000
+2014-01-16 07:03:48,914 [output] Innodb_s_lock_os_waits	2
+2014-01-16 07:03:48,914 [output] Innodb_s_lock_spin_rounds	60
+2014-01-16 07:03:48,914 [output] Innodb_s_lock_spin_waits	2
+2014-01-16 07:03:48,914 [output] Innodb_truncated_status_writes	0
+2014-01-16 07:03:48,914 [output] Innodb_x_lock_os_waits	0
+2014-01-16 07:03:48,914 [output] Innodb_x_lock_spin_rounds	0
+2014-01-16 07:03:48,914 [output] Innodb_x_lock_spin_waits	0
+2014-01-16 07:03:48,950 [output] Test will migrate from 133 to 161
+2014-01-16 07:03:48,956 [output] ++ dirname .../task_plugins/gate_real_db_upgrade/nova_mysql_migrations.sh
+2014-01-16 07:03:48,961 [output] + sudo /sbin/ip netns exec nonet .../task_plugins/gate_real_db_upgrade/nova-manage-wrapper .../envs/bc1198bacf884c0295037e8e32c0ec17 --config-file .../jobs/65/65615/7/check/gate-real-db-upgrade_nova_percona_user_001/bc1198b/nova-grizzly.conf --verbose db sync --version 134
+2014-01-16 07:03:49,076 [syslog] Jan 16 07:03:49 thw-percona-007 /etc/mysql/debian-start[10272]: /usr/bin/mysql_upgrade: the '--basedir' option is always ignored
+2014-01-16 07:03:49,076 [syslog] Jan 16 07:03:49 thw-percona-007 /etc/mysql/debian-start[10272]: Looking for 'mysql' as: /usr/bin/mysql
+2014-01-16 07:03:49,076 [syslog] Jan 16 07:03:49 thw-percona-007 /etc/mysql/debian-start[10272]: Looking for 'mysqlcheck' as: /usr/bin/mysqlcheck
+2014-01-16 07:03:49,076 [syslog] Jan 16 07:03:49 thw-percona-007 /etc/mysql/debian-start[10272]: This installation of MySQL is already upgraded to 5.5.35, use --force if you still need to run mysql_upgrade
+2014-01-16 07:03:49,079 [syslog] Jan 16 07:03:49 thw-percona-007 /etc/mysql/debian-start[10299]: Checking for insecure root accounts.
+2014-01-16 07:03:49,102 [syslog] Jan 16 07:03:49 thw-percona-007 /etc/mysql/debian-start[10305]: Triggering myisam-recover for all MyISAM tables
+2014-01-16 07:03:50,665 [sqlerr] 140116  7:03:50 [Warning] IP address '172.16.0.2' could not be resolved: Name or service not known
+2014-01-16 07:03:50,708 [output] 133 -> 134...
+2014-01-16 07:03:50,879 [output] done
+2014-01-16 07:03:51,225 [output] + manage_exit=0
+2014-01-16 07:03:51,225 [output] + set +x
+2014-01-16 07:03:51,226 [output] MySQL counters after upgrade:
+2014-01-16 07:03:51,238 [output] Variable_name	Value
+2014-01-16 07:03:51,238 [output] Innodb_adaptive_hash_cells	276671
+2014-01-16 07:03:51,238 [output] Innodb_adaptive_hash_heap_buffers	2
+2014-01-16 07:03:51,238 [output] Innodb_adaptive_hash_hash_searches	951
+2014-01-16 07:03:51,238 [output] Innodb_adaptive_hash_non_hash_searches	8727
+2014-01-16 07:03:51,238 [output] Innodb_background_log_sync	4
+2014-01-16 07:03:51,238 [output] Innodb_buffer_pool_pages_data	1143
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_bytes_data	18726912
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_pages_dirty	56
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_bytes_dirty	917504
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_pages_flushed	0
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_pages_LRU_flushed	0
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_pages_free	7045
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_pages_made_not_young	0
+2014-01-16 07:03:51,239 [output] Innodb_buffer_pool_pages_made_young	0
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_pages_misc	3
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_pages_old	441
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_pages_total	8191
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_read_ahead_rnd	0
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_read_ahead	0
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_read_ahead_evicted	0
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_read_requests	47329
+2014-01-16 07:03:51,240 [output] Innodb_buffer_pool_reads	1134
+2014-01-16 07:03:51,241 [output] Innodb_buffer_pool_wait_free	0
+2014-01-16 07:03:51,241 [output] Innodb_buffer_pool_write_requests	498
+2014-01-16 07:03:51,241 [output] Innodb_checkpoint_age	22103
+2014-01-16 07:03:51,241 [output] Innodb_checkpoint_max_age	7782360
+2014-01-16 07:03:51,241 [output] Innodb_checkpoint_target_age	7539162
+2014-01-16 07:03:51,241 [output] Innodb_data_fsyncs	14
+2014-01-16 07:03:51,241 [output] Innodb_data_pending_fsyncs	0
+2014-01-16 07:03:51,241 [output] Innodb_data_pending_reads	1
+2014-01-16 07:03:51,241 [output] Innodb_data_pending_writes	0
+2014-01-16 07:03:51,242 [output] Innodb_data_read	20779008
+2014-01-16 07:03:51,242 [output] Innodb_data_reads	1145
+2014-01-16 07:03:51,242 [output] Innodb_data_writes	14
+2014-01-16 07:03:51,242 [output] Innodb_data_written	29184
+2014-01-16 07:03:51,242 [output] Innodb_dblwr_pages_written	0
+2014-01-16 07:03:51,242 [output] Innodb_dblwr_writes	0
+2014-01-16 07:03:51,242 [output] Innodb_deadlocks	0
+2014-01-16 07:03:51,242 [output] Innodb_dict_tables	311
+2014-01-16 07:03:51,243 [output] Innodb_have_atomic_builtins	ON
+2014-01-16 07:03:51,243 [output] Innodb_history_list_length	879
+2014-01-16 07:03:51,243 [output] Innodb_ibuf_discarded_delete_marks	0
+2014-01-16 07:03:51,243 [output] Innodb_ibuf_discarded_deletes	0
+2014-01-16 07:03:51,243 [output] Innodb_ibuf_discarded_inserts	0
+2014-01-16 07:03:51,243 [output] Innodb_ibuf_free_list	5
+2014-01-16 07:03:51,243 [output] Innodb_ibuf_merged_delete_marks	0
+2014-01-16 07:03:51,243 [output] Innodb_ibuf_merged_deletes	0
+2014-01-16 07:03:51,244 [output] Innodb_ibuf_merged_inserts	0
+2014-01-16 07:03:51,244 [output] Innodb_ibuf_merges	0
+2014-01-16 07:03:51,244 [output] Innodb_ibuf_segment_size	7
+2014-01-16 07:03:51,244 [output] Innodb_ibuf_size	1
+2014-01-16 07:03:51,244 [output] Innodb_log_waits	0
+2014-01-16 07:03:51,244 [output] Innodb_log_write_requests	54
+2014-01-16 07:03:51,244 [output] Innodb_log_writes	12
+2014-01-16 07:03:51,244 [output] Innodb_lsn_current	727562636278
+2014-01-16 07:03:51,244 [output] Innodb_lsn_flushed	727562636278
+2014-01-16 07:03:51,245 [output] Innodb_lsn_last_checkpoint	727562614175
+2014-01-16 07:03:51,245 [output] Innodb_master_thread_1_second_loops	4
+2014-01-16 07:03:51,245 [output] Innodb_master_thread_10_second_loops	0
+2014-01-16 07:03:51,245 [output] Innodb_master_thread_background_loops	1
+2014-01-16 07:03:51,245 [output] Innodb_master_thread_main_flush_loops	1
+2014-01-16 07:03:51,245 [output] Innodb_master_thread_sleeps	3
+2014-01-16 07:03:51,245 [output] Innodb_max_trx_id	1636119
+2014-01-16 07:03:51,245 [output] Innodb_mem_adaptive_hash	2266736
+2014-01-16 07:03:51,245 [output] Innodb_mem_dictionary	2568175
+2014-01-16 07:03:51,246 [output] Innodb_mem_total	137756672
+2014-01-16 07:03:51,246 [output] Innodb_mutex_os_waits	1
+2014-01-16 07:03:51,246 [output] Innodb_mutex_spin_rounds	30
+2014-01-16 07:03:51,246 [output] Innodb_mutex_spin_waits	1
+2014-01-16 07:03:51,246 [output] Innodb_oldest_view_low_limit_trx_id	1636119
+2014-01-16 07:03:51,246 [output] Innodb_os_log_fsyncs	14
+2014-01-16 07:03:51,246 [output] Innodb_os_log_pending_fsyncs	0
+2014-01-16 07:03:51,246 [output] Innodb_os_log_pending_writes	0
+2014-01-16 07:03:51,246 [output] Innodb_os_log_written	28160
+2014-01-16 07:03:51,247 [output] Innodb_page_size	16384
+2014-01-16 07:03:51,247 [output] Innodb_pages_created	9
+2014-01-16 07:03:51,247 [output] Innodb_pages_read	1133
+2014-01-16 07:03:51,247 [output] Innodb_pages_written	0
+2014-01-16 07:03:51,247 [output] Innodb_purge_trx_id	1636118
+2014-01-16 07:03:51,247 [output] Innodb_purge_undo_no	0
+2014-01-16 07:03:51,247 [output] Innodb_row_lock_current_waits	0
+2014-01-16 07:03:51,247 [output] Innodb_current_row_locks	0
+2014-01-16 07:03:51,247 [output] Innodb_row_lock_time	0
+2014-01-16 07:03:51,248 [output] Innodb_row_lock_time_avg	0
+2014-01-16 07:03:51,248 [output] Innodb_row_lock_time_max	0
+2014-01-16 07:03:51,248 [output] Innodb_row_lock_waits	0
+2014-01-16 07:03:51,248 [output] Innodb_rows_deleted	0
+2014-01-16 07:03:51,248 [output] Innodb_rows_inserted	0
+2014-01-16 07:03:51,248 [output] Innodb_rows_read	5
+2014-01-16 07:03:51,248 [output] Innodb_rows_updated	1
+2014-01-16 07:03:51,248 [output] Innodb_read_views_memory	88
+2014-01-16 07:03:51,248 [output] Innodb_descriptors_memory	8000
+2014-01-16 07:03:51,249 [output] Innodb_s_lock_os_waits	2
+2014-01-16 07:03:51,249 [output] Innodb_s_lock_spin_rounds	60
+2014-01-16 07:03:51,249 [output] Innodb_s_lock_spin_waits	2
+2014-01-16 07:03:51,249 [output] Innodb_truncated_status_writes	0
+2014-01-16 07:03:51,249 [output] Innodb_x_lock_os_waits	1
+2014-01-16 07:03:51,249 [output] Innodb_x_lock_spin_rounds	30
+2014-01-16 07:03:51,249 [output] Innodb_x_lock_spin_waits	1
+2014-01-16 07:03:51,250 [output] nova-manage returned exit code 0
+2014-01-16 07:03:51,250 [output] ++ dirname .../task_plugins/gate_real_db_upgrade/nova_mysql_migrations.sh
+2014-01-16 07:03:51,250 [output] + sudo /sbin/ip netns exec nonet .../task_plugins/gate_real_db_upgrade/nova-manage-wrapper .../envs/bc1198bacf884c0295037e8e32c0ec17 --config-file .../jobs/65/65615/7/check/gate-real-db-upgrade_nova_percona_user_001/bc1198b/nova-grizzly.conf --verbose db sync --version 135
+2014-01-16 07:03:52,241 [output] 134 -> 135...
+2014-01-16 07:04:14,138 [heartbeat]
+2014-01-16 07:04:44,138 [heartbeat]
+2014-01-16 07:04:52,187 [output] done
+2014-01-16 07:04:52,780 [output] + manage_exit=0
+2014-01-16 07:04:52,781 [output] + set +x
+2014-01-16 07:04:52,781 [output] MySQL counters after upgrade:
+2014-01-16 07:04:53,160 [output] Variable_name	Value
+2014-01-16 07:04:53,160 [output] Innodb_adaptive_hash_cells	276671
+2014-01-16 07:04:53,160 [output] Innodb_adaptive_hash_heap_buffers	2
+2014-01-16 07:04:53,160 [output] Innodb_adaptive_hash_hash_searches	106083
+2014-01-16 07:04:53,160 [output] Innodb_adaptive_hash_non_hash_searches	298400
+2014-01-16 07:04:53,161 [output] Innodb_background_log_sync	66
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_pages_data	8188
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_bytes_data	134152192
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_pages_dirty	7
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_bytes_dirty	114688
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_pages_flushed	45520
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_pages_LRU_flushed	0
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_pages_free	0
+2014-01-16 07:04:53,161 [output] Innodb_buffer_pool_pages_made_not_young	0
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_pages_made_young	21156
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_pages_misc	3
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_pages_old	3003
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_pages_total	8191
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_read_ahead_rnd	0
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_read_ahead	384
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_read_ahead_evicted	74
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_read_requests	1298715
+2014-01-16 07:04:53,162 [output] Innodb_buffer_pool_reads	26174
+2014-01-16 07:04:53,163 [output] Innodb_buffer_pool_wait_free	0
+2014-01-16 07:04:53,163 [output] Innodb_buffer_pool_write_requests	614699
+2014-01-16 07:04:53,163 [output] Innodb_checkpoint_age	6587228
+2014-01-16 07:04:53,163 [output] Innodb_checkpoint_max_age	7782360
+2014-01-16 07:04:53,163 [output] Innodb_checkpoint_target_age	7539162
+2014-01-16 07:04:53,163 [output] Innodb_data_fsyncs	1413
+2014-01-16 07:04:53,163 [output] Innodb_data_pending_fsyncs	0
+2014-01-16 07:04:53,163 [output] Innodb_data_pending_reads	0
+2014-01-16 07:04:53,164 [output] Innodb_data_pending_writes	0
+2014-01-16 07:04:53,164 [output] Innodb_data_read	437538816
+2014-01-16 07:04:53,164 [output] Innodb_data_reads	26582
+2014-01-16 07:04:53,164 [output] Innodb_data_writes	46917
+2014-01-16 07:04:53,164 [output] Innodb_data_written	1826503168
+2014-01-16 07:04:53,164 [output] Innodb_dblwr_pages_written	45520
+2014-01-16 07:04:53,164 [output] Innodb_dblwr_writes	443
+2014-01-16 07:04:53,164 [output] Innodb_deadlocks	0
+2014-01-16 07:04:53,164 [output] Innodb_dict_tables	345
+2014-01-16 07:04:53,165 [output] Innodb_have_atomic_builtins	ON
+2014-01-16 07:04:53,165 [output] Innodb_history_list_length	883
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_discarded_delete_marks	0
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_discarded_deletes	0
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_discarded_inserts	0
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_free_list	5
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_merged_delete_marks	1
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_merged_deletes	0
+2014-01-16 07:04:53,165 [output] Innodb_ibuf_merged_inserts	143
+2014-01-16 07:04:53,166 [output] Innodb_ibuf_merges	18
+2014-01-16 07:04:53,166 [output] Innodb_ibuf_segment_size	7
+2014-01-16 07:04:53,166 [output] Innodb_ibuf_size	1
+2014-01-16 07:04:53,166 [output] Innodb_log_waits	0
+2014-01-16 07:04:53,166 [output] Innodb_log_write_requests	731094
+2014-01-16 07:04:53,166 [output] Innodb_log_writes	507
+2014-01-16 07:04:53,166 [output] Innodb_lsn_current	727897236746
+2014-01-16 07:04:53,166 [output] Innodb_lsn_flushed	727897236160
+2014-01-16 07:04:53,166 [output] Innodb_lsn_last_checkpoint	727890649518
+2014-01-16 07:04:53,167 [output] Innodb_master_thread_1_second_loops	64
+2014-01-16 07:04:53,167 [output] Innodb_master_thread_10_second_loops	6
+2014-01-16 07:04:53,167 [output] Innodb_master_thread_background_loops	1
+2014-01-16 07:04:53,167 [output] Innodb_master_thread_main_flush_loops	1
+2014-01-16 07:04:53,167 [output] Innodb_master_thread_sleeps	63
+2014-01-16 07:04:53,167 [output] Innodb_max_trx_id	1636137
+2014-01-16 07:04:53,167 [output] Innodb_mem_adaptive_hash	2266736
+2014-01-16 07:04:53,167 [output] Innodb_mem_dictionary	2812073
+2014-01-16 07:04:53,167 [output] Innodb_mem_total	137756672
+2014-01-16 07:04:53,168 [output] Innodb_mutex_os_waits	18
+2014-01-16 07:04:53,168 [output] Innodb_mutex_spin_rounds	630
+2014-01-16 07:04:53,168 [output] Innodb_mutex_spin_waits	21
+2014-01-16 07:04:53,168 [output] Innodb_oldest_view_low_limit_trx_id	1636137
+2014-01-16 07:04:53,168 [output] Innodb_os_log_fsyncs	516
+2014-01-16 07:04:53,168 [output] Innodb_os_log_pending_fsyncs	0
+2014-01-16 07:04:53,168 [output] Innodb_os_log_pending_writes	0
+2014-01-16 07:04:53,168 [output] Innodb_os_log_written	334849024
+2014-01-16 07:04:53,169 [output] Innodb_page_size	16384
+2014-01-16 07:04:53,169 [output] Innodb_pages_created	25512
+2014-01-16 07:04:53,169 [output] Innodb_pages_read	26571
+2014-01-16 07:04:53,169 [output] Innodb_pages_written	45520
+2014-01-16 07:04:53,169 [output] Innodb_purge_trx_id	1636136
+2014-01-16 07:04:53,169 [output] Innodb_purge_undo_no	0
+2014-01-16 07:04:53,169 [output] Innodb_row_lock_current_waits	0
+2014-01-16 07:04:53,169 [output] Innodb_current_row_locks	0
+2014-01-16 07:04:53,169 [output] Innodb_row_lock_time	0
+2014-01-16 07:04:53,170 [output] Innodb_row_lock_time_avg	0
+2014-01-16 07:04:53,170 [output] Innodb_row_lock_time_max	0
+2014-01-16 07:04:53,170 [output] Innodb_row_lock_waits	0
+2014-01-16 07:04:53,170 [output] Innodb_rows_deleted	0
+2014-01-16 07:04:53,170 [output] Innodb_rows_inserted	45463
+2014-01-16 07:04:53,170 [output] Innodb_rows_read	45472
+2014-01-16 07:04:53,170 [output] Innodb_rows_updated	2
+2014-01-16 07:04:53,170 [output] Innodb_read_views_memory	96
+2014-01-16 07:04:53,170 [output] Innodb_descriptors_memory	8000
+2014-01-16 07:04:53,171 [output] Innodb_s_lock_os_waits	14
+2014-01-16 07:04:53,171 [output] Innodb_s_lock_spin_rounds	420
+2014-01-16 07:04:53,171 [output] Innodb_s_lock_spin_waits	14
+2014-01-16 07:04:53,171 [output] Innodb_truncated_status_writes	0
+2014-01-16 07:04:53,171 [output] Innodb_x_lock_os_waits	408
+2014-01-16 07:04:53,171 [output] Innodb_x_lock_spin_rounds	12240
+2014-01-16 07:04:53,171 [output] Innodb_x_lock_spin_waits	2
+2014-01-16 07:04:53,172 [output] nova-manage returned exit code 0
+2014-01-16 07:04:53,172 [output] ++ dirname .../task_plugins/gate_real_db_upgrade/nova_mysql_migrations.sh
+2014-01-16 07:04:53,172 [output] + sudo /sbin/ip netns exec nonet .../task_plugins/gate_real_db_upgrade/nova-manage-wrapper .../envs/bc1198bacf884c0295037e8e32c0ec17 --config-file .../jobs/65/65615/7/check/gate-real-db-upgrade_nova_percona_user_001/bc1198b/nova-grizzly.conf --verbose db sync --version 136
+2014-01-16 07:04:55,160 [output] 135 -> 136...
+2014-01-16 07:04:56,173 [output] done
+2014-01-16 07:04:56,453 [output] + manage_exit=0
+2014-01-16 07:04:56,454 [output] + set +x
+2014-01-16 07:04:56,454 [output] MySQL counters after upgrade:
+2014-01-16 07:04:56,466 [output] Variable_name	Value
+2014-01-16 07:04:56,466 [output] Innodb_adaptive_hash_cells	276671
+2014-01-16 07:04:56,466 [output] Innodb_adaptive_hash_heap_buffers	2
+2014-01-16 07:04:56,466 [output] Innodb_adaptive_hash_hash_searches	141986
+2014-01-16 07:04:56,466 [output] Innodb_adaptive_hash_non_hash_searches	308095
+2014-01-16 07:04:56,466 [output] Innodb_background_log_sync	69
+2014-01-16 07:04:56,466 [output] Innodb_buffer_pool_pages_data	8188
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_bytes_data	134152192
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_pages_dirty	92
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_bytes_dirty	1507328
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_pages_flushed	45520
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_pages_LRU_flushed	0
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_pages_free	0
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_pages_made_not_young	0
+2014-01-16 07:04:56,467 [output] Innodb_buffer_pool_pages_made_young	25041
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_pages_misc	3
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_pages_old	3002
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_pages_total	8191
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_read_ahead_rnd	0
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_read_ahead	384
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_read_ahead_evicted	92
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_read_requests	1402370
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_reads	29629
+2014-01-16 07:04:56,468 [output] Innodb_buffer_pool_wait_free	0
+2014-01-16 07:04:56,469 [output] Innodb_buffer_pool_write_requests	661199
+2014-01-16 07:04:56,469 [output] Innodb_checkpoint_age	1026411
+2014-01-16 07:04:56,469 [output] Innodb_checkpoint_max_age	7782360
+2014-01-16 07:04:56,469 [output] Innodb_checkpoint_target_age	7539162
+2014-01-16 07:04:56,469 [output] Innodb_data_fsyncs	1418
+2014-01-16 07:04:56,469 [output] Innodb_data_pending_fsyncs	0
+2014-01-16 07:04:56,469 [output] Innodb_data_pending_reads	0
+2014-01-16 07:04:56,469 [output] Innodb_data_pending_writes	0
+2014-01-16 07:04:56,470 [output] Innodb_data_read	494145536
+2014-01-16 07:04:56,470 [output] Innodb_data_reads	30038
+2014-01-16 07:04:56,470 [output] Innodb_data_writes	46923
+2014-01-16 07:04:56,470 [output] Innodb_data_written	1827532288
+2014-01-16 07:04:56,470 [output] Innodb_dblwr_pages_written	45520
+2014-01-16 07:04:56,470 [output] Innodb_dblwr_writes	443
+2014-01-16 07:04:56,470 [output] Innodb_deadlocks	0
+2014-01-16 07:04:56,470 [output] Innodb_dict_tables	345
+2014-01-16 07:04:56,470 [output] Innodb_have_atomic_builtins	ON
+2014-01-16 07:04:56,471 [output] Innodb_history_list_length	885
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_discarded_delete_marks	0
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_discarded_deletes	0
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_discarded_inserts	0
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_free_list	5
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_merged_delete_marks	1
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_merged_deletes	0
+2014-01-16 07:04:56,471 [output] Innodb_ibuf_merged_inserts	143
+2014-01-16 07:04:56,472 [output] Innodb_ibuf_merges	18
+2014-01-16 07:04:56,472 [output] Innodb_ibuf_segment_size	7
+2014-01-16 07:04:56,472 [output] Innodb_ibuf_size	1
+2014-01-16 07:04:56,472 [output] Innodb_log_waits	0
+2014-01-16 07:04:56,472 [output] Innodb_log_write_requests	733125
+2014-01-16 07:04:56,472 [output] Innodb_log_writes	511
+2014-01-16 07:04:56,472 [output] Innodb_lsn_current	727898262571
+2014-01-16 07:04:56,472 [output] Innodb_lsn_flushed	727898262571
+2014-01-16 07:04:56,473 [output] Innodb_lsn_last_checkpoint	727897236160
+2014-01-16 07:04:56,473 [output] Innodb_master_thread_1_second_loops	67
+2014-01-16 07:04:56,473 [output] Innodb_master_thread_10_second_loops	6
+2014-01-16 07:04:56,473 [output] Innodb_master_thread_background_loops	1
+2014-01-16 07:04:56,473 [output] Innodb_master_thread_main_flush_loops	1
+2014-01-16 07:04:56,473 [output] Innodb_master_thread_sleeps	66
+2014-01-16 07:04:56,473 [output] Innodb_max_trx_id	1636148
+2014-01-16 07:04:56,473 [output] Innodb_mem_adaptive_hash	2266736
+2014-01-16 07:04:56,473 [output] Innodb_mem_dictionary	2814121
+2014-01-16 07:04:56,474 [output] Innodb_mem_total	137756672
+2014-01-16 07:04:56,474 [output] Innodb_mutex_os_waits	18
+2014-01-16 07:04:56,474 [output] Innodb_mutex_spin_rounds	630
+2014-01-16 07:04:56,474 [output] Innodb_mutex_spin_waits	21
+2014-01-16 07:04:56,474 [output] Innodb_oldest_view_low_limit_trx_id	1636148
+2014-01-16 07:04:56,474 [output] Innodb_os_log_fsyncs	522
+2014-01-16 07:04:56,474 [output] Innodb_os_log_pending_fsyncs	0
+2014-01-16 07:04:56,474 [output] Innodb_os_log_pending_writes	0
+2014-01-16 07:04:56,474 [output] Innodb_os_log_written	335877632
+2014-01-16 07:04:56,475 [output] Innodb_page_size	16384
+2014-01-16 07:04:56,475 [output] Innodb_pages_created	25571
+2014-01-16 07:04:56,475 [output] Innodb_pages_read	30026
+2014-01-16 07:04:56,475 [output] Innodb_pages_written	45520
+2014-01-16 07:04:56,475 [output] Innodb_purge_trx_id	1636147
+2014-01-16 07:04:56,475 [output] Innodb_purge_undo_no	0
+2014-01-16 07:04:56,475 [output] Innodb_row_lock_current_waits	0
+2014-01-16 07:04:56,475 [output] Innodb_current_row_locks	0
+2014-01-16 07:04:56,476 [output] Innodb_row_lock_time	0
+2014-01-16 07:04:56,476 [output] Innodb_row_lock_time_avg	0
+2014-01-16 07:04:56,476 [output] Innodb_row_lock_time_max	0
+2014-01-16 07:04:56,476 [output] Innodb_row_lock_waits	0
+2014-01-16 07:04:56,476 [output] Innodb_rows_deleted	0
+2014-01-16 07:04:56,476 [output] Innodb_rows_inserted	90926
+2014-01-16 07:04:56,476 [output] Innodb_rows_read	45476
+2014-01-16 07:04:56,476 [output] Innodb_rows_updated	3
+2014-01-16 07:04:56,476 [output] Innodb_read_views_memory	96
+2014-01-16 07:04:56,476 [output] Innodb_descriptors_memory	8000
+2014-01-16 07:04:56,477 [output] Innodb_s_lock_os_waits	14
+2014-01-16 07:04:56,477 [output] Innodb_s_lock_spin_rounds	420
+2014-01-16 07:04:56,477 [output] Innodb_s_lock_spin_waits	14
+2014-01-16 07:04:56,477 [output] Innodb_truncated_status_writes	0
+2014-01-16 07:04:56,477 [output] Innodb_x_lock_os_waits	408
+2014-01-16 07:04:56,477 [output] Innodb_x_lock_spin_rounds	12240
+2014-01-16 07:04:56,477 [output] Innodb_x_lock_spin_waits	2
+2014-01-16 07:04:56,478 [output] nova-manage returned exit code 0
+2014-01-16 07:04:56,478 [output] ++ dirname .../task_plugins/gate_real_db_upgrade/nova_mysql_migrations.sh
+2014-01-16 07:04:56,478 [output] + sudo /sbin/ip netns exec nonet .../task_plugins/gate_real_db_upgrade/nova-manage-wrapper .../envs/bc1198bacf884c0295037e8e32c0ec17 --config-file .../jobs/65/65615/7/check/gate-real-db-upgrade_nova_percona_user_001/bc1198b/nova-grizzly.conf --verbose db sync --version 137
+2014-01-16 07:04:57,456 [output] 136 -> 137...
+2014-01-16 07:04:57,486 [output] done
+2014-01-16 07:04:57,741 [output] + manage_exit=0
+2014-01-16 07:04:57,742 [output] + set +x
+2014-01-16 07:04:57,742 [output] MySQL counters after upgrade:
+2014-01-16 07:04:57,754 [output] Variable_name	Value
+2014-01-16 07:04:57,754 [output] Innodb_adaptive_hash_cells	276671
+2014-01-16 07:04:57,754 [output] Innodb_adaptive_hash_heap_buffers	2
+2014-01-16 07:04:57,754 [output] Innodb_adaptive_hash_hash_searches	141986
+2014-01-16 07:04:57,754 [output] Innodb_adaptive_hash_non_hash_searches	308112
+2014-01-16 07:04:57,754 [output] Innodb_background_log_sync	70
+2014-01-16 07:04:57,754 [output] Innodb_buffer_pool_pages_data	8188
+2014-01-16 07:04:57,754 [output] Innodb_buffer_pool_bytes_data	134152192
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_dirty	98
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_bytes_dirty	1605632
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_flushed	45520
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_LRU_flushed	0
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_free	0
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_made_not_young	0
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_made_young	25046
+2014-01-16 07:04:57,755 [output] Innodb_buffer_pool_pages_misc	3
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_pages_old	3002
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_pages_total	8191
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_read_ahead_rnd	0
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_read_ahead	384
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_read_ahead_evicted	92
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_read_requests	1402454
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_reads	29634
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_wait_free	0
+2014-01-16 07:04:57,756 [output] Innodb_buffer_pool_write_requests	661250
+2014-01-16 07:04:57,757 [output] Innodb_checkpoint_age	1029808
+2014-01-16 07:04:57,757 [output] Innodb_checkpoint_max_age	7782360
+2014-01-16 07:04:57,757 [output] Innodb_checkpoint_target_age	7539162
+2014-01-16 07:04:57,757 [output] Innodb_data_fsyncs	1421
+2014-01-16 07:04:57,757 [output] Innodb_data_pending_fsyncs	0
+2014-01-16 07:04:57,757 [output] Innodb_data_pending_reads	0
+2014-01-16 07:04:57,757 [output] Innodb_data_pending_writes	0
+2014-01-16 07:04:57,757 [output] Innodb_data_read	494227456
+2014-01-16 07:04:57,758 [output] Innodb_data_reads	30044
+2014-01-16 07:04:57,758 [output] Innodb_data_writes	46927
+2014-01-16 07:04:57,758 [output] Innodb_data_written	1827536896
+2014-01-16 07:04:57,758 [output] Innodb_dblwr_pages_written	45520
+2014-01-16 07:04:57,758 [output] Innodb_dblwr_writes	443
+2014-01-16 07:04:57,758 [output] Innodb_deadlocks	0
+2014-01-16 07:04:57,758 [output] Innodb_dict_tables	345
+2014-01-16 07:04:57,758 [output] Innodb_have_atomic_builtins	ON
+2014-01-16 07:04:57,758 [output] Innodb_history_list_length	887
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_discarded_delete_marks	0
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_discarded_deletes	0
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_discarded_inserts	0
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_free_list	5
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_merged_delete_marks	1
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_merged_deletes	0
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_merged_inserts	143
+2014-01-16 07:04:57,759 [output] Innodb_ibuf_merges	18
+2014-01-16 07:04:57,760 [output] Innodb_ibuf_segment_size	7
+2014-01-16 07:04:57,760 [output] Innodb_ibuf_size	1
+2014-01-16 07:04:57,760 [output] Innodb_log_waits	0
+2014-01-16 07:04:57,760 [output] Innodb_log_write_requests	733132
+2014-01-16 07:04:57,760 [output] Innodb_log_writes	514
+2014-01-16 07:04:57,760 [output] Innodb_lsn_current	727898265968
+2014-01-16 07:04:57,760 [output] Innodb_lsn_flushed	727898265968
+2014-01-16 07:04:57,760 [output] Innodb_lsn_last_checkpoint	727897236160
+2014-01-16 07:04:57,761 [output] Innodb_master_thread_1_second_loops	68
+2014-01-16 07:04:57,761 [output] Innodb_master_thread_10_second_loops	6
+2014-01-16 07:04:57,761 [output] Innodb_master_thread_background_loops	1
+2014-01-16 07:04:57,761 [output] Innodb_master_thread_main_flush_loops	1
+2014-01-16 07:04:57,761 [output] Innodb_master_thread_sleeps	67
+2014-01-16 07:04:57,761 [output] Innodb_max_trx_id	1636159
+2014-01-16 07:04:57,761 [output] Innodb_mem_adaptive_hash	2266736
+2014-01-16 07:04:57,761 [output] Innodb_mem_dictionary	2816169
+2014-01-16 07:04:57,761 [output] Innodb_mem_total	137756672
+2014-01-16 07:04:57,762 [output] Innodb_mutex_os_waits	18
+2014-01-16 07:04:57,762 [output] Innodb_mutex_spin_rounds	630
+2014-01-16 07:04:57,762 [output] Innodb_mutex_spin_waits	21
+2014-01-16 07:04:57,762 [output] Innodb_oldest_view_low_limit_trx_id	1636148
+2014-01-16 07:04:57,762 [output] Innodb_os_log_fsyncs	525
+2014-01-16 07:04:57,762 [output] Innodb_os_log_pending_fsyncs	0
+2014-01-16 07:04:57,762 [output] Innodb_os_log_pending_writes	0
+2014-01-16 07:04:57,762 [output] Innodb_os_log_written	335882240
+2014-01-16 07:04:57,762 [output] Innodb_page_size	16384
+2014-01-16 07:04:57,763 [output] Innodb_pages_created	25573
+2014-01-16 07:04:57,763 [output] Innodb_pages_read	30031
+2014-01-16 07:04:57,763 [output] Innodb_pages_written	45520
+2014-01-16 07:04:57,763 [output] Innodb_purge_trx_id	1636147
+2014-01-16 07:04:57,763 [output] Innodb_purge_undo_no	0
+2014-01-16 07:04:57,763 [output] Innodb_row_lock_current_waits	0
+2014-01-16 07:04:57,763 [output] Innodb_current_row_locks	0
+2014-01-16 07:04:57,763 [output] Innodb_row_lock_time	0
+2014-01-16 07:04:57,764 [output] Innodb_row_lock_time_avg	0
+2014-01-16 07:04:57,764 [output] Innodb_row_lock_time_max	0
+2014-01-16 07:04:57,764 [output] Innodb_row_lock_waits	0
+2014-01-16 07:04:57,764 [output] Innodb_rows_deleted	0
+2014-01-16 07:04:57,764 [output] Innodb_rows_inserted	90929
+2014-01-16 07:04:57,764 [output] Innodb_rows_read	45480
+2014-01-16 07:04:57,764 [output] Innodb_rows_updated	4
+2014-01-16 07:04:57,764 [output] Innodb_read_views_memory	96
+2014-01-16 07:04:57,764 [output] Innodb_descriptors_memory	8000
+2014-01-16 07:04:57,764 [output] Innodb_s_lock_os_waits	14
+2014-01-16 07:04:57,765 [output] Innodb_s_lock_spin_rounds	420
+2014-01-16 07:04:57,765 [output] Innodb_s_lock_spin_waits	14
+2014-01-16 07:04:57,765 [output] Innodb_truncated_status_writes	0
+2014-01-16 07:04:57,765 [output] Innodb_x_lock_os_waits	408
+2014-01-16 07:04:57,765 [output] Innodb_x_lock_spin_rounds	12240
+2014-01-16 07:04:57,765 [output] Innodb_x_lock_spin_waits	2
+2014-01-16 07:04:57,765 [output] nova-manage returned exit code 0
+2014-01-16 07:04:57,766 [output] ++ dirname .../task_plugins/gate_real_db_upgrade/nova_mysql_migrations.sh
+2014-01-16 07:04:57,766 [output] + sudo /sbin/ip netns exec nonet .../task_plugins/gate_real_db_upgrade/nova-manage-wrapper .../envs/bc1198bacf884c0295037e8e32c0ec17 --config-file .../jobs/65/65615/7/check/gate-real-db-upgrade_nova_percona_user_001/bc1198b/nova-grizzly.conf --verbose db sync --version 138
+2014-01-16 07:04:58,757 [output] 137 -> 138...
+2014-01-16 07:05:14,138 [heartbeat]
+2014-01-16 07:05:22,054 [output] done

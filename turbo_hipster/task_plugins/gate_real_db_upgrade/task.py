@@ -147,14 +147,41 @@ class Runner(object):
                     self.messages.append(warn)
 
             for migration in lp.migrations:
+                migration.setdefault('stats', {})
+
+                # Check total time
                 if not (handle_results.check_migration(
-                        migration,
-                        'maximum_migration_times',
-                        migration['duration'],
-                        dataset['config'])):
+                        migration, 'maximum_migration_times',
+                        migration['duration'], dataset['config'])):
                     self.success = False
-                    self.messages.append('WARNING - Migration %s took too long'
-                                         % migration[0])
+                    self.messages.append(
+                        'WARNING - Migration %s->%s took too long'
+                        % (migration['from'], migration['to']))
+
+                # Check rows changed
+                rows_changed = 0
+                for key in ['Innodb_rows_updated',
+                            'Innodb_rows_inserted',
+                            'Innodb_rows_deleted']:
+                    rows_changed += migration['stats'].get(key, 0)
+
+                if not (handle_results.check_migration(
+                        migration, 'XInnodb_rows_changed',
+                        rows_changed, dataset['config'])):
+                    self.success = False
+                    self.messages.append(
+                        'WARNING - Migration %s->%s changed too many rows (%d)'
+                        % (migration['from'], migration['to'], rows_changed))
+
+                # Check rows read
+                rows_read = migration['stats'].get('Innodb_rows_read', 0)
+                if not (handle_results.check_migration(
+                        migration, 'Innodb_rows_read',
+                        rows_read, dataset['config'])):
+                    self.success = False
+                    self.messages.append(
+                        'WARNING - Migration %s->%s read too many rows (%d)'
+                        % (migration['from'], migration['to'], rows_read))
 
             if self.success:
                 self.job_datasets[i]['result'] = 'SUCCESS'
