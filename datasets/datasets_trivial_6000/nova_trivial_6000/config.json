@@ -1,11 +1,20 @@
 {
+    "Innodb_rows_read": {
+        "default": 1000
+    }, 
+    "XInnodb_rows_changed": {
+        "default": 1000
+    }, 
     "database": "nova_dataset_trivial_6000", 
     "db_pass": "tester", 
     "db_user": "nova", 
     "logging_conf": "logging.conf", 
     "maximum_migration_times": {
-        "152": 74.0, 
-        "default": 30
+        "151->152": 159.0, 
+        "152->151": 195.0, 
+        "184->185": 66.0, 
+        "186->185": 144.0, 
+        "default": 60
     }, 
     "project": "openstack/nova", 
     "seed_data": "nova_trivial_6000.sql", 

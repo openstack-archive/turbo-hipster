@@ -7,17 +7,16 @@
     "seed_data": "nova_user_001.sql",
     "logging_conf": "logging.conf",
     "maximum_migration_times": {
-        "default": 30,
-        "135": 120,
-        "138": 180,
+        "default": 60,
         "_138_bugs": [1263835],
-        "149": 240,
         "_149_bugs": [1263836],
-        "152": 300,
-        "159": 120,
-        "205": 120,
-        "_205_bugs": [1263868],
-        "216": 180
+        "_205_bugs": [1263868]
+    },
+    "XInnodb_rows_changed": {
+        "default": 100000
+    },
+    "Innodb_rows_read": {
+        "default": 100000
     }
 }
 

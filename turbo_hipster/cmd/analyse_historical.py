@@ -59,6 +59,7 @@ def main():
 
     # Open the results database
     db = MySQLdb.connect(host=config['results']['host'],
+                         port=config['results'].get('port', 3306),
                          user=config['results']['username'],
                          passwd=config['results']['password'],
                          db=config['results']['database'])
@@ -83,16 +84,28 @@ def main():
                     if not 'duration' in migration:
                         continue
 
-                    cursor.execute('insert ignore into summary'
-                                   '(path, parsed_at, engine, dataset, '
-                                   'migration, duration, stats_json) '
-                                   'values("%s", now(), "%s", '
-                                   '"%s", "%s", %d, "%s");'
-                                   % (item['name'], engine, dataset,
-                                      '%s->%s' % (migration['from'],
-                                                  migration['to']),
-                                      migration['duration'],
-                                      migration['stats']))
+                    if migration['stats']:
+                        cursor.execute('insert ignore into summary'
+                                       '(path, parsed_at, engine, dataset, '
+                                       'migration, duration, stats_json) '
+                                       'values(%s, now(), %s, '
+                                       '%s, %s, %s, %s);',
+                                       (item['name'], engine, dataset,
+                                        '%s->%s' % (migration['from'],
+                                                    migration['to']),
+                                        migration['duration'],
+                                        json.dumps(migration['stats'])))
+                    else:
+                        cursor.execute('insert ignore into summary'
+                                       '(path, parsed_at, engine, dataset, '
+                                       'migration, duration, stats_json) '
+                                       'values(%s, now(), %s, '
+                                       '%s, %s, %s, NULL);',
+                                       (item['name'], engine, dataset,
+                                        '%s->%s' % (migration['from'],
+                                                    migration['to']),
+                                        migration['duration']))
+
                 cursor.execute('commit;')
 
         items = connection.get_container(swift_config['container'],

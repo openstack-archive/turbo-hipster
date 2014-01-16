@@ -17,7 +17,7 @@
 
 import json
 import math
-import numpy
+import MySQLdb
 import os
 import sys
 
@@ -29,35 +29,63 @@ def main():
 
 
 def process_dataset(dataset):
-    with open('results.json') as f:
-        results = json.loads(f.read())
+    with open('/etc/turbo-hipster/config.json', 'r') as config_stream:
+        config = json.load(config_stream)
+    db = MySQLdb.connect(host=config['results']['host'],
+                         port=config['results'].get('port', 3306),
+                         user=config['results']['username'],
+                         passwd=config['results']['password'],
+                         db=config['results']['database'])
+    cursor = db.cursor(MySQLdb.cursors.DictCursor)
 
     migrations = {}
     all_times = {}
+    stats_summary = {}
 
     for engine in ['mysql', 'percona']:
-        print
-        print 'Dataset: %s' % dataset
-        print 'Engine: %s' % engine
-        print
+        print '%s, %s' % (dataset, engine)
+        cursor.execute('select distinct(migration) from summary where '
+                       'engine="%s" and dataset="%s" order by migration;'
+                       % (engine, dataset))
+        migrations_list = []
+        for row in cursor:
+            migrations_list.append(row['migration'])
 
-        for migration in sorted(results[engine][dataset]):
-            times = []
+        for migration in migrations_list:
             all_times.setdefault(migration, [])
-            for time in results[engine][dataset][migration]:
-                for i in range(results[engine][dataset][migration][time]):
-                    times.append(int(time))
-                    all_times[migration].append(int(time))
 
-            times = sorted(times)
-            emit_summary(engine, times, migrations, migration)
+            cursor.execute('select distinct(duration), count(*) from summary '
+                           'where engine="%s" and dataset="%s" and '
+                           'migration="%s" group by duration;'
+                           % (engine, dataset, migration))
+            for row in cursor:
+                for i in range(row['count(*)']):
+                    all_times[migration].append(row['duration'])
 
-    print
-    print 'Dataset: %s' % dataset
-    print 'Engine: combined'
-    print
-    for migration in sorted(all_times.keys()):
-        emit_summary('combined', all_times[migration], migrations, migration)
+            cursor.execute('select stats_json from summary where engine="%s" '
+                           'and dataset="%s" and migration="%s" and '
+                           'not (stats_json = "{}");'
+                           % (engine, dataset, migration))
+            for row in cursor:
+                stats = json.loads(row['stats_json'])
+                for key in stats:
+                    stats_summary.setdefault(migration, {})
+                    stats_summary[migration].setdefault(key, {})
+                    stats_summary[migration][key].setdefault(stats[key], 0)
+                    stats_summary[migration][key][stats[key]] += 1
+
+                # Composed stats
+                rows_changed = 0
+                for key in ['Innodb_rows_updated',
+                            'Innodb_rows_inserted',
+                            'Innodb_rows_deleted']:
+                    rows_changed += stats.get(key, 0)
+
+                stats_summary[migration].setdefault('XInnodb_rows_changed', {})
+                stats_summary[migration]['XInnodb_rows_changed'].setdefault(
+                    rows_changed, 0)
+                stats_summary[migration]['XInnodb_rows_changed'][rows_changed]\
+                    += 1
 
     with open('results.txt', 'w') as f:
         f.write('Migration,mysql,percona\n')
@@ -75,10 +103,33 @@ def process_dataset(dataset):
         config = json.loads(f.read())
 
     for migration in sorted(all_times.keys()):
-        minimum, mean, maximum, stddev = analyse(all_times[migration])
-        recommend = mean + 2 * stddev
-        if recommend > 30.0:
-            config['maximum_migration_times'][migration] = math.ceil(recommend)
+        # Timing
+        config_max = config['maximum_migration_times']['default']
+        l = len(all_times[migration])
+        if l > 10:
+            sorted_all_times = sorted(all_times[migration])
+            one_percent = int(math.ceil(l / 100))
+            recommend = sorted_all_times[-one_percent] + 30
+            if recommend > config_max:
+                config['maximum_migration_times'][migration] = \
+                    math.ceil(recommend)
+
+        # Innodb stats
+        if not migration in stats_summary:
+            continue
+
+        for stats_key in ['XInnodb_rows_changed', 'Innodb_rows_read']:
+            config_max = config[stats_key]['default']
+
+            values = []
+            results = stats_summary[migration].get(stats_key, {})
+            for result in results:
+                values.append(result)
+
+            max_value = max(values)
+            rounding = max_value % 10000
+            if max_value > config_max:
+                config[stats_key][migration] = max_value + (10000 - rounding)
 
     with open(os.path.join(config_path, 'config.json'), 'w') as f:
         f.write(json.dumps(config, indent=4, sort_keys=True))
@@ -92,40 +143,6 @@ def omg_hard_to_predict_names(dataset):
     if dataset == 'devstack_131007':
         return '131007_devstack_export'
     return dataset
-
-
-def analyse(times):
-    np_times = numpy.array(times)
-    minimum = np_times.min()
-    mean = np_times.mean()
-    maximum = np_times.max()
-    stddev = np_times.std()
-    return minimum, mean, maximum, stddev
-
-
-def emit_summary(engine, times, migrations, migration):
-    minimum, mean, maximum, stddev = analyse(times)
-    failed_threshold = int(max(30.0, mean + stddev * 2))
-
-    failed = 0
-    for time in times:
-        if time > failed_threshold:
-            failed += 1
-
-    migrations.setdefault(migration, {})
-    migrations[migration][engine] = ('%.02f;%0.2f;%.02f'
-                                     % (mean - 2 * stddev,
-                                        mean,
-                                        mean + 2 * stddev))
-
-    if failed_threshold != 30 or failed > 0:
-        print ('%s: Values range from %s to %s seconds. %d values. '
-               'Mean is %.02f, stddev is %.02f.\n    '
-               'Recommend max of %d. With this value %.02f%% of tests '
-               'would have failed.'
-               % (migration, minimum, maximum,
-                  len(times), mean, stddev, failed_threshold,
-                  failed * 100.0 / len(times)))
 
 
 if __name__ == '__main__':
