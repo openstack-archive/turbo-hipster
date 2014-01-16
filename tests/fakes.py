@@ -299,3 +299,11 @@ class FakeGearmanServer(gear.Server):
         qlen = (len(self.high_queue) + len(self.normal_queue) +
                 len(self.low_queue))
         self.log.debug("done releasing queued jobs %s (%s)" % (regex, qlen))
+
+
+class FakeJob(object):
+    def __init__(self):
+        pass
+
+    def sendWorkStatus(self, *args, **kwargs):
+        pass
