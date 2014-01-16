@@ -18,8 +18,10 @@ import logging
 import os
 import re
 
-from turbo_hipster.lib import utils
+from turbo_hipster.lib import common
 from turbo_hipster.lib import models
+from turbo_hipster.lib import utils
+
 
 import turbo_hipster.task_plugins.gate_real_db_upgrade.handle_results\
     as handle_results
@@ -67,24 +69,20 @@ class Runner(models.Task):
                 self.job_datasets = self._get_job_datasets()
 
                 # Step 2: Checkout updates from git!
-                self._do_next_step()
                 self.git_path = self._grab_patchset(
                     self.job_arguments,
                     self.job_datasets[0]['job_log_file_path'])
 
                 # Step 3: Run migrations on datasets
-                self._do_next_step()
                 if self._execute_migrations() > 0:
                     self.success = False
                     self.messages.append('Return code from test script was '
                                          'non-zero')
 
                 # Step 4: Analyse logs for errors
-                self._do_next_step()
                 self._check_all_dataset_logs_for_errors()
 
                 # Step 5: handle the results (and upload etc)
-                self._do_next_step()
                 self._handle_results()
 
                 # Finally, send updated work data and completed packets
@@ -100,6 +98,7 @@ class Runner(models.Task):
                 if not self.cancelled:
                     self.job.sendWorkException(str(e).encode('utf-8'))
 
+    @common.task_step
     def _handle_results(self):
         """ pass over the results to handle_results.py for post-processing """
         self.log.debug("Process the resulting files (upload/push)")
@@ -110,6 +109,7 @@ class Runner(models.Task):
         self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
 
+    @common.task_step
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug('Check logs for errors')
         self.success = True
@@ -157,6 +157,7 @@ class Runner(models.Task):
 
         return self.datasets
 
+    @common.task_step
     def _get_job_datasets(self):
         """ Take the applicable datasets for this job and set them up in
         self.job_datasets """
@@ -193,6 +194,7 @@ class Runner(models.Task):
             return command
         return False
 
+    @common.task_step
     def _execute_migrations(self):
         """ Execute the migration on each dataset in datasets """
 

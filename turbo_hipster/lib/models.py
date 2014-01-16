@@ -18,6 +18,7 @@ import json
 import logging
 import os
 
+from turbo_hipster.lib import common
 from turbo_hipster.lib import utils
 
 
@@ -48,6 +49,7 @@ class Task(object):
             self.cancelled = True
             # TODO: Work out how to kill current step
 
+    @common.task_step
     def _grab_patchset(self, job_args, job_log_file_path):
         """ Checkout the reference into config['git_working_dir'] """
 
