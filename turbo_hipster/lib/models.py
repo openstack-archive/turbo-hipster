@@ -48,6 +48,7 @@ class Task(object):
             self.cancelled = True
             # TODO: Work out how to kill current step
 
+    @common.task_step
     def _grab_patchset(self, job_args, job_log_file_path):
         """ Checkout the reference into config['git_working_dir'] """
 
