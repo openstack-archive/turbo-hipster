@@ -36,12 +36,14 @@ class TestHandleResults(testtools.TestCase):
             dataset_config = json.load(config_stream)
         duration = 120
 
-        result = handle_results.check_migration({'to': '151'},
+        result = handle_results.check_migration({'to': '151',
+                                                 'from': '150'},
                                                 'maximum_migration_times',
                                                 duration, dataset_config)
         self.assertFalse(result)
 
-        result = handle_results.check_migration({'to': '152'},
+        result = handle_results.check_migration({'to': '152',
+                                                 'from': '151'},
                                                 'maximum_migration_times',
                                                 duration, dataset_config)
         self.assertTrue(result)
@@ -86,3 +88,18 @@ class TestHandleResults(testtools.TestCase):
             self.assertTrue(migration in migrations,
                             'Migration %d missing from %s'
                             % (migration, migrations))
+
+    def test_innodb_stats(self):
+        logfile = os.path.join(TESTS_DIR, 'assets/user_001.log')
+
+        def fake_find_schemas_228():
+            return [228]
+
+        lp = handle_results.LogParser(logfile, '/tmp/foo')
+        lp.find_schemas = fake_find_schemas_228
+        lp.process_log()
+
+        migration = lp.migrations[0]
+        self.assertTrue('stats' in migration)
+        self.assertTrue('Innodb_rows_read' in migration['stats'])
+        self.assertEqual(5, migration['stats']['Innodb_rows_read'])

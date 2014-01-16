@@ -198,9 +198,67 @@ def check_migration(migration, attribute, value, dataset_config):
 
     Returns True if okay, False if it takes too long."""
 
-    migration_number = str(migration['to'])
+    migration_name = '%s->%s' % (migration['from'], migration['to'])
     allowed = dataset_config[attribute].get(
-        migration_number, dataset_config[attribute]['default'])
+        migration_name, dataset_config[attribute]['default'])
     if value > allowed:
         return False
     return True
+
+
+def check_log_file(log_file, git_path, dataset):
+    lp = LogParser(log_file, git_path)
+    lp.process_log()
+
+    success = True
+    messages = []
+
+    if not lp.migrations:
+        success = False
+        messages.append('No migrations run')
+
+    if lp.errors:
+        success = False
+        for err in lp.errors:
+            messages.append(err)
+
+    if lp.warnings:
+        success = False
+        for warn in lp.warnings:
+            messages.append(warn)
+
+    for migration in lp.migrations:
+        migration.setdefault('stats', {})
+
+        # Check total time
+        if not check_migration(migration, 'maximum_migration_times',
+                               migration['duration'], dataset['config']):
+            success = False
+            messages.append('WARNING - Migration %s->%s took too long'
+                            % (migration['from'], migration['to']))
+
+        # Check rows changed
+        rows_changed = 0
+        for key in ['Innodb_rows_updated',
+                    'Innodb_rows_inserted',
+                    'Innodb_rows_deleted']:
+            rows_changed += migration['stats'].get(key, 0)
+
+        if not check_migration(migration, 'XInnodb_rows_changed',
+                               rows_changed, dataset['config']):
+            success = False
+            messages.append('WARNING - Migration %s->%s changed too many '
+                            'rows (%d)'
+                            % (migration['from'], migration['to'],
+                               rows_changed))
+
+        # Check rows read
+        rows_read = migration['stats'].get('Innodb_rows_read', 0)
+        if not check_migration(migration, 'Innodb_rows_read',
+                               rows_read, dataset['config']):
+            success = False
+            messages.append('WARNING - Migration %s->%s read too many '
+                            'rows (%d)'
+                            % (migration['from'], migration['to'], rows_read))
+
+    return success, messages
