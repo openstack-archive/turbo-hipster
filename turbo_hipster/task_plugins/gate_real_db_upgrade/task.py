@@ -129,37 +129,22 @@ class Runner(object):
 
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug('Check logs for errors')
+        self.success = True
+        self.messages = []
+
         for i, dataset in enumerate(self.job_datasets):
-            lp = handle_results.LogParser(dataset['job_log_file_path'],
-                                          self.git_path)
-            lp.process_log()
+            success, messages = handle_results.check_log_file(
+                dataset['job_log_file_path'], self.git_path, dataset)
 
-            if not lp.migrations:
+            if self.success and not success:
                 self.success = False
-                self.messages.append('No migrations run')
-            if lp.errors:
-                self.success = False
-                for err in lp.errors:
-                    self.messages.append(err)
-            if lp.warnings:
-                self.success = False
-                for warn in lp.warnings:
-                    self.messages.append(warn)
+            for message in messages:
+                self.messages.append(message)
 
-            for migration in lp.migrations:
-                if not (handle_results.check_migration(
-                        migration,
-                        'maximum_migration_times',
-                        migration['duration'],
-                        dataset['config'])):
-                    self.success = False
-                    self.messages.append('WARNING - Migration %s took too long'
-                                         % migration[0])
-
-            if self.success:
+            if success:
                 self.job_datasets[i]['result'] = 'SUCCESS'
             else:
-                self.job_datasets[i]['result'] = self.messages[0]
+                self.job_datasets[i]['result'] = messages[0]
 
         if self.success:
             self.work_data['result'] = 'SUCCESS'
