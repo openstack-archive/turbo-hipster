@@ -198,9 +198,9 @@ def check_migration(migration, attribute, value, dataset_config):
 
     Returns True if okay, False if it takes too long."""
 
-    migration_number = str(migration['to'])
+    migration_name = '%s->%s' % (migration['to'], migration['from'])
     allowed = dataset_config[attribute].get(
-        migration_number, dataset_config[attribute]['default'])
+        migration_name, dataset_config[attribute]['default'])
     if value > allowed:
         return False
     return True
