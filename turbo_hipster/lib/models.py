@@ -99,3 +99,53 @@ class Task(object):
 
         self.current_step += 1
         self.job.sendWorkStatus(self.current_step, self.total_steps)
+
+
+class ShellTask(Task):
+    log = logging.getLogger("lib.models.ShellTask")
+
+    def __init__(self, global_config, plugin_config, job_name):
+        super(ShellTask, self).__init__(global_config, plugin_config, job_name)
+        # Define the number of steps we will do to determine our progress.
+        self.total_steps = 4
+
+    def start_job(self, job):
+        self.job = job
+        self.success = True
+        self.messages = []
+
+        if self.job is not None:
+            try:
+                self.job_arguments = \
+                    json.loads(self.job.arguments.decode('utf-8'))
+                self.log.debug("Got job from ZUUL %s" % self.job_arguments)
+
+                # Send an initial WORK_DATA and WORK_STATUS packets
+                self._send_work_data()
+
+                # Step 1: Checkout updates from git!
+                self.git_path = self._grab_patchset(
+                    self.job_arguments,
+                    self.job_datasets[0]['job_log_file_path'])
+
+                # Step 3: execute shell script
+                # TODO
+
+                # Step 4: Analyse logs for errors
+                # TODO
+
+                # Step 5: handle the results (and upload etc)
+                # TODO
+
+                # Finally, send updated work data and completed packets
+                self._send_work_data()
+
+                if self.work_data['result'] is 'SUCCESS':
+                    self.job.sendWorkComplete(
+                        json.dumps(self._get_work_data()))
+                else:
+                    self.job.sendWorkFail()
+            except Exception as e:
+                self.log.exception('Exception handling log event.')
+                if not self.cancelled:
+                    self.job.sendWorkException(str(e).encode('utf-8'))
