@@ -12,9 +12,7 @@ Contents:
    :maxdepth: 2
 
    intro
-   structure
    installation
-   configuration
    running
 
 
