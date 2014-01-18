@@ -124,24 +124,29 @@ class ShellTask(Task):
     def __init__(self, global_config, plugin_config, job_name):
         super(ShellTask, self).__init__(global_config, plugin_config, job_name)
         # Define the number of steps we will do to determine our progress.
-        self.total_steps = 4
+        self.total_steps = 5
 
     def _reset(self):
         super(ShellTask, self)._reset()
         self.git_path = None
+        self.job_working_dir = None
+        self.shell_output_log = None
 
     def do_job_steps(self, job):
         # Step 1: Checkout updates from git
         self._grab_patchset(self.job_arguments,
                             self.job_datasets[0]['job_log_file_path'])
 
-        # Step 2: Run shell script
+        # Step 2: Prep job working dir
+        self._prep_working_dir()
+
+        # Step 3: Run shell script
         self._execute_script()
 
-        # Step 3: Analyse logs for errors
+        # Step 4: Analyse logs for errors
         self._parse_and_check_results()
 
-        # Step 4: handle the results (and upload etc)
+        # Step 5: handle the results (and upload etc)
         self._handle_results()
 
     @common.task_step
@@ -167,9 +172,37 @@ class ShellTask(Task):
         return local_path
 
     @common.task_step
+    def _prep_working_dir(self):
+        self.job_working_dir = os.path.join(
+            self.global_config['jobs_working_dir'],
+            utils.determine_job_identifier(self.job_arguments,
+                                           self.plugin_config['function'],
+                                           self.job.unique)
+        )
+        self.shell_output_log = os.path.join(
+            self.job_working_dir,
+            'shell_output.log'
+        )
+
+        if not os.path.isdir(os.path.dirname(self.shell_output_log)):
+            os.makedirs(os.path.dirname(self.shell_output_log))
+
+    @common.task_step
     def _execute_script(self):
         # Run script
-        self.script_return_code = 0
+        cmd = self.plugin_config['shell_script']
+        cmd += (
+            (' %(git_path)s %(job_working_dir)s %(unique_id)s')
+            % {
+                'git_path': self.git_path,
+                'job_working_dir': self.job_working_dir,
+                'unique_id': self.job.unique
+            }
+        )
+        self.script_return_code = utils.execute_to_log(
+            cmd,
+            self.shell_output_log
+        )
 
     @common.task_step
     def _parse_and_check_results(self):
