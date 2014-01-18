@@ -30,15 +30,43 @@ class Task(object):
         self.global_config = global_config
         self.plugin_config = plugin_config
         self.job_name = job_name
+        self._reset()
 
+        # Define the number of steps we will do to determine our progress.
+        self.total_steps = 0
+
+    def _reset(self):
         self.job = None
         self.job_arguments = None
         self.work_data = None
         self.cancelled = False
-
-        # Define the number of steps we will do to determine our progress.
+        self.success = True
+        self.messages = []
         self.current_step = 0
-        self.total_steps = 0
+
+    def start_job(self, job):
+        self._reset()
+        self.job = job
+
+        if self.job is not None:
+            try:
+                self.job_arguments = \
+                    json.loads(self.job.arguments.decode('utf-8'))
+                self.log.debug("Got job from ZUUL %s" % self.job_arguments)
+
+                # Send an initial WORK_DATA and WORK_STATUS packets
+                self._send_work_data()
+
+                # Execute the job_steps
+                self.do_job_steps()
+
+                # Finally, send updated work data and completed packets
+                self._send_final_results()
+
+            except Exception as e:
+                self.log.exception('Exception handling log event.')
+                if not self.cancelled:
+                    self.job.sendWorkException(str(e).encode('utf-8'))
 
     def stop_worker(self, number):
         # Check the number is for this job instance
@@ -48,27 +76,6 @@ class Task(object):
             self.log.debug("We've been asked to stop by our gearman manager")
             self.cancelled = True
             # TODO: Work out how to kill current step
-
-    @common.task_step
-    def _grab_patchset(self, job_args, job_log_file_path):
-        """ Checkout the reference into config['git_working_dir'] """
-
-        self.log.debug("Grab the patchset we want to test against")
-        local_path = os.path.join(self.global_config['git_working_dir'],
-                                  self.job_name, job_args['ZUUL_PROJECT'])
-        if not os.path.exists(local_path):
-            os.makedirs(local_path)
-
-        git_args = copy.deepcopy(job_args)
-        git_args['GIT_ORIGIN'] = 'git://git.openstack.org/'
-
-        cmd = os.path.join(os.path.join(os.path.dirname(__file__),
-                                        'gerrit-git-prep.sh'))
-        cmd += ' https://review.openstack.org'
-        cmd += ' http://zuul.rcbops.com'
-        utils.execute_to_log(cmd, job_log_file_path, env=git_args,
-                             cwd=local_path)
-        return local_path
 
     def _get_work_data(self):
         if self.work_data is None:
@@ -86,6 +93,15 @@ class Task(object):
         self.log.debug("Send the work data response: %s" %
                        json.dumps(self._get_work_data()))
         self.job.sendWorkData(json.dumps(self._get_work_data()))
+
+    def _send_final_results(self):
+        self._send_work_data()
+
+        if self.work_data['result'] is 'SUCCESS':
+            self.job.sendWorkComplete(
+                json.dumps(self._get_work_data()))
+        else:
+            self.job.sendWorkFail()
 
     def _do_next_step(self):
         """ Send a WORK_STATUS command to the gearman server.
@@ -110,43 +126,58 @@ class ShellTask(Task):
         # Define the number of steps we will do to determine our progress.
         self.total_steps = 4
 
-    def start_job(self, job):
-        self.job = job
-        self.success = True
-        self.messages = []
+    def _reset(self):
+        super(ShellTask, self)._reset()
+        self.git_path = None
 
-        if self.job is not None:
-            try:
-                self.job_arguments = \
-                    json.loads(self.job.arguments.decode('utf-8'))
-                self.log.debug("Got job from ZUUL %s" % self.job_arguments)
+    def do_job_steps(self, job):
+        # Step 1: Checkout updates from git
+        self._grab_patchset(self.job_arguments,
+                            self.job_datasets[0]['job_log_file_path'])
 
-                # Send an initial WORK_DATA and WORK_STATUS packets
-                self._send_work_data()
+        # Step 2: Run shell script
+        self._execute_script()
 
-                # Step 1: Checkout updates from git!
-                self.git_path = self._grab_patchset(
-                    self.job_arguments,
-                    self.job_datasets[0]['job_log_file_path'])
+        # Step 3: Analyse logs for errors
+        self._parse_and_check_results()
 
-                # Step 3: execute shell script
-                # TODO
+        # Step 4: handle the results (and upload etc)
+        self._handle_results()
 
-                # Step 4: Analyse logs for errors
-                # TODO
+    @common.task_step
+    def _grab_patchset(self, job_args, job_log_file_path):
+        """ Checkout the reference into config['git_working_dir'] """
 
-                # Step 5: handle the results (and upload etc)
-                # TODO
+        self.log.debug("Grab the patchset we want to test against")
+        local_path = os.path.join(self.global_config['git_working_dir'],
+                                  self.job_name, job_args['ZUUL_PROJECT'])
+        if not os.path.exists(local_path):
+            os.makedirs(local_path)
 
-                # Finally, send updated work data and completed packets
-                self._send_work_data()
+        git_args = copy.deepcopy(job_args)
+        git_args['GIT_ORIGIN'] = 'git://git.openstack.org/'
 
-                if self.work_data['result'] is 'SUCCESS':
-                    self.job.sendWorkComplete(
-                        json.dumps(self._get_work_data()))
-                else:
-                    self.job.sendWorkFail()
-            except Exception as e:
-                self.log.exception('Exception handling log event.')
-                if not self.cancelled:
-                    self.job.sendWorkException(str(e).encode('utf-8'))
+        cmd = os.path.join(os.path.join(os.path.dirname(__file__),
+                                        'gerrit-git-prep.sh'))
+        cmd += ' https://review.openstack.org'
+        cmd += ' http://zuul.rcbops.com'
+        utils.execute_to_log(cmd, job_log_file_path, env=git_args,
+                             cwd=local_path)
+        self.git_path = local_path
+        return local_path
+
+    @common.task_step
+    def _execute_script(self):
+        # Run script
+        self.script_return_code = 0
+
+    @common.task_step
+    def _parse_and_check_results(self):
+        if self.script_return_code > 0:
+            self.success = False
+            self.messages.append('Return code from test script was non-zero '
+                                 '(%d)' % self.script_return_code)
+
+    @common.task_step
+    def _handle_results(self):
+        pass
