@@ -48,7 +48,7 @@ class Runner(models.Task):
         self.job_datasets = []
 
         # Define the number of steps we will do to determine our progress.
-        self.total_steps = 4
+        self.total_steps = 5
 
     def start_job(self, job):
         self.job = job
@@ -65,7 +65,6 @@ class Runner(models.Task):
                 self._send_work_data()
 
                 # Step 1: Figure out which datasets to run
-                self._do_next_step()
                 self.job_datasets = self._get_job_datasets()
 
                 # Step 2: Checkout updates from git!
