@@ -32,7 +32,7 @@ MIGRATION_START_RE = re.compile('([0-9]+) -&gt; ([0-9]+)\.\.\.$')
 MIGRATION_END_RE = re.compile('^done$')
 
 
-class Runner(models.Task):
+class Runner(models.ShellTask):
 
     """ This thread handles the actual sql-migration tests.
         It pulls in a gearman job from the  build:gate-real-db-upgrade
@@ -50,52 +50,51 @@ class Runner(models.Task):
         # Define the number of steps we will do to determine our progress.
         self.total_steps = 5
 
-    def start_job(self, job):
-        self.job = job
-        self.success = True
-        self.messages = []
+    def do_job_steps(self):
+        # Step 1: Figure out which datasets to run
+        self.job_datasets = self._get_job_datasets()
 
-        if self.job is not None:
-            try:
-                self.job_arguments = \
-                    json.loads(self.job.arguments.decode('utf-8'))
-                self.log.debug("Got job from ZUUL %s" % self.job_arguments)
+        # all other steps are common to running a shell script
+        super(Runner, self).job_steps()
 
-                # Send an initial WORK_DATA and WORK_STATUS packets
-                self._send_work_data()
+    @common.task_step
+    def _get_job_datasets(self):
+        """ Take the applicable datasets for this job and set them up in
+        self.job_datasets """
 
-                # Step 1: Figure out which datasets to run
-                self.job_datasets = self._get_job_datasets()
+        job_datasets = []
+        for dataset in self._get_datasets():
+            # Only load a dataset if it is the right project and we
+            # know how to process the upgrade
+            if (self.job_arguments['ZUUL_PROJECT'] ==
+                    dataset['config']['project'] and
+                    self._get_project_command(dataset['config']['type'])):
+                dataset['determined_path'] = utils.determine_job_identifier(
+                    self.job_arguments, self.plugin_config['function'],
+                    self.job.unique
+                )
+                dataset['job_log_file_path'] = os.path.join(
+                    self.global_config['jobs_working_dir'],
+                    dataset['determined_path'],
+                    dataset['name'] + '.log'
+                )
+                dataset['result'] = 'UNTESTED'
+                dataset['command'] = \
+                    self._get_project_command(dataset['config']['type'])
 
-                # Step 2: Checkout updates from git!
-                self.git_path = self._grab_patchset(
-                    self.job_arguments,
-                    self.job_datasets[0]['job_log_file_path'])
+                job_datasets.append(dataset)
 
-                # Step 3: Run migrations on datasets
-                if self._execute_migrations() > 0:
-                    self.success = False
-                    self.messages.append('Return code from test script was '
-                                         'non-zero')
+        return job_datasets
 
-                # Step 4: Analyse logs for errors
-                self._check_all_dataset_logs_for_errors()
+    @common.task_step
+    def _execute_script(self):
+        # Run script
+        self.script_return_code = self._execute_migrations()
 
-                # Step 5: handle the results (and upload etc)
-                self._handle_results()
-
-                # Finally, send updated work data and completed packets
-                self._send_work_data()
-
-                if self.work_data['result'] is 'SUCCESS':
-                    self.job.sendWorkComplete(
-                        json.dumps(self._get_work_data()))
-                else:
-                    self.job.sendWorkFail()
-            except Exception as e:
-                self.log.exception('Exception handling log event.')
-                if not self.cancelled:
-                    self.job.sendWorkException(str(e).encode('utf-8'))
+    @common.task_step
+    def _parse_and_check_results(self):
+        super(Runner, self)._parse_and_check_results()
+        self._check_all_dataset_logs_for_errors()
 
     @common.task_step
     def _handle_results(self):
@@ -108,11 +107,8 @@ class Runner(models.Task):
         self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
 
-    @common.task_step
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug('Check logs for errors')
-        self.success = True
-        self.messages = []
 
         for i, dataset in enumerate(self.job_datasets):
             success, messages = handle_results.check_log_file(
@@ -156,35 +152,6 @@ class Runner(models.Task):
 
         return self.datasets
 
-    @common.task_step
-    def _get_job_datasets(self):
-        """ Take the applicable datasets for this job and set them up in
-        self.job_datasets """
-
-        job_datasets = []
-        for dataset in self._get_datasets():
-            # Only load a dataset if it is the right project and we
-            # know how to process the upgrade
-            if (self.job_arguments['ZUUL_PROJECT'] ==
-                    dataset['config']['project'] and
-                    self._get_project_command(dataset['config']['type'])):
-                dataset['determined_path'] = utils.determine_job_identifier(
-                    self.job_arguments, self.plugin_config['function'],
-                    self.job.unique
-                )
-                dataset['job_log_file_path'] = os.path.join(
-                    self.global_config['jobs_working_dir'],
-                    dataset['determined_path'],
-                    dataset['name'] + '.log'
-                )
-                dataset['result'] = 'UNTESTED'
-                dataset['command'] = \
-                    self._get_project_command(dataset['config']['type'])
-
-                job_datasets.append(dataset)
-
-        return job_datasets
-
     def _get_project_command(self, db_type):
         command = (self.job_arguments['ZUUL_PROJECT'].split('/')[-1] + '_' +
                    db_type + '_migrations.sh')
@@ -193,7 +160,6 @@ class Runner(models.Task):
             return command
         return False
 
-    @common.task_step
     def _execute_migrations(self):
         """ Execute the migration on each dataset in datasets """
 
