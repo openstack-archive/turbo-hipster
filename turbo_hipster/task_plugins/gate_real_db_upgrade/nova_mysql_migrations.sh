@@ -104,7 +104,7 @@ EOF
   for i in `seq $start_version $increment $end_version`
   do
     set -x
-    sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper $VENV_PATH --config-file $2/nova-$1.conf --verbose db sync --version $i
+    sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $2/nova-$1.conf --verbose db sync --version $i
     manage_exit=$?
     set +x
 
