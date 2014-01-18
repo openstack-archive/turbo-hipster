@@ -48,7 +48,7 @@ class Runner(models.Task):
         self.job_datasets = []
 
         # Define the number of steps we will do to determine our progress.
-        self.total_steps = 4
+        self.total_steps = 5
 
     def start_job(self, job):
         self.job = job
