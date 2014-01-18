@@ -232,4 +232,6 @@ class Runner(models.ShellTask):
                     ('[sqlerr]', sqlerr)
                 ],
             )
+            # FIXME: If more than one dataset is provided we won't actually
+            # test them!
             return rc
