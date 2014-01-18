@@ -20,8 +20,7 @@ from turbo_hipster.lib import models
 
 class Runner(models.ShellTask):
 
-    """ This thread handles the actual sql-migration tests.
-        It pulls in a gearman job from the  build:gate-real-db-upgrade
-        queue and runs it through _handle_patchset"""
+    """A plugin to run any shell script as defined in the config. Based on
+    models.ShellTask the steps can be overwritten."""
 
     log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
