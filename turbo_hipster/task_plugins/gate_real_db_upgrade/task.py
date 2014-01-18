@@ -48,7 +48,7 @@ class Runner(models.ShellTask):
         self.job_datasets = []
 
         # Define the number of steps we will do to determine our progress.
-        self.total_steps = 5
+        self.total_steps = 6
 
     def do_job_steps(self):
         # Step 1: Figure out which datasets to run
