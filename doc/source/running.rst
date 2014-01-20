@@ -9,7 +9,7 @@ Starting turbo-hipster
 
 Turbo-hipster can be run from the command line::
 
- $ ./turbo-hipster/worker_server.py
+ $ turbo-hipster
 
 This option allows you to pass parameters to turbo-hipster. Use the --help
 parameter to see a full list.
@@ -45,7 +45,7 @@ Plugins can be used to extend turbo-hipster's capabilities.
 
 .. note::
  Currently, the only available plugin for turbo-hipster is the
- Database Migration plugin, ``gate_real_db_upgrade``, which tests code
+ database migration plugin, ``gate_real_db_upgrade``, which tests code
  against a variety of real-world databases.
 
 Installing plugins
@@ -96,7 +96,7 @@ Testing with turbo-hipster
 ==========================
 
 When turbo-hipster completes a test, it sends the result of the test back to
-Gearman. These results contain a link to a compiled logfile for the test.
+Gearman. These results contain a link to a compiled log file for the test.
 
 If the test fails, or takes too long to complete, turbo-hipster will add a
 review to your patchset that looks like this:
