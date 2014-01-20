@@ -8,22 +8,22 @@ Installation
 
 Turbo-hipster is installed directly into your Python ``site-packages``
 directory, and is then run as a service. It is managed using a configuration
-file, which is in .json format.
+file, which is in json format.
 
 Installing turbo-hipster
 ------------------------
 
-1. Turbo-Hipster can be installed directly to your Python ``site-packages``
-directory::
+1. Turbo-hipster can be installed directly to your Python ``site-packages``
+directory:
 
  $ sudo python setup.py install
 
 2. Copy the configuration file to a convenient location. By default,
-turbo-hipster will look in ``/etc/turbo-hipster/config.json`` ::
+turbo-hipster will look in ``/etc/turbo-hipster/config.json``:
 
  $ cp -R etc/turbo-hipster /etc/
 
-3. The Turbo-Hipster configuration file is in .json format. Open the
+3. The turbo-hipster configuration file is in json format. Open the
 ``config.json`` configuration file in your preferred editor and modify it
 for your environment::
 
@@ -83,7 +83,7 @@ for your environment::
  $ useradd turbo-hipster
 
 5. Create the directories listed in the configuration file, and give the
-``turbo-hipster`` user write access::
+``turbo-hipster`` user write access:
 
  $ mkdir -p /var/log/turbo-hipster/
  $ chown turbo-hipster:turbo-hipster /var/log/turbo-hipster/
@@ -98,7 +98,7 @@ for your environment::
  $ chown turbo-hipster:turbo-hipster /var/cache/pip
 
 6. Open the MySQL log rotation configuration file in your preferred text
-editor, and edit it to ensure it is writable by ``other``::
+editor, and edit it to ensure it is writable by ``other``:
 
  $ vim /etc/logrotate.d/mysql-server
  # edit create 640 to 644.
