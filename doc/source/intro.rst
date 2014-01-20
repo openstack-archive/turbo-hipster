@@ -21,7 +21,7 @@ migration may take an unreasonable amount of time against a large database.
  Happiness. Fuzzy Happiness takes markup in the sqlalchemy models file and
  uses that to decide what values to anonymize, and how to do so. This feature
  is still in development, and until it is complete turbo-hipster will not
- report back to Zuul automatically. See the Release Notes for more detail.
+ report back to Zuul automatically.
 
 Additionally, turbo-hipster has been designed to be extensible, so it is
 possible to write other plugins to expand its capabilities.
@@ -35,19 +35,19 @@ report back with success or failure. Zuul allows you to specify which jobs
 should be run against which projects. You can create a rule in Zuul for it
 to select jobs that require testing against a database. Turbo-hipster will
 then register as being able to complete that type of job. Gearman handles
-the connection between Zuul and Turbo-Hipster, recognizing when a job
+the connection between Zuul and turbo-hipster, recognizing when a job
 matches the rule, and passing it to turbo-hipster for testing. When turbo-
 hipster receives the patchset for the job, it creates a virtual environment
 to test it. The result of the test is sent back to Gearman as a json string,
 which contains links to compiled logfiles.
 
-The simplified workflow for Turbo-Hipster:
+The simplified workflow for turbo-hipster:
 
 1. Registers as a worker against Zuul's Gearman server
 2. Receives jobs from Zuul as they arrive
 3. Checks out the patchset
 4. Sets up a new virtual environment for testing
-5. Loads in a representative subset of the available datasets
+5. Loads a representative subset of the available datasets
 6. Runs the migration against each dataset, and checks the result
 7. Reports the results to Zuul, using the Gearman protocol
 
