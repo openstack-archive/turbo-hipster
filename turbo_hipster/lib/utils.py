@@ -198,18 +198,18 @@ def execute_to_log(cmd, logfile, timeout=-1,
     return p.returncode
 
 
-def push_file(job_log_dir, file_path, publish_config):
+def push_file(results_set_name, file_path, publish_config):
     """ Push a log file to a server. Returns the public URL """
     method = publish_config['type'] + '_push_file'
     if method in globals() and hasattr(globals()[method], '__call__'):
-        return globals()[method](job_log_dir, file_path, publish_config)
+        return globals()[method](results_set_name, file_path, publish_config)
 
 
-def swift_push_file(job_log_dir, file_path, swift_config):
+def swift_push_file(results_set_name, file_path, swift_config):
     """ Push a log file to a swift server. """
-    def _push_individual_file(job_log_dir, file_path, swift_config):
+    def _push_individual_file(results_set_name, file_path, swift_config):
         with open(file_path, 'r') as fd:
-            name = os.path.join(job_log_dir, os.path.basename(file_path))
+            name = os.path.join(results_set_name, os.path.basename(file_path))
             con = swiftclient.client.Connection(
                 authurl=swift_config['authurl'],
                 user=swift_config['user'],
@@ -220,20 +220,20 @@ def swift_push_file(job_log_dir, file_path, swift_config):
             con.put_object(swift_config['container'], name, fd)
 
     if os.path.isfile(file_path):
-        _push_individual_file(job_log_dir, file_path, swift_config)
+        _push_individual_file(results_set_name, file_path, swift_config)
     elif os.path.isdir(file_path):
         for path, folders, files in os.walk(file_path):
             for f in files:
                 f_path = os.path.join(path, f)
-                _push_individual_file(job_log_dir, f_path, swift_config)
+                _push_individual_file(results_set_name, f_path, swift_config)
 
     return (swift_config['prepend_url'] +
-            os.path.join(job_log_dir, os.path.basename(file_path)))
+            os.path.join(results_set_name, os.path.basename(file_path)))
 
 
-def local_push_file(job_log_dir, file_path, local_config):
+def local_push_file(results_set_name, file_path, local_config):
     """ Copy the file locally somewhere sensible """
-    dest_dir = os.path.join(local_config['path'], job_log_dir)
+    dest_dir = os.path.join(local_config['path'], results_set_name)
     dest_filename = os.path.basename(file_path)
     if not os.path.isdir(dest_dir):
         os.makedirs(dest_dir)
@@ -244,11 +244,11 @@ def local_push_file(job_log_dir, file_path, local_config):
         shutil.copyfile(file_path, dest_file)
     elif os.path.isdir(file_path):
         shutil.copytree(file_path, dest_file)
-    return local_config['prepend_url'] + os.path.join(job_log_dir,
+    return local_config['prepend_url'] + os.path.join(results_set_name,
                                                       dest_filename)
 
 
-def scp_push_file(job_log_dir, file_path, local_config):
+def scp_push_file(results_set_name, file_path, local_config):
     """ Copy the file remotely over ssh """
     # TODO!
     pass
