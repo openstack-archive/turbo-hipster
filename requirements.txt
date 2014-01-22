@@ -11,3 +11,5 @@ sphinxcontrib-programoutput
 sphinxcontrib-seqdiag
 
 mysql-python
+
+requests

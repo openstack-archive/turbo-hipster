@@ -218,9 +218,16 @@ class ShellTask(Task):
     def _handle_results(self):
         """Upload the contents of the working dir either using the instructions
         provided by zuul and/or our configuration"""
+
         self.log.debug("Process the resulting files (upload/push)")
-        index_url = utils.push_file(self.results_set_name,
-                                    self.job_working_dir,
-                                    self.global_config['publish_logs'])
-        self.log.debug("Index URL found at %s" % index_url)
-        self.work_data['url'] = index_url
+
+        if 'publish_logs' in self.global_config:
+            index_url = utils.push_file(self.results_set_name,
+                                        self.job_working_dir,
+                                        self.global_config['publish_logs'])
+            self.log.debug("Index URL found at %s" % index_url)
+            self.work_data['url'] = index_url
+
+        if 'ZUUL_EXTRA_SWIFT_URL' in self.job_arguments:
+            # Upload to zuul's url as instructed
+            utils.zuul_swift_upload(self.job_working_dir, self.job_arguments)

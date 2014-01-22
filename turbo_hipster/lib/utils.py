@@ -16,6 +16,7 @@
 import git
 import logging
 import os
+import requests
 import select
 import shutil
 import subprocess
@@ -267,3 +268,41 @@ def determine_job_identifier(zuul_arguments, job, unique):
     log.info('Converted args: %s, job: %s and unique: %s to %s'
              % (zuul_arguments, job, unique, path))
     return path
+
+
+def zuul_swift_upload(file_path, job_arguments):
+    """Upload working_dir to swift as per zuul's instructions"""
+    # NOTE(jhesketh): Zuul specifies an object prefix in the destination so
+    #                 we don't need to be concerned with results_set_name
+
+    file_list = []
+    if os.path.isfile(file_path):
+        file_list.append(file_path)
+    elif os.path.isdir(file_path):
+        for path, folders, files in os.walk(file_path):
+            for f in files:
+                f_path = os.path.join(path, f)
+                file_list.append(f_path)
+
+    # We are uploading the file_list as an HTTP POST multipart encoded.
+    # First grab out the information we need to send back from the hmac_body
+    payload = {}
+    (object_prefix,
+     payload['redirect'],
+     payload['max_file_size'],
+     payload['max_file_count'],
+     payload['expires']) = \
+        job_arguments['ZUUL_EXTRA_SWIFT_HMAC_BODY'].split('\n')
+
+    url = job_arguments['ZUUL_EXTRA_SWIFT_URL']
+    payload['signature'] = job_arguments['ZUUL_EXTRA_SWIFT_SIGNATURE']
+    logserver_prefix = job_arguments['ZUUL_EXTRA_SWIFT_LOGSERVER_PREFIX']
+
+    files = {}
+    for i, f in enumerate(file_list):
+        files['file%d' % (i + 1)] = open(f, 'rb')
+
+    requests.post(url, data=payload, files=files)
+
+    return (logserver_prefix +
+            job_arguments['ZUUL_EXTRA_SWIFT_DESTINATION_PREFIX'])
