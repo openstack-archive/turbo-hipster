@@ -173,11 +173,14 @@ class ShellTask(Task):
 
     @common.task_step
     def _prep_working_dir(self):
+        self.results_set_name = utils.determine_job_identifier(
+            self.job_arguments,
+            self.plugin_config['function'],
+            self.job.unique
+        )
         self.job_working_dir = os.path.join(
             self.global_config['jobs_working_dir'],
-            utils.determine_job_identifier(self.job_arguments,
-                                           self.plugin_config['function'],
-                                           self.job.unique)
+            self.results_set_name
         )
         self.shell_output_log = os.path.join(
             self.job_working_dir,
@@ -213,4 +216,11 @@ class ShellTask(Task):
 
     @common.task_step
     def _handle_results(self):
-        pass
+        """Upload the contents of the working dir either using the instructions
+        provided by zuul and/or our configuration"""
+        self.log.debug("Process the resulting files (upload/push)")
+        index_url = utils.push_file(self.results_set_name,
+                                    self.job_working_dir,
+                                    self.global_config['publish_logs'])
+        self.log.debug("Index URL found at %s" % index_url)
+        self.work_data['url'] = index_url
