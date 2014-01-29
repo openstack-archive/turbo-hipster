@@ -27,9 +27,9 @@ with open(os.path.join(CONFIG_DIR, 'config.json'), 'r') as config_stream:
     CONFIG = json.load(config_stream)
 
 
-class TestGearmanManager(testtools.TestCase):
+class TestZuulManager(testtools.TestCase):
     def setUp(self):
-        super(TestGearmanManager, self).setUp()
+        super(TestZuulManager, self).setUp()
         self.config = CONFIG
         self.gearman_server = FakeGearmanServer(
             self.config['zuul_server']['gearman_port'])
@@ -42,7 +42,11 @@ class TestGearmanManager(testtools.TestCase):
 
         self.gearman_manager = FakeZuulManager(self.config, self.tasks, self)
 
-    def xtest_manager_function_registered(self):
+    def tearDown(self):
+        super(TestZuulManager, self).tearDown()
+        self.gearman_server.shutdown()
+
+    def test_manager_function_registered(self):
         """ Check the manager is set up correctly and registered with the
         gearman server with an appropriate function """
 
@@ -57,12 +61,12 @@ class TestGearmanManager(testtools.TestCase):
 
         self.assertIn(function_name, self.gearman_server.functions)
 
-    def xtest_task_registered_with_manager(self):
+    def test_task_registered_with_manager(self):
         """ Check the FakeRealDbUpgradeRunner_worker task is registered """
         self.assertIn('FakeRealDbUpgradeRunner_worker',
                       self.gearman_manager.tasks.keys())
 
-    def xtest_stop_task(self):
+    def test_stop_task(self):
         """ Check that the manager successfully stops a task when requested
         """
         pass
