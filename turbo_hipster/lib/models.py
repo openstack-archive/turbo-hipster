@@ -218,7 +218,7 @@ class ShellTask(Task):
         self.log.debug("Process the resulting files (upload/push)")
 
         if 'publish_logs' in self.global_config:
-            index_url = utils.push_file(self.results_set_name,
+            index_url = utils.push_file(self.shell_output_log,
                                         self.job_working_dir,
                                         self.global_config['publish_logs'])
             self.log.debug("Index URL found at %s" % index_url)
