@@ -97,7 +97,7 @@ class Task(object):
     def _send_final_results(self):
         self._send_work_data()
 
-        if self.work_data['result'] is 'SUCCESS':
+        if self.success:
             self.job.sendWorkComplete(
                 json.dumps(self._get_work_data()))
         else:
