@@ -132,7 +132,7 @@ class ShellTask(Task):
         self.job_working_dir = None
         self.shell_output_log = None
 
-    def do_job_steps(self, job):
+    def do_job_steps(self):
         # Step 1: Checkout updates from git
         self._grab_patchset(self.job_arguments,
                             self.job_datasets[0]['job_log_file_path'])
