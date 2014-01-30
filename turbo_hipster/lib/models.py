@@ -152,11 +152,14 @@ class ShellTask(Task):
 
     @common.task_step
     def _prep_working_dir(self):
+        self.job_identifier = utils.determine_job_identifier(
+            self.job_arguments,
+            self.plugin_config['function'],
+            self.job.unique
+        )
         self.job_working_dir = os.path.join(
             self.global_config['jobs_working_dir'],
-            utils.determine_job_identifier(self.job_arguments,
-                                           self.plugin_config['function'],
-                                           self.job.unique)
+            self.job_identifier
         )
         self.shell_output_log = os.path.join(
             self.job_working_dir,
@@ -220,7 +223,7 @@ class ShellTask(Task):
         self.log.debug("Process the resulting files (upload/push)")
 
         if 'publish_logs' in self.global_config:
-            index_url = utils.push_file(self.shell_output_log,
+            index_url = utils.push_file(self.job_identifier,
                                         self.job_working_dir,
                                         self.global_config['publish_logs'])
             self.log.debug("Index URL found at %s" % index_url)
@@ -229,3 +232,4 @@ class ShellTask(Task):
         if 'ZUUL_EXTRA_SWIFT_URL' in self.job_arguments:
             # Upload to zuul's url as instructed
             utils.zuul_swift_upload(self.job_working_dir, self.job_arguments)
+            self.work_data['url'] = self.job_identifier
