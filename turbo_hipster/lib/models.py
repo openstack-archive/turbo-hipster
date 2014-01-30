@@ -133,12 +133,11 @@ class ShellTask(Task):
         self.shell_output_log = None
 
     def do_job_steps(self):
-        # Step 1: Checkout updates from git
-        self._grab_patchset(self.job_arguments,
-                            self.job_datasets[0]['job_log_file_path'])
-
-        # Step 2: Prep job working dir
+        # Step 1: Prep job working dir
         self._prep_working_dir()
+
+        # Step 2: Checkout updates from git
+        self._grab_patchset(self.job_arguments)
 
         # Step 3: Run shell script
         self._execute_script()
@@ -150,7 +149,23 @@ class ShellTask(Task):
         self._handle_results()
 
     @common.task_step
-    def _grab_patchset(self, job_args, job_log_file_path):
+    def _prep_working_dir(self):
+        self.job_working_dir = os.path.join(
+            self.global_config['jobs_working_dir'],
+            utils.determine_job_identifier(self.job_arguments,
+                                           self.plugin_config['function'],
+                                           self.job.unique)
+        )
+        self.shell_output_log = os.path.join(
+            self.job_working_dir,
+            'shell_output.log'
+        )
+
+        if not os.path.isdir(os.path.dirname(self.shell_output_log)):
+            os.makedirs(os.path.dirname(self.shell_output_log))
+
+    @common.task_step
+    def _grab_patchset(self, job_args):
         """ Checkout the reference into config['git_working_dir'] """
 
         self.log.debug("Grab the patchset we want to test against")
@@ -166,29 +181,10 @@ class ShellTask(Task):
                                         'gerrit-git-prep.sh'))
         cmd += ' https://review.openstack.org'
         cmd += ' http://zuul.rcbops.com'
-        utils.execute_to_log(cmd, job_log_file_path, env=git_args,
+        utils.execute_to_log(cmd, self.shell_output_log, env=git_args,
                              cwd=local_path)
         self.git_path = local_path
         return local_path
-
-    @common.task_step
-    def _prep_working_dir(self):
-        self.results_set_name = utils.determine_job_identifier(
-            self.job_arguments,
-            self.plugin_config['function'],
-            self.job.unique
-        )
-        self.job_working_dir = os.path.join(
-            self.global_config['jobs_working_dir'],
-            self.results_set_name
-        )
-        self.shell_output_log = os.path.join(
-            self.job_working_dir,
-            'shell_output.log'
-        )
-
-        if not os.path.isdir(os.path.dirname(self.shell_output_log)):
-            os.makedirs(os.path.dirname(self.shell_output_log))
 
     @common.task_step
     def _execute_script(self):
