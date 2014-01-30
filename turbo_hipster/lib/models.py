@@ -98,9 +98,11 @@ class Task(object):
         self._send_work_data()
 
         if self.success:
+            self.work_data['result'] = 'SUCCESS'
             self.job.sendWorkComplete(
                 json.dumps(self._get_work_data()))
         else:
+            self.work_data['result'] = '\n'.join(self.messages)
             self.job.sendWorkFail()
 
     def _do_next_step(self):

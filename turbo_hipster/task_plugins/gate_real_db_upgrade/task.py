@@ -124,11 +124,6 @@ class Runner(models.ShellTask):
             else:
                 self.job_datasets[i]['result'] = messages[0]
 
-        if self.success:
-            self.work_data['result'] = 'SUCCESS'
-        else:
-            self.work_data['result'] = '\n'.join(self.messages)
-
     def _get_datasets(self):
         self.log.debug("Get configured datasets to run tests against")
         if len(self.datasets) > 0:
