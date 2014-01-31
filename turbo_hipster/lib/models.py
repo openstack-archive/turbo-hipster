@@ -92,17 +92,19 @@ class Task(object):
         """ Send the WORK DATA in json format for job """
         self.log.debug("Send the work data response: %s" %
                        json.dumps(self._get_work_data()))
+        if self.success:
+            self.work_data['result'] = 'SUCCESS'
+        else:
+            self.work_data['result'] = '\n'.join(self.messages)
         self.job.sendWorkData(json.dumps(self._get_work_data()))
 
     def _send_final_results(self):
         self._send_work_data()
 
         if self.success:
-            self.work_data['result'] = 'SUCCESS'
             self.job.sendWorkComplete(
                 json.dumps(self._get_work_data()))
         else:
-            self.work_data['result'] = '\n'.join(self.messages)
             self.job.sendWorkFail()
 
     def _do_next_step(self):
