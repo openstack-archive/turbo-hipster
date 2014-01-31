@@ -226,7 +226,7 @@ class ShellTask(Task):
 
         if 'publish_logs' in self.global_config:
             index_url = utils.push_file(self.job_identifier,
-                                        self.job_working_dir,
+                                        self.shell_output_log,
                                         self.global_config['publish_logs'])
             self.log.debug("Index URL found at %s" % index_url)
             self.work_data['url'] = index_url
