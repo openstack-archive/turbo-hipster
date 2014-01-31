@@ -1,6 +1,8 @@
 {
     "zuul_server": {
-        "git_url": "http://119.9.13.90/p/",
+        "gerrit_site": "http://review.openstack.org",
+        "zuul_site": "http://119.9.13.90",
+        "git_origin": "git://git.openstack.org/",
         "gearman_host": "119.9.13.90",
         "gearman_port": 4730
     },

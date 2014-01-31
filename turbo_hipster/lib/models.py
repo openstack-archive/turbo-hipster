@@ -182,12 +182,11 @@ class ShellTask(Task):
             os.makedirs(local_path)
 
         git_args = copy.deepcopy(job_args)
-        git_args['GIT_ORIGIN'] = 'git://git.openstack.org/'
 
         cmd = os.path.join(os.path.join(os.path.dirname(__file__),
                                         'gerrit-git-prep.sh'))
-        cmd += ' https://review.openstack.org'
-        cmd += ' http://zuul.rcbops.com'
+        cmd += ' ' + self.global_config['zuul_server']['gerrit_site']
+        cmd += ' ' + self.global_config['zuul_server']['zuul_site']
         utils.execute_to_log(cmd, self.shell_output_log, env=git_args,
                              cwd=local_path)
         self.git_path = local_path
