@@ -15,16 +15,16 @@
 # under the License.
 
 
-import json
 import os
 import testtools
 import time
+import yaml
 from fakes import FakeZuulManager, FakeGearmanServer,\
     FakeRealDbUpgradeRunner
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'etc')
-with open(os.path.join(CONFIG_DIR, 'config.json'), 'r') as config_stream:
-    CONFIG = json.load(config_stream)
+with open(os.path.join(CONFIG_DIR, 'config.yaml'), 'r') as config_stream:
+    CONFIG = yaml.safe_load(config_stream)
 
 
 class TestZuulManager(testtools.TestCase):
