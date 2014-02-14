@@ -13,3 +13,4 @@ sphinxcontrib-seqdiag
 mysql-python
 
 requests
+PyYAML
