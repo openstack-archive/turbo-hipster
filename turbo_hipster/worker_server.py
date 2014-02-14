@@ -18,13 +18,14 @@
 """ worker_server.py is an executable worker server that loads and runs
 task_plugins. """
 
+import json
 import logging
 import os
 import signal
 import sys
 
 import worker_manager
-
+from os.path import join, isdir, isfile
 
 class Server(object):
 
@@ -33,6 +34,13 @@ class Server(object):
 
     def __init__(self, config):
         self.config = config
+
+        # Load extra configuration first
+        # NOTE(Mattoliverau): debug_log might be specified in
+        # a conf.d snippet.
+        if 'conf_d' in self.config:
+            self.load_extra_configuration()
+
         # Python logging output file.
         self.debug_log = self.config['debug_log']
 
@@ -47,6 +55,24 @@ class Server(object):
 
         self.tasks = {}
         self.load_plugins()
+
+    def load_extra_configuration(self):
+        if isdir(self.config["conf_d"]):
+            extra_configs = (join(self.config["conf_d"].item)
+                             for item in os.listdir(self.config["conf_d"])
+                             if isfile(join(self.config["conf_d"], item)))
+            for conf in extra_configs:
+                try:
+                    with open(conf, 'r') as config_stream:
+                        extra_config = json.load(config_stream)
+                        self.config.update(extra_config)
+                except:
+                    self.log.warn("Failed to load extra configuration: '%s'" %
+                                  (conf))
+                    continue
+        else:
+            self.log.warn("conf_d parameter '%s' isn't a directory" %
+                          (self.config["conf_d"]))
 
     def setup_logging(self):
         if not self.debug_log:
