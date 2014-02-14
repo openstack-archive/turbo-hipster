@@ -77,6 +77,10 @@ for your environment::
            to use a script to authenticate against a swift
            account or to use *laughing_spice* to format the logs
            etc.
+  **conf_d**
+    A path of a directory containing peices of json confiuration.
+    This is helpful when you want different plugins to add extra
+    or even modify the default configuration.
 
 4. Create a turbo-hipster user:
 
