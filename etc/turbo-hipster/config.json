@@ -17,10 +17,6 @@
             "function": "build:gate-real-db-upgrade_nova_mysql_devstack_131007"
         }, {
             "name": "gate_real_db_upgrade",
-            "datasets_dir": "/var/lib/turbo-hipster/datasets_devstack_150",
-            "function": "build:gate-real-db-upgrade_nova_mysql_devstack_150"
-        }, {
-            "name": "gate_real_db_upgrade",
             "datasets_dir": "/var/lib/turbo-hipster/datasets_trivial_500",
             "function": "build:gate-real-db-upgrade_nova_mysql_trivial_500"
         }, {
