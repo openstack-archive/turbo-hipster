@@ -20,21 +20,23 @@ task_plugins. """
 
 import logging
 import os
-import signal
-import sys
+import threading
 
 import worker_manager
 
 
-class Server(object):
+class Server(threading.Thread):
 
     """ This is the worker server object to be daemonized """
     log = logging.getLogger("worker_server.Server")
 
     def __init__(self, config):
+        super(Server, self).__init__()
+        self._stop = threading.Event()
         self.config = config
         # Python logging output file.
         self.debug_log = self.config['debug_log']
+        self.setup_logging()
 
         # Config init
         self.zuul_manager = None
@@ -56,7 +58,8 @@ class Server(object):
         # in lib.utils.execute_to_log to work correctly.
         if not os.path.isdir(os.path.dirname(self.debug_log)):
             os.makedirs(os.path.dirname(self.debug_log))
-        logging.basicConfig(format='%(asctime)s %(name)s %(message)s',
+        logging.basicConfig(format='%(asctime)s %(name)-32s '
+                            '%(levelname)-8s %(message)s',
                             filename=self.debug_log, level=logging.DEBUG)
 
     def load_plugins(self):
@@ -73,9 +76,9 @@ class Server(object):
             })
             self.log.debug('Plugin %s loaded' % plugin['name'])
 
-    def start_gearman_workers(self):
+    def start_zuul_client(self):
         """ Run the tasks """
-        self.log.debug('Starting gearman workers')
+        self.log.debug('Starting zuul client')
         self.zuul_client = worker_manager.ZuulClient(self.config,
                                                      self.worker_name)
 
@@ -92,28 +95,23 @@ class Server(object):
                                           self.tasks[job_name])
 
         self.zuul_client.register_functions()
-        self.zuul_client.daemon = True
         self.zuul_client.start()
 
+    def start_zuul_manager(self):
         self.zuul_manager = worker_manager.ZuulManager(self.config, self.tasks)
-        self.zuul_manager.daemon = True
         self.zuul_manager.start()
 
-    def exit_handler(self, signum):
+    def stop(self):
+        self._stop.set()
         self.log.debug('Exiting...')
-        signal.signal(signal.SIGUSR1, signal.SIG_IGN)
-        for task_name, task in self.tasks.items():
-            task.stop()
-        self.manager.stop()
-        sys.exit(0)
+        self.zuul_client.stop()
+        self.zuul_manager.stop()
 
-    def main(self):
-        self.setup_logging()
-        self.start_gearman_workers()
+    def stopped(self):
+        return self._stop.isSet()
 
-        while True:
-            try:
-                signal.pause()
-            except KeyboardInterrupt:
-                print "Ctrl + C: asking tasks to exit nicely...\n"
-                self.exit_handler(signal.SIGINT)
+    def run(self):
+        self.start_zuul_client()
+        self.start_zuul_manager()
+        while not self.stopped():
+            self._stop.wait()

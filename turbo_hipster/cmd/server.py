@@ -20,6 +20,7 @@ import daemon
 import extras
 import json
 import os
+import signal
 import sys
 
 from turbo_hipster import worker_server
@@ -29,7 +30,32 @@ from turbo_hipster import worker_server
 PID_FILE_MODULE = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
 
 
-def main():
+def main(args):
+
+    with open(args.config, 'r') as config_stream:
+        config = json.load(config_stream)
+
+    server = worker_server.Server(config)
+
+    def term_handler(signum, frame):
+        server.stop()
+    signal.signal(signal.SIGTERM, term_handler)
+
+    if args.background:
+        server.daemon = True
+    server.start()
+
+    while not server.stopped():
+        try:
+            signal.pause()
+        except KeyboardInterrupt:
+            print "Ctrl + C: asking tasks to exit nicely...\n"
+            server.stop()
+
+
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), '../')))
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
                         default=
@@ -42,21 +68,9 @@ def main():
                                 'turbo-hipster-worker-server.pid',
                         help='PID file to lock during daemonization.')
     args = parser.parse_args()
-
-    with open(args.config, 'r') as config_stream:
-        config = json.load(config_stream)
-
-    server = worker_server.Server(config)
-
     if args.background:
         pidfile = PID_FILE_MODULE.TimeoutPIDLockFile(args.pidfile, 10)
         with daemon.DaemonContext(pidfile=pidfile):
-            server.main()
+            main(args)
     else:
-        server.main()
-
-
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '../')))
-    main()
+        main(args)
