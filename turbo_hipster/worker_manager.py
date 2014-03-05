@@ -47,6 +47,9 @@ class ZuulManager(threading.Thread):
             self.config['zuul_server']['gearman_host'],
             self.config['zuul_server']['gearman_port']
         )
+
+    def register_functions(self):
+        hostname = os.uname()[1]
         self.gearman_worker.registerFunction(
             'stop:turbo-hipster-manager-%s' % hostname)
 
@@ -67,6 +70,8 @@ class ZuulManager(threading.Thread):
                 self.gearman_worker.waitForServer()
                 if (not self.stopped() and self.gearman_worker.running and
                     self.gearman_worker.active_connections):
+                    self.register_functions()
+                    self.gearman_worker.waitForServer()
                     logging.debug("Waiting for job")
                     self.current_step = 0
                     job = self.gearman_worker.getJob()
@@ -145,6 +150,8 @@ class ZuulClient(threading.Thread):
                 self.gearman_worker.waitForServer()
                 if (not self.stopped() and self.gearman_worker.running and
                     self.gearman_worker.active_connections):
+                    self.register_functions()
+                    self.gearman_worker.waitForServer()
                     self.log.debug("Waiting for job")
                     self.job = self.gearman_worker.getJob()
                     self._handle_job()

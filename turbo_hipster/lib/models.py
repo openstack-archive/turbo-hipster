@@ -23,7 +23,7 @@ from turbo_hipster.lib import utils
 
 
 class Task(object):
-
+    """ A base object for running a job (aka Task) """
     log = logging.getLogger("lib.models.Task")
 
     def __init__(self, global_config, plugin_config, job_name):

@@ -42,6 +42,7 @@ class Server(threading.Thread):
         self.zuul_manager = None
         self.zuul_client = None
         self.plugins = []
+        self.services_started = False
 
         # TODO: Make me unique (random?) and we should be able to run multiple
         # instances of turbo-hipster on the one host
@@ -94,7 +95,6 @@ class Server(threading.Thread):
             self.zuul_client.add_function(plugin['plugin_config']['function'],
                                           self.tasks[job_name])
 
-        self.zuul_client.register_functions()
         self.zuul_client.start()
 
     def start_zuul_manager(self):
@@ -113,5 +113,6 @@ class Server(threading.Thread):
     def run(self):
         self.start_zuul_client()
         self.start_zuul_manager()
+        self.services_started = True
         while not self.stopped():
             self._stop.wait()
