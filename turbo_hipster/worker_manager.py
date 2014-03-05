@@ -79,7 +79,7 @@ class ZuulManager(threading.Thread):
         """ Handle the requested job """
         try:
             job_arguments = json.loads(job.arguments.decode('utf-8'))
-            self.tasks[job_arguments['name']].stop_worker(
+            self.tasks[job_arguments['name']].stop_working(
                 job_arguments['number'])
             job.sendWorkComplete()
         except Exception as e:
@@ -128,6 +128,8 @@ class ZuulClient(threading.Thread):
 
     def stop(self):
         self._stop.set()
+        for task in self.functions.values():
+            task.stop_working()
         # Unblock gearman
         self.log.debug("Telling gearman to stop waiting for jobs")
         self.gearman_worker.shutdown()

@@ -68,11 +68,11 @@ class Task(object):
                 if not self.cancelled:
                     self.job.sendWorkException(str(e).encode('utf-8'))
 
-    def stop_worker(self, number):
-        # Check the number is for this job instance
+    def stop_working(self, number=None):
+        # Check the number is for this job instance (None will cancel all)
         # (makes it possible to run multiple workers with this task
         # on this server)
-        if number == self.job.unique:
+        if number is None or number == self.job.unique:
             self.log.debug("We've been asked to stop by our gearman manager")
             self.cancelled = True
             # TODO: Work out how to kill current step
