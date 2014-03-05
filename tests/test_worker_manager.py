@@ -15,58 +15,172 @@
 # under the License.
 
 
+import gear
 import json
+import logging
 import os
 import testtools
 import time
-from fakes import FakeZuulManager, FakeGearmanServer,\
-    FakeRealDbUpgradeRunner
 
-CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'etc')
-with open(os.path.join(CONFIG_DIR, 'config.json'), 'r') as config_stream:
-    CONFIG = json.load(config_stream)
+import turbo_hipster.task_plugins.gate_real_db_upgrade.task
+import turbo_hipster.worker_server
 
 
-class TestZuulManager(testtools.TestCase):
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(name)-32s '
+                    '%(levelname)-8s %(message)s')
+
+
+class TestWithGearman(testtools.TestCase):
+
+    log = logging.getLogger("TestWithGearman")
+
     def setUp(self):
-        super(TestZuulManager, self).setUp()
-        self.config = CONFIG
-        self.gearman_server = FakeGearmanServer(
+        super(TestWithGearman, self).setUp()
+
+        self.config = []
+        self._load_config_fixture()
+
+        self.gearman_server = gear.Server(
             self.config['zuul_server']['gearman_port'])
+
+        # Grab the port so the clients can connect to it
         self.config['zuul_server']['gearman_port'] = self.gearman_server.port
 
-        self.task = FakeRealDbUpgradeRunner(self.config,
-                                            self.config['plugins'][0],
-                                            'test-worker-1', self)
-        self.tasks = dict(FakeRealDbUpgradeRunner_worker=self.task)
-
-        self.gearman_manager = FakeZuulManager(self.config, self.tasks, self)
+        self.worker_server = turbo_hipster.worker_server.Server(self.config)
+        self.worker_server.start()
+        t0 = time.time()
+        while time.time() - t0 < 10:
+            if self.worker_server.services_started:
+                break
+            time.sleep(0.01)
+        if not self.worker_server.services_started:
+            self.fail("Failed to start worker_service services")
 
     def tearDown(self):
-        super(TestZuulManager, self).tearDown()
+        self.worker_server.stop()
         self.gearman_server.shutdown()
+        super(TestWithGearman, self).tearDown()
 
-    def test_manager_function_registered(self):
-        """ Check the manager is set up correctly and registered with the
-        gearman server with an appropriate function """
+    def _load_config_fixture(self, config_name='default-config.json'):
+        config_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
+        with open(os.path.join(config_dir, config_name), 'r') as config_stream:
+            self.config = json.load(config_stream)
 
-        # Give the gearman server up to 5 seconds to register the function
-        for x in range(500):
-            time.sleep(0.01)
-            if len(self.gearman_server.functions) > 0:
+
+class TestWorkerServer(TestWithGearman):
+    def test_plugins_load(self):
+        "Test the configured plugins are loaded"
+
+        self.assertFalse(self.worker_server.stopped())
+        self.assertEqual(3, len(self.worker_server.plugins))
+
+        plugin0_config = {
+            "name": "gate_real_db_upgrade",
+            "datasets_dir": "/var/lib/turbo-hipster/datasets_devstack_131007",
+            "function": "build:gate-real-db-upgrade_nova_mysql_devstack_131007"
+        }
+        plugin1_config = {
+            "name": "gate_real_db_upgrade",
+            "datasets_dir": "/var/lib/turbo-hipster/datasets_user_001",
+            "function": "build:gate-real-db-upgrade_nova_mysql_user_001"
+        }
+        plugin2_config = {
+            "name": "shell_script",
+            "function": "build:do_something_shelly"
+        }
+
+        self.assertEqual(plugin0_config,
+                         self.worker_server.plugins[0]['plugin_config'])
+        self.assertEqual(
+            'turbo_hipster.task_plugins.gate_real_db_upgrade.task',
+            self.worker_server.plugins[0]['module'].__name__
+        )
+
+        self.assertEqual(plugin1_config,
+                         self.worker_server.plugins[1]['plugin_config'])
+        self.assertEqual(
+            'turbo_hipster.task_plugins.gate_real_db_upgrade.task',
+            self.worker_server.plugins[1]['module'].__name__
+        )
+
+        self.assertEqual(plugin2_config,
+                         self.worker_server.plugins[2]['plugin_config'])
+        self.assertEqual(
+            'turbo_hipster.task_plugins.shell_script.task',
+            self.worker_server.plugins[2]['module'].__name__
+        )
+
+    def test_zuul_client_started(self):
+        "Test the zuul client has been started"
+        self.assertFalse(self.worker_server.zuul_client.stopped())
+
+    def test_zuul_manager_started(self):
+        "Test the zuul manager has been started"
+        self.assertFalse(self.worker_server.zuul_manager.stopped())
+
+
+class TestZuulClient(TestWithGearman):
+    def test_setup_gearman_worker(self):
+        "Make sure the client is registered as a worker with gearman"
+        pass
+
+    def test_registered_functions(self):
+        "Test the correct functions are registered with gearman"
+        # The client should have all of the functions defined in the config
+        # registered with gearman
+
+        # We need to wait for all the functions to register with the server..
+        # We'll give it up to 10seconds to do so
+        t0 = time.time()
+        failed = True
+        while time.time() - t0 < 10:
+            # There should be 4 functions. 1 for each plugin + 1 for the
+            # manager
+            if len(self.gearman_server.functions) == 4:
+                failed = False
                 break
+            time.sleep(0.01)
+        if failed:
+            self.log.debug(self.gearman_server.functions)
+            self.fail("The correct number of functions haven't registered with"
+                      " gearman")
+
+        self.assertIn('build:gate-real-db-upgrade_nova_mysql_devstack_131007',
+                      self.gearman_server.functions)
+        self.assertIn('build:gate-real-db-upgrade_nova_mysql_user_001',
+                      self.gearman_server.functions)
+        self.assertIn('build:do_something_shelly',
+                      self.gearman_server.functions)
+
+    def test_waiting_for_job(self):
+        "Make sure the client waits for jobs as expected"
+        pass
+
+    def test_stop(self):
+        "Test sending a stop signal to the client exists correctly"
+        pass
+
+
+class TestZuulManager(TestWithGearman):
+    def test_registered_functions(self):
+        "Test the correct functions are registered with gearman"
+        # We need to wait for all the functions to register with the server..
+        # We'll give it up to 10seconds to do so
+        t0 = time.time()
+        failed = True
+        while time.time() - t0 < 10:
+            # There should be 4 functions. 1 for each plugin + 1 for the
+            # manager
+            if len(self.gearman_server.functions) == 4:
+                failed = False
+                break
+            time.sleep(0.01)
+        if failed:
+            self.log.debug(self.gearman_server.functions)
+            self.fail("The correct number of functions haven't registered with"
+                      " gearman")
 
         hostname = os.uname()[1]
-        function_name = 'stop:turbo-hipster-manager-%s' % hostname
-
-        self.assertIn(function_name, self.gearman_server.functions)
-
-    def test_task_registered_with_manager(self):
-        """ Check the FakeRealDbUpgradeRunner_worker task is registered """
-        self.assertIn('FakeRealDbUpgradeRunner_worker',
-                      self.gearman_manager.tasks.keys())
-
-    def test_stop_task(self):
-        """ Check that the manager successfully stops a task when requested
-        """
-        pass
+        self.assertIn('stop:turbo-hipster-manager-%s' % hostname,
+                      self.gearman_server.functions)
