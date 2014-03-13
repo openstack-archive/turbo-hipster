@@ -20,6 +20,7 @@ import math
 import MySQLdb
 import os
 import sys
+import yaml
 
 
 def main():
@@ -29,8 +30,8 @@ def main():
 
 
 def process_dataset(dataset):
-    with open('/etc/turbo-hipster/config.json', 'r') as config_stream:
-        config = json.load(config_stream)
+    with open('/etc/turbo-hipster/config.yaml', 'r') as config_stream:
+        config = yaml.safe_load(config_stream)
     db = MySQLdb.connect(host=config['results']['host'],
                          port=config['results'].get('port', 3306),
                          user=config['results']['username'],

@@ -23,6 +23,7 @@ import MySQLdb
 import os
 import re
 import sys
+import yaml
 
 import swiftclient
 
@@ -33,12 +34,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
                         default=
-                        '/etc/turbo-hipster/config.json',
-                        help='Path to json config file.')
+                        '/etc/turbo-hipster/config.yaml',
+                        help='Path to yaml config file.')
     args = parser.parse_args()
 
     with open(args.config, 'r') as config_stream:
-        config = json.load(config_stream)
+        config = yaml.safe_load(config_stream)
     swift_config = config['publish_logs']
 
     log = logging.getLogger(__name__)

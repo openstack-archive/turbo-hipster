@@ -61,7 +61,7 @@ with turbo-hipster. They must contain a ``task.py`` file with a ``Runner``
 class.
 
 Once you have created a turbo-hipster plugin, you need to configure it in
-the ``config.json`` configuration file.
+the ``config.yaml`` configuration file.
 
 .. FIXME More config information required here
 
@@ -86,7 +86,7 @@ turbo-hipster's configuration file.
 
  $ cp /my/dataset.json /var/lib/turbo-hipster/datasets/
 
-3. Open the ``/etc/turbo-hipster/config.json`` file in your preferred
+3. Open the ``/etc/turbo-hipster/config.yaml`` file in your preferred
 editor, locate the plugins section, and add this line::
 
   **plugins**

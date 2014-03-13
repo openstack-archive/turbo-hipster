@@ -8,7 +8,7 @@ Installation
 
 Turbo-hipster is installed directly into your Python ``site-packages``
 directory, and is then run as a service. It is managed using a configuration
-file, which is in json format.
+file, which is in yaml format.
 
 Installing turbo-hipster
 ------------------------
@@ -19,12 +19,12 @@ directory:
  $ sudo python setup.py install
 
 2. Copy the configuration file to a convenient location. By default,
-turbo-hipster will look in ``/etc/turbo-hipster/config.json``:
+turbo-hipster will look in ``/etc/turbo-hipster/config.yaml``:
 
  $ cp -R etc/turbo-hipster /etc/
 
-3. The turbo-hipster configuration file is in json format. Open the
-``config.json`` configuration file in your preferred editor and modify it
+3. The turbo-hipster configuration file is in yaml format. Open the
+``config.yaml`` configuration file in your preferred editor and modify it
 for your environment::
 
   **zuul_server**
@@ -113,4 +113,4 @@ editor, and edit it to ensure it is writable by ``other``:
  Debug logging must be configured for turbo-hipster, as it uses the Python
  logging framework to capture log messages from the task plugin code.
  To configure debug logging, set the ``debug_log`` configuration
- setting in the ``config.json`` configuration file.
+ setting in the ``config.yaml`` configuration file.
