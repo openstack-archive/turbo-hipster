@@ -18,10 +18,10 @@
 import argparse
 import daemon
 import extras
-import json
 import os
 import signal
 import sys
+import yaml
 
 from turbo_hipster import worker_server
 
@@ -33,7 +33,7 @@ PID_FILE_MODULE = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
 def main(args):
 
     with open(args.config, 'r') as config_stream:
-        config = json.load(config_stream)
+        config = yaml.safe_load(config_stream)
 
     server = worker_server.Server(config)
 
@@ -59,8 +59,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
                         default=
-                        '/etc/turbo-hipster/config.json',
-                        help='Path to json config file.')
+                        '/etc/turbo-hipster/config.yaml',
+                        help='Path to yaml config file.')
     parser.add_argument('-b', '--background', action='store_true',
                         help='Run as a daemon in the background.')
     parser.add_argument('-p', '--pidfile',
