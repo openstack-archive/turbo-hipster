@@ -167,7 +167,8 @@ echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
 # Setup the environment
 export PATH=/usr/lib/ccache:$PATH
 export PIP_DOWNLOAD_CACHE=$9
-export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
+#export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
+export PIP_INDEX_URL="http://pypi.openstack.org/openstack"
 export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
 
 # Restore database to known good state
