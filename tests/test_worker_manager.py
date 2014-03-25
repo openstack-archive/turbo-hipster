@@ -15,6 +15,7 @@
 # under the License.
 
 
+import fixtures
 import gear
 import logging
 import os
@@ -24,6 +25,8 @@ import yaml
 
 import turbo_hipster.task_plugins.gate_real_db_upgrade.task
 import turbo_hipster.worker_server
+
+import fakes
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-32s '
@@ -36,12 +39,13 @@ class TestWithGearman(testtools.TestCase):
 
     def setUp(self):
         super(TestWithGearman, self).setUp()
-
-        self.config = []
-        self._load_config_fixture()
-
+        self.config = None
+        self.worker_server = None
         self.gearman_server = gear.Server(0)
 
+    def start_server(self):
+        if not self.config:
+            self._load_config_fixture()
         # Grab the port so the clients can connect to it
         self.config['zuul_server']['gearman_port'] = self.gearman_server.port
 
@@ -57,19 +61,38 @@ class TestWithGearman(testtools.TestCase):
             self.fail("Failed to start worker_service services")
 
     def tearDown(self):
-        self.worker_server.stop()
+        if self.worker_server and not self.worker_server.stopped():
+            self.worker_server.shutdown()
         self.gearman_server.shutdown()
         super(TestWithGearman, self).tearDown()
 
-    def _load_config_fixture(self, config_name='default-config.json'):
-        config_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
+    def _load_config_fixture(self, config_name='default-config.yaml'):
+        config_dir = os.path.join(os.path.dirname(__file__), 'etc')
         with open(os.path.join(config_dir, config_name), 'r') as config_stream:
             self.config = yaml.safe_load(config_stream)
+
+        # Set all of the working dirs etc to a writeable temp dir
+        temp_path = self.useFixture(fixtures.TempDir()).path
+        for config_dir in ['debug_log', 'jobs_working_dir', 'git_working_dir',
+                           'pip_download_cache']:
+            if config_dir in self.config:
+                if self.config[config_dir][0] == '/':
+                    self.config[config_dir] = self.config[config_dir][1:]
+                self.config[config_dir] = os.path.join(temp_path,
+                                                       self.config[config_dir])
+        if self.config['publish_logs']['type'] == 'local':
+            if self.config['publish_logs']['path'][0] == '/':
+                self.config['publish_logs']['path'] = \
+                    self.config['publish_logs']['path'][1:]
+            self.config['publish_logs']['path'] = os.path.join(
+                temp_path, self.config[config_dir])
 
 
 class TestWorkerServer(TestWithGearman):
     def test_plugins_load(self):
         "Test the configured plugins are loaded"
+
+        self.start_server()
 
         self.assertFalse(self.worker_server.stopped())
         self.assertEqual(3, len(self.worker_server.plugins))
@@ -112,10 +135,12 @@ class TestWorkerServer(TestWithGearman):
 
     def test_zuul_client_started(self):
         "Test the zuul client has been started"
+        self.start_server()
         self.assertFalse(self.worker_server.zuul_client.stopped())
 
     def test_zuul_manager_started(self):
         "Test the zuul manager has been started"
+        self.start_server()
         self.assertFalse(self.worker_server.zuul_manager.stopped())
 
 
@@ -126,6 +151,9 @@ class TestZuulClient(TestWithGearman):
 
     def test_registered_functions(self):
         "Test the correct functions are registered with gearman"
+
+        self.start_server()
+
         # The client should have all of the functions defined in the config
         # registered with gearman
 
@@ -160,10 +188,38 @@ class TestZuulClient(TestWithGearman):
         "Test sending a stop signal to the client exists correctly"
         pass
 
+    def test_shutdown(self):
+        "Test that a job can stop turbo-hipster"
+
+        self._load_config_fixture('shutdown-config.yaml')
+        self.start_server()
+        zuul = fakes.FakeZuul(self.config['zuul_server']['gearman_host'],
+                              self.config['zuul_server']['gearman_port'])
+
+        # First check we can run a job that /doesn't/ shut down turbo-hipster
+        data_req = zuul.make_zuul_data()
+        zuul.submit_job('build:demo_job_clean', data_req)
+        zuul.wait_for_completion()
+        self.assertTrue(zuul.job.complete)
+        self.assertFalse(self.worker_server.stopped())
+
+        # Now run a job that leaves the environment dirty and /should/ shut
+        # down turbo-hipster
+        zuul.job = None
+        zuul.submit_job('build:demo_job_dirty', data_req)
+        zuul.wait_for_completion()
+        self.assertTrue(zuul.job.complete)
+        # Give the server a second to shutdown
+        time.sleep(1)
+        self.assertTrue(self.worker_server.stopped())
+
 
 class TestZuulManager(TestWithGearman):
     def test_registered_functions(self):
         "Test the correct functions are registered with gearman"
+
+        self.start_server()
+
         # We need to wait for all the functions to register with the server..
         # We'll give it up to 10seconds to do so
         t0 = time.time()

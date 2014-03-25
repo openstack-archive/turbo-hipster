@@ -26,8 +26,8 @@ class Task(object):
     """ A base object for running a job (aka Task) """
     log = logging.getLogger("lib.models.Task")
 
-    def __init__(self, global_config, plugin_config, job_name):
-        self.global_config = global_config
+    def __init__(self, worker_server, plugin_config, job_name):
+        self.worker_server = worker_server
         self.plugin_config = plugin_config
         self.job_name = job_name
         self._reset()
@@ -125,10 +125,10 @@ class Task(object):
 class ShellTask(Task):
     log = logging.getLogger("lib.models.ShellTask")
 
-    def __init__(self, global_config, plugin_config, job_name):
-        super(ShellTask, self).__init__(global_config, plugin_config, job_name)
+    def __init__(self, worker_server, plugin_config, job_name):
+        super(ShellTask, self).__init__(worker_server, plugin_config, job_name)
         # Define the number of steps we will do to determine our progress.
-        self.total_steps = 5
+        self.total_steps = 6
 
     def _reset(self):
         super(ShellTask, self)._reset()
@@ -137,20 +137,23 @@ class ShellTask(Task):
         self.shell_output_log = None
 
     def do_job_steps(self):
-        # Step 1: Prep job working dir
+        self.log.info('Step 1: Prep job working dir')
         self._prep_working_dir()
 
-        # Step 2: Checkout updates from git
+        self.log.info('Step 2: Checkout updates from git')
         self._grab_patchset(self.job_arguments)
 
-        # Step 3: Run shell script
+        self.log.info('Step 3: Run shell script')
         self._execute_script()
 
-        # Step 4: Analyse logs for errors
+        self.log.info('Step 4: Analyse logs for errors')
         self._parse_and_check_results()
 
-        # Step 5: handle the results (and upload etc)
+        self.log.info('Step 5: handle the results (and upload etc)')
         self._handle_results()
+
+        self.log.info('Step 6: Handle extra actions such as shutting down')
+        self._handle_cleanup()
 
     @common.task_step
     def _prep_working_dir(self):
@@ -160,7 +163,7 @@ class ShellTask(Task):
             self.job.unique
         )
         self.job_working_dir = os.path.join(
-            self.global_config['jobs_working_dir'],
+            self.worker_server.config['jobs_working_dir'],
             self.job_identifier
         )
         self.shell_output_log = os.path.join(
@@ -176,7 +179,7 @@ class ShellTask(Task):
         """ Checkout the reference into config['git_working_dir'] """
 
         self.log.debug("Grab the patchset we want to test against")
-        local_path = os.path.join(self.global_config['git_working_dir'],
+        local_path = os.path.join(self.worker_server.config['git_working_dir'],
                                   self.job_name, job_args['ZUUL_PROJECT'])
         if not os.path.exists(local_path):
             os.makedirs(local_path)
@@ -185,8 +188,8 @@ class ShellTask(Task):
 
         cmd = os.path.join(os.path.join(os.path.dirname(__file__),
                                         'gerrit-git-prep.sh'))
-        cmd += ' ' + self.global_config['zuul_server']['gerrit_site']
-        cmd += ' ' + self.global_config['zuul_server']['zuul_site']
+        cmd += ' ' + self.worker_server.config['zuul_server']['gerrit_site']
+        cmd += ' ' + self.worker_server.config['zuul_server']['zuul_site']
         utils.execute_to_log(cmd, self.shell_output_log, env=git_args,
                              cwd=local_path)
         self.git_path = local_path
@@ -223,10 +226,10 @@ class ShellTask(Task):
 
         self.log.debug("Process the resulting files (upload/push)")
 
-        if 'publish_logs' in self.global_config:
-            index_url = utils.push_file(self.job_identifier,
-                                        self.shell_output_log,
-                                        self.global_config['publish_logs'])
+        if 'publish_logs' in self.worker_server.config:
+            index_url = utils.push_file(
+                self.job_identifier, self.shell_output_log,
+                self.worker_server.config['publish_logs'])
             self.log.debug("Index URL found at %s" % index_url)
             self.work_data['url'] = index_url
 
@@ -234,3 +237,11 @@ class ShellTask(Task):
             # Upload to zuul's url as instructed
             utils.zuul_swift_upload(self.job_working_dir, self.job_arguments)
             self.work_data['url'] = self.job_identifier
+
+    @common.task_step
+    def _handle_cleanup(self):
+        """Handle and cleanup functions. Shutdown if requested to so that no
+        further jobs are ran if the environment is dirty."""
+        if ('shutdown-th' in self.plugin_config and
+            self.plugin_config['shutdown-th']):
+            self.worker_server.shutdown_gracefully()

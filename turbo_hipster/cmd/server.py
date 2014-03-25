@@ -44,7 +44,7 @@ def main(args):
     server.setup_logging(config['debug_log'])
 
     def term_handler(signum, frame):
-        server.stop()
+        server.shutdown()
     signal.signal(signal.SIGTERM, term_handler)
 
     if args.background:
@@ -56,7 +56,7 @@ def main(args):
             signal.pause()
         except KeyboardInterrupt:
             print "Ctrl + C: asking tasks to exit nicely...\n"
-            server.stop()
+            server.shutdown()
 
 
 if __name__ == '__main__':

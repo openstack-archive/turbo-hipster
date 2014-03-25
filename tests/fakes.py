@@ -14,6 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import gear
+import json
+import time
+import uuid
+
 
 class FakeJob(object):
     def __init__(self):
@@ -21,3 +26,43 @@ class FakeJob(object):
 
     def sendWorkStatus(self, *args, **kwargs):
         pass
+
+
+class FakeZuul(object):
+    """A fake zuul/gearman client to request work from gearman and check
+    results"""
+    def __init__(self, server, port):
+        self.gearman = gear.Client('FakeZuul')
+        self.gearman.addServer(server, port)
+        self.gearman.waitForServer()
+        self.job = None
+
+    def make_zuul_data(self, data={}):
+        defaults = {
+            'ZUUL_UUID': str(uuid.uuid1()),
+            'ZUUL_REF': 'a',
+            'ZUUL_COMMIT': 'a',
+            'ZUUL_PROJECT': 'a',
+            'ZUUL_PIPELINE': 'a',
+            'ZUUL_URL': 'http://localhost',
+            'BASE_LOG_PATH': '56/123456/8',
+            'LOG_PATH': '56/123456/8/check/job_name/uuid123'
+        }
+        defaults.update(data)
+        return defaults
+
+    def submit_job(self, name, data):
+        if not self.job:
+            self.job = gear.Job(name,
+                                json.dumps(data),
+                                unique=str(time.time()))
+            self.gearman.submitJob(self.job)
+        else:
+            raise Exception('A job already exists in self.job')
+
+        return self.job
+
+    def wait_for_completion(self):
+        if self.job:
+            while not self.job.complete:
+                time.sleep(0.1)
