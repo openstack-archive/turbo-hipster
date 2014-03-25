@@ -1,0 +1,33 @@
+zuul_server:
+  gerrit_site: http://review.openstack.org
+  zuul_site: http://119.9.13.90
+  git_origin: git://git.openstack.org/
+  gearman_host: localhost
+  gearman_port: 0
+
+debug_log: /var/log/turbo-hipster/debug.log
+jobs_working_dir: /var/lib/turbo-hipster/jobs
+git_working_dir: /var/lib/turbo-hipster/git
+pip_download_cache: /var/cache/pip
+
+plugins:
+  - name: gate_real_db_upgrade
+    datasets_dir: /var/lib/turbo-hipster/datasets_devstack_131007
+    function: build:gate-real-db-upgrade_nova_mysql_devstack_131007
+
+  - name: gate_real_db_upgrade
+    datasets_dir: /var/lib/turbo-hipster/datasets_user_001
+    function: build:gate-real-db-upgrade_nova_mysql_user_001
+
+  - name: shell_script
+    function: build:do_something_shelly
+
+publish_logs:
+  type: swift
+  authurl: https://identity.api.rackspacecloud.com/v2.0/
+  tenant: XXXX
+  user: XXXXXX
+  password: XXXXXX
+  container: XXXXXX
+  region: SYD
+  prepend_url: http://www.rcbops.com/turbo_hipster/results/

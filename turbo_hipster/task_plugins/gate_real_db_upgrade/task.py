@@ -40,15 +40,15 @@ class Runner(models.ShellTask):
 
     log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
 
-    def __init__(self, global_config, plugin_config, job_name):
-        super(Runner, self).__init__(global_config, plugin_config, job_name)
+    def __init__(self, worker_server, plugin_config, job_name):
+        super(Runner, self).__init__(worker_server, plugin_config, job_name)
 
         # Set up the runner worker
         self.datasets = []
         self.job_datasets = []
 
         # Define the number of steps we will do to determine our progress.
-        self.total_steps = 6
+        self.total_steps += 1
 
     def do_job_steps(self):
         # Step 1: Figure out which datasets to run
@@ -74,7 +74,7 @@ class Runner(models.ShellTask):
                     self.job.unique
                 )
                 dataset['job_log_file_path'] = os.path.join(
-                    self.global_config['jobs_working_dir'],
+                    self.worker_server.config['jobs_working_dir'],
                     dataset['determined_path'],
                     dataset['name'] + '.log'
                 )
@@ -102,7 +102,7 @@ class Runner(models.ShellTask):
         self.log.debug("Process the resulting files (upload/push)")
         index_url = handle_results.generate_push_results(
             self.job_datasets,
-            self.global_config['publish_logs']
+            self.worker_server.config['publish_logs']
         )
         self.log.debug("Index URL found at %s" % index_url)
         self.work_data['url'] = index_url
@@ -162,8 +162,8 @@ class Runner(models.ShellTask):
 
         for dataset in self.job_datasets:
             cmd = os.path.join(os.path.join(os.path.dirname(__file__),
-                               (self.global_config['baseline_command']
-                                % self.global_config['flavor'])))
+                               (self.worker_server.config['baseline_command']
+                                % self.worker_server.config['flavor'])))
             rc = utils.execute_to_log(
                 cmd,
                 dataset['job_log_file_path'],
@@ -187,7 +187,7 @@ class Runner(models.ShellTask):
                 % {
                     'unique_id': self.job.unique,
                     'job_working_dir': os.path.join(
-                        self.global_config['jobs_working_dir'],
+                        self.worker_server.config['jobs_working_dir'],
                         dataset['determined_path']
                     ),
                     'git_path': self.git_path,
@@ -202,7 +202,8 @@ class Runner(models.ShellTask):
                         dataset['dataset_dir'],
                         dataset['config']['logging_conf']
                     ),
-                    'pip_cache_dir': self.global_config['pip_download_cache']
+                    'pip_cache_dir':
+                    self.worker_server.config['pip_download_cache']
                 }
             )
 
@@ -210,13 +211,13 @@ class Runner(models.ShellTask):
             syslog = '/var/log/syslog'
             sqlslo = '/var/log/mysql/slow-queries.log'
             sqlerr = '/var/log/mysql/error.log'
-            if 'logs' in self.global_config:
-                if 'syslog' in self.global_config['logs']:
-                    syslog = self.global_config['logs']['syslog']
-                if 'sqlslo' in self.global_config['logs']:
-                    sqlslo = self.global_config['logs']['sqlslo']
-                if 'sqlerr' in self.global_config['logs']:
-                    sqlerr = self.global_config['logs']['sqlerr']
+            if 'logs' in self.worker_server.config:
+                if 'syslog' in self.worker_server.config['logs']:
+                    syslog = self.worker_server.config['logs']['syslog']
+                if 'sqlslo' in self.worker_server.config['logs']:
+                    sqlslo = self.worker_server.config['logs']['sqlslo']
+                if 'sqlerr' in self.worker_server.config['logs']:
+                    sqlerr = self.worker_server.config['logs']['sqlerr']
 
             rc = utils.execute_to_log(
                 cmd,

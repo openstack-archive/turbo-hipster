@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import threading
+import time
 
 
 class ZuulManager(threading.Thread):
@@ -30,10 +31,13 @@ class ZuulManager(threading.Thread):
 
     log = logging.getLogger("worker_manager.ZuulManager")
 
-    def __init__(self, config, tasks):
+    def __init__(self, worker_server, tasks):
         super(ZuulManager, self).__init__()
         self._stop = threading.Event()
-        self.config = config
+        self.stopping = False
+        self.running = False
+
+        self.worker_server = worker_server
         self.tasks = tasks
 
         self.gearman_worker = None
@@ -44,14 +48,23 @@ class ZuulManager(threading.Thread):
         self.gearman_worker = gear.Worker('turbo-hipster-manager-%s'
                                           % hostname)
         self.gearman_worker.addServer(
-            self.config['zuul_server']['gearman_host'],
-            self.config['zuul_server']['gearman_port']
+            self.worker_server.config['zuul_server']['gearman_host'],
+            self.worker_server.config['zuul_server']['gearman_port']
         )
 
     def register_functions(self):
         hostname = os.uname()[1]
         self.gearman_worker.registerFunction(
             'stop:turbo-hipster-manager-%s' % hostname)
+
+    def stop_gracefully(self):
+        self.stopping = True
+        self.gearman_worker.stopWaitingForJobs()
+        while self.running:
+            self.log.debug('waiting to finish')
+            time.sleep(0.1)
+        self._stop.set()
+        self.gearman_worker.shutdown()
 
     def stop(self):
         self._stop.set()
@@ -64,7 +77,8 @@ class ZuulManager(threading.Thread):
         return self._stop.isSet()
 
     def run(self):
-        while not self.stopped():
+        while not self.stopped() and not self.stopping:
+            self.running = True
             try:
                 # gearman_worker.getJob() blocks until a job is available
                 self.log.debug("Waiting for server")
@@ -81,6 +95,7 @@ class ZuulManager(threading.Thread):
                 self.log.debug('We were asked to stop waiting for jobs')
             except:
                 self.log.exception('Unknown exception waiting for job.')
+        self.running = False
         self.log.debug("Finished manager thread")
 
     def _handle_job(self, job):
@@ -101,12 +116,13 @@ class ZuulClient(threading.Thread):
 
     log = logging.getLogger("worker_manager.ZuulClient")
 
-    def __init__(self, global_config, worker_name):
+    def __init__(self, worker_server):
         super(ZuulClient, self).__init__()
         self._stop = threading.Event()
-        self.global_config = global_config
+        self.stopping = False
+        self.running = False
 
-        self.worker_name = worker_name
+        self.worker_server = worker_server
 
         # Set up the runner worker
         self.gearman_worker = None
@@ -118,10 +134,10 @@ class ZuulClient(threading.Thread):
 
     def setup_gearman(self):
         self.log.debug("Set up gearman worker")
-        self.gearman_worker = gear.Worker(self.worker_name)
+        self.gearman_worker = gear.Worker(self.worker_server.worker_name)
         self.gearman_worker.addServer(
-            self.global_config['zuul_server']['gearman_host'],
-            self.global_config['zuul_server']['gearman_port']
+            self.worker_server.config['zuul_server']['gearman_host'],
+            self.worker_server.config['zuul_server']['gearman_port']
         )
 
     def register_functions(self):
@@ -143,11 +159,20 @@ class ZuulClient(threading.Thread):
         self.gearman_worker.stopWaitingForJobs()
         self.gearman_worker.shutdown()
 
+    def stop_gracefully(self):
+        self.stopping = True
+        self.gearman_worker.stopWaitingForJobs()
+        while self.running:
+            time.sleep(0.1)
+        self._stop.set()
+        self.gearman_worker.shutdown()
+
     def stopped(self):
         return self._stop.isSet()
 
     def run(self):
-        while not self.stopped():
+        while not self.stopped() and not self.stopping:
+            self.running = True
             try:
                 # gearman_worker.getJob() blocks until a job is available
                 self.log.debug("Waiting for server")
@@ -163,6 +188,7 @@ class ZuulClient(threading.Thread):
                 self.log.debug('We were asked to stop waiting for jobs')
             except:
                 self.log.exception('Unknown exception waiting for job.')
+        self.running = False
         self.log.debug("Finished client thread")
 
     def _handle_job(self):

@@ -256,7 +256,7 @@ def scp_push_file(results_set_name, file_path, local_config):
 
 
 def determine_job_identifier(zuul_arguments, job, unique):
-    if 'build:' in job:
+    """if 'build:' in job:
         job = job.split('build:')[1]
 
     path = os.path.join(zuul_arguments['ZUUL_CHANGE'][:2],
@@ -265,8 +265,12 @@ def determine_job_identifier(zuul_arguments, job, unique):
                         zuul_arguments['ZUUL_PIPELINE'],
                         job,
                         unique[:7])
+
     log.info('Converted args: %s, job: %s and unique: %s to %s'
-             % (zuul_arguments, job, unique, path))
+             % (zuul_arguments, job, unique, path))"""
+
+    # use new determined path from zuul
+    path = zuul_arguments['LOG_PATH']
     return path
 
 

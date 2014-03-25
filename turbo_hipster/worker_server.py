@@ -15,9 +15,6 @@
 # under the License.
 
 
-""" worker_server.py is an executable worker server that loads and runs
-task_plugins. """
-
 import logging
 import os
 import threading
@@ -104,15 +101,14 @@ class Server(threading.Thread):
     def start_zuul_client(self):
         """ Run the tasks """
         self.log.debug('Starting zuul client')
-        self.zuul_client = worker_manager.ZuulClient(self.config,
-                                                     self.worker_name)
+        self.zuul_client = worker_manager.ZuulClient(self)
 
         for task_number, plugin in enumerate(self.plugins):
             module = plugin['module']
             job_name = '%s-%s-%s' % (plugin['plugin_config']['name'],
                                      self.worker_name, task_number)
             self.tasks[job_name] = module.Runner(
-                self.config,
+                self,
                 plugin['plugin_config'],
                 job_name
             )
@@ -122,14 +118,25 @@ class Server(threading.Thread):
         self.zuul_client.start()
 
     def start_zuul_manager(self):
-        self.zuul_manager = worker_manager.ZuulManager(self.config, self.tasks)
+        self.zuul_manager = worker_manager.ZuulManager(self, self.tasks)
         self.zuul_manager.start()
 
-    def stop(self):
+    def shutdown_gracefully(self):
+        """ Shutdown while no work is currently happening """
+        self.log.debug('Graceful shutdown once jobs are complete...')
+        thread = threading.Thread(target=self._shutdown_gracefully)
+        thread.start()
+
+    def _shutdown_gracefully(self):
+        self.zuul_client.stop_gracefully()
+        self.zuul_manager.stop_gracefully()
         self._stop.set()
-        self.log.debug('Exiting...')
+
+    def shutdown(self):
+        self.log.debug('Shutting down now!...')
         self.zuul_client.stop()
         self.zuul_manager.stop()
+        self._stop.set()
 
     def stopped(self):
         return self._stop.isSet()
