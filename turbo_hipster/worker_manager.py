@@ -57,6 +57,7 @@ class ZuulManager(threading.Thread):
         self._stop.set()
         # Unblock gearman
         self.log.debug("Telling gearman to stop waiting for jobs")
+        self.gearman_worker.stopWaitingForJobs()
         self.gearman_worker.shutdown()
 
     def stopped(self):
@@ -76,8 +77,10 @@ class ZuulManager(threading.Thread):
                     self.current_step = 0
                     job = self.gearman_worker.getJob()
                     self._handle_job(job)
+            except gear.InterruptedError:
+                self.log.debug('We were asked to stop waiting for jobs')
             except:
-                logging.exception('Exception retrieving log event.')
+                self.log.exception('Unknown exception waiting for job.')
         self.log.debug("Finished manager thread")
 
     def _handle_job(self, job):
@@ -137,6 +140,7 @@ class ZuulClient(threading.Thread):
             task.stop_working()
         # Unblock gearman
         self.log.debug("Telling gearman to stop waiting for jobs")
+        self.gearman_worker.stopWaitingForJobs()
         self.gearman_worker.shutdown()
 
     def stopped(self):
@@ -155,8 +159,10 @@ class ZuulClient(threading.Thread):
                     self.log.debug("Waiting for job")
                     self.job = self.gearman_worker.getJob()
                     self._handle_job()
+            except gear.InterruptedError:
+                self.log.debug('We were asked to stop waiting for jobs')
             except:
-                self.log.exception('Exception waiting for job.')
+                self.log.exception('Unknown exception waiting for job.')
         self.log.debug("Finished client thread")
 
     def _handle_job(self):

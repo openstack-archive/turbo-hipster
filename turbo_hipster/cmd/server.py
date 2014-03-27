@@ -35,7 +35,13 @@ def main(args):
     with open(args.config, 'r') as config_stream:
         config = yaml.safe_load(config_stream)
 
+    if not config['debug_log']:
+        # NOTE(mikal): debug logging _must_ be enabled for the log writing
+        # in lib.utils.execute_to_log to work correctly.
+        raise Exception('Debug log not configured')
+
     server = worker_server.Server(config)
+    server.setup_logging(config['debug_log'])
 
     def term_handler(signum, frame):
         server.stop()
