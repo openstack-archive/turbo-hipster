@@ -78,17 +78,14 @@ class Server(threading.Thread):
             self.log.warn("conf_d parameter '%s' isn't a directory" %
                           (self.config["conf_d"]))
 
-    def setup_logging(self):
-        if not self.debug_log:
-            raise Exception('Debug log not configured')
-
-        # NOTE(mikal): debug logging _must_ be enabled for the log writing
-        # in lib.utils.execute_to_log to work correctly.
-        if not os.path.isdir(os.path.dirname(self.debug_log)):
-            os.makedirs(os.path.dirname(self.debug_log))
+    def setup_logging(self, log_file=None):
+        if log_file:
+            if not os.path.isdir(os.path.dirname(log_file)):
+                os.makedirs(os.path.dirname(log_file))
         logging.basicConfig(format='%(asctime)s %(name)-32s '
                             '%(levelname)-8s %(message)s',
-                            filename=self.debug_log, level=logging.DEBUG)
+                            filename=log_file,
+                            level=logging.DEBUG)
 
     def load_plugins(self):
         """ Load the available plugins from task_plugins """
