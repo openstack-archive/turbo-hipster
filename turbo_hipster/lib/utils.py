@@ -97,7 +97,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
                        ('[sqlslo]', '/var/log/mysql/slow-queries.log'),
                        ('[sqlerr]', '/var/log/mysql/error.log')
                    ],
-                   heartbeat=True, env=None, cwd=None
+                   heartbeat=30, env=None, cwd=None, append_to_log=False
                    ):
     """ Executes a command and logs the STDOUT/STDERR and output of any
     supplied watch_logs from logs into a new logfile
@@ -132,6 +132,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
                            % (watch_file[1], e))
 
     cmd += ' 2>&1'
+    logger.info("[running %s]" % cmd)
     start_time = time.time()
     p = subprocess.Popen(
         cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -174,7 +175,7 @@ def execute_to_log(cmd, logfile, timeout=-1,
         for fd, flag in poll_obj.poll(0):
             process(fd)
 
-        if time.time() - last_heartbeat > 30:
+        if heartbeat and (time.time() - last_heartbeat > heartbeat):
             # Append to logfile
             logger.info("[heartbeat]")
             last_heartbeat = time.time()
