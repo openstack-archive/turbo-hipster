@@ -38,15 +38,16 @@ class FakeZuul(object):
         self.job = None
 
     def make_zuul_data(self, data={}):
+        job_uuid = str(uuid.uuid1())
         defaults = {
-            'ZUUL_UUID': str(uuid.uuid1()),
+            'ZUUL_UUID': job_uuid,
             'ZUUL_REF': 'a',
             'ZUUL_COMMIT': 'a',
             'ZUUL_PROJECT': 'a',
             'ZUUL_PIPELINE': 'a',
             'ZUUL_URL': 'http://localhost',
             'BASE_LOG_PATH': '56/123456/8',
-            'LOG_PATH': '56/123456/8/check/job_name/uuid123'
+            'LOG_PATH': '56/123456/8/check/job_name/%s' % job_uuid
         }
         defaults.update(data)
         return defaults
