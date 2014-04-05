@@ -1,0 +1,21 @@
+zuul_server:
+  gerrit_site: http://review.openstack.org
+  zuul_site: http://119.9.13.90
+  git_origin: git://git.openstack.org/
+  gearman_host: localhost
+  gearman_port: 0
+
+debug_log: /var/log/turbo-hipster/debug.log
+jobs_working_dir: /var/lib/turbo-hipster/jobs
+git_working_dir: /var/lib/turbo-hipster/git
+pip_download_cache: /var/cache/pip
+
+plugins:
+  - name: jjb_runner
+    function: build:gate-turbo-hipster-pep8
+    jjb_config: modules/openstack_project/files/jenkins_job_builder/config
+
+publish_logs:
+  type: local
+  path: /var/lib/turbo_hipster/logs
+  prepend_url: http://mylogserver/
