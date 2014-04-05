@@ -18,7 +18,7 @@ import testtools
 
 from turbo_hipster.task_plugins.gate_real_db_upgrade import handle_results
 
-TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
+TESTS_DIR = os.path.join(os.path.dirname(__file__))
 
 
 class TestHandleResults(testtools.TestCase):
