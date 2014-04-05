@@ -48,7 +48,7 @@ class TestExecuteToLog(testtools.TestCase):
             print d
 
         self.assertNotEqual('', d)
-        self.assertEqual(3, len(d.split('\n')))
+        self.assertEqual(4, len(d.split('\n')))
         self.assertNotEqual(-1, d.find('yay'))
         self.assertNotEqual(-1, d.find('[script exit code = 0]'))
 
