@@ -186,6 +186,9 @@ def execute_to_log(cmd, logfile, timeout=-1,
     # Clean up
     for fd, descriptor in descriptors.items():
         poll_obj.unregister(fd)
+        if fd == p.stdout.fileno():
+            # Don't try and close the process, it'll clean itself up
+            continue
         os.close(fd)
     try:
         p.kill()
