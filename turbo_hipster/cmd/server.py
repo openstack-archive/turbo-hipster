@@ -30,7 +30,7 @@ from turbo_hipster import worker_server
 PID_FILE_MODULE = extras.try_imports(['daemon.pidlockfile', 'daemon.pidfile'])
 
 
-def main(args):
+def setup_server(args):
 
     with open(args.config, 'r') as config_stream:
         config = yaml.safe_load(config_stream)
@@ -59,7 +59,7 @@ def main(args):
             server.shutdown()
 
 
-if __name__ == '__main__':
+def main():
     sys.path.insert(0, os.path.abspath(
                     os.path.join(os.path.dirname(__file__), '../')))
     parser = argparse.ArgumentParser()
@@ -77,6 +77,10 @@ if __name__ == '__main__':
     if args.background:
         pidfile = PID_FILE_MODULE.TimeoutPIDLockFile(args.pidfile, 10)
         with daemon.DaemonContext(pidfile=pidfile):
-            main(args)
+            setup_server(args)
     else:
-        main(args)
+        setup_server(args)
+
+
+if __name__ == '__main__':
+    main()
