@@ -59,7 +59,7 @@ def main(args):
             server.shutdown()
 
 
-if __name__ == '__main__':
+def parse_args():
     sys.path.insert(0, os.path.abspath(
                     os.path.join(os.path.dirname(__file__), '../')))
     parser = argparse.ArgumentParser()
@@ -80,3 +80,7 @@ if __name__ == '__main__':
             main(args)
     else:
         main(args)
+
+
+if __name__ == '__main__':
+    parse_args()
