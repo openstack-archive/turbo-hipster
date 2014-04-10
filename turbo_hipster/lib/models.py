@@ -66,6 +66,9 @@ class Task(object):
             except Exception as e:
                 self.log.exception('Exception handling log event.')
                 if not self.cancelled:
+                    self.success = False
+                    self.messages.append('Exception: %s' % e)
+                    self._send_work_data()
                     self.job.sendWorkException(str(e).encode('utf-8'))
 
     def stop_working(self, number=None):
