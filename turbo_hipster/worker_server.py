@@ -42,7 +42,7 @@ class Server(threading.Thread):
 
         # Python logging output file.
         self.debug_log = self.config['debug_log']
-        self.setup_logging()
+        self.setup_logging(self.debug_log)
 
         # Config init
         self.zuul_manager = None
