@@ -23,7 +23,7 @@ from turbo_hipster.lib import models
 from turbo_hipster.lib import utils
 
 
-import turbo_hipster.task_plugins.gate_real_db_upgrade.handle_results\
+import turbo_hipster.task_plugins.real_db_upgrade.handle_results\
     as handle_results
 
 
@@ -35,10 +35,10 @@ MIGRATION_END_RE = re.compile('^done$')
 class Runner(models.ShellTask):
 
     """ This thread handles the actual sql-migration tests.
-        It pulls in a gearman job from the  build:gate-real-db-upgrade
+        It pulls in a gearman job from the  build:real-db-upgrade
         queue and runs it through _handle_patchset"""
 
-    log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
+    log = logging.getLogger("task_plugins.real_db_upgrade.task.Runner")
 
     def __init__(self, worker_server, plugin_config, job_name):
         super(Runner, self).__init__(worker_server, plugin_config, job_name)

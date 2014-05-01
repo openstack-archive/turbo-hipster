@@ -27,7 +27,7 @@ import yaml
 
 import swiftclient
 
-from turbo_hipster.task_plugins.gate_real_db_upgrade import handle_results
+from turbo_hipster.task_plugins.real_db_upgrade import handle_results
 
 
 def main():
@@ -112,8 +112,8 @@ def main():
         items = connection.get_container(swift_config['container'],
                                          marker=item['name'], limit=1000)[1]
 
-TEST_NAME1_RE = re.compile('.*/gate-real-db-upgrade_nova_([^_]+)_([^/]*)/.*')
-TEST_NAME2_RE = re.compile('.*/gate-real-db-upgrade_nova_([^_]+)/.*/(.*).log')
+TEST_NAME1_RE = re.compile('.*/real-db-upgrade_nova_([^_]+)_([^/]*)/.*')
+TEST_NAME2_RE = re.compile('.*/real-db-upgrade_nova_([^_]+)/.*/(.*).log')
 
 
 def process(connection, container, name):
