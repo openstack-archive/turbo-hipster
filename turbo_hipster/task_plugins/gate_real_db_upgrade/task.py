@@ -55,7 +55,7 @@ class Runner(models.ShellTask):
         self.job_datasets = self._get_job_datasets()
 
         # all other steps are common to running a shell script
-        super(Runner, self).job_steps()
+        super(Runner, self).do_job_steps()
 
     @common.task_step
     def _get_job_datasets(self):
