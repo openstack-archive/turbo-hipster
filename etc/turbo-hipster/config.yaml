@@ -11,29 +11,29 @@ git_working_dir: /var/lib/turbo-hipster/git
 pip_download_cache: /var/cache/pip
 
 plugins:
-  - name: gate_real_db_upgrade
+  - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_devstack_131007
-    function: build:gate-real-db-upgrade_nova_mysql_devstack_131007
+    function: build:real-db-upgrade_nova_mysql_devstack_131007
 
-  - name: gate_real_db_upgrade
+  - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_devstack_150
-    function: build:gate-real-db-upgrade_nova_mysql_devstack_150
+    function: build:real-db-upgrade_nova_mysql_devstack_150
 
-  - name: gate_real_db_upgrade
+  - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_trivial_500
-    function: build:gate-real-db-upgrade_nova_mysql_trivial_500
+    function: build:real-db-upgrade_nova_mysql_trivial_500
 
-  - name: gate_real_db_upgrade
+  - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_trivial_6000
-    function: build:gate-real-db-upgrade_nova_mysql_trivial_6000
+    function: build:real-db-upgrade_nova_mysql_trivial_6000
 
-  - name: gate_real_db_upgrade
+  - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_user_001
-    function: build:gate-real-db-upgrade_nova_mysql_user_001
+    function: build:real-db-upgrade_nova_mysql_user_001
 
-  - name: gate_real_db_upgrade
+  - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_user_002
-    function: build:gate-real-db-upgrade_nova_mysql_user_002
+    function: build:real-db-upgrade_nova_mysql_user_002
 
 publish_logs:
   type: swift

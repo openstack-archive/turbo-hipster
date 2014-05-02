@@ -23,4 +23,4 @@ class Runner(models.ShellTask):
     """A plugin to run any shell script as defined in the config. Based on
     models.ShellTask the steps can be overwritten."""
 
-    log = logging.getLogger("task_plugins.gate_real_db_upgrade.task.Runner")
+    log = logging.getLogger("task_plugins.shell_script.task.Runner")

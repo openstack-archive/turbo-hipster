@@ -45,7 +45,7 @@ Plugins can be used to extend turbo-hipster's capabilities.
 
 .. note::
  Currently, the only available plugin for turbo-hipster is the
- database migration plugin, ``gate_real_db_upgrade``, which tests code
+ database migration plugin, ``real_db_upgrade``, which tests code
  against a variety of real-world databases.
 
 Installing plugins
@@ -65,16 +65,16 @@ the ``config.yaml`` configuration file.
 
 .. FIXME More config information required here
 
-Plugin: Database migration with ``gate_real_db_upgrade``
+Plugin: Database migration with ``real_db_upgrade``
 --------------------------------------------------------
 
-The database migration plugin, ``gate_real_db_upgrade``, is used to test
+The database migration plugin, ``real_db_upgrade``, is used to test
 datasets against real-world, anonymized, databases.
 
 Migrating a database
 --------------------
 
-In order to use turbo-hipster with the ``gate_real_db_upgrade`` plugin, you
+In order to use turbo-hipster with the ``real_db_upgrade`` plugin, you
 need to set up the databases to test against, and point to the plugin in
 turbo-hipster's configuration file.
 
@@ -90,7 +90,7 @@ turbo-hipster's configuration file.
 editor, locate the plugins section, and add this line::
 
   **plugins**
-   gate_real_db_upgrade
+   real_db_upgrade
 
 Testing with turbo-hipster
 ==========================

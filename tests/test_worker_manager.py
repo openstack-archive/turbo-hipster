@@ -29,14 +29,14 @@ class TestWorkerServer(base.TestWithGearman):
         self.assertEqual(3, len(self.worker_server.plugins))
 
         plugin0_config = {
-            "name": "gate_real_db_upgrade",
+            "name": "real_db_upgrade",
             "datasets_dir": "/var/lib/turbo-hipster/datasets_devstack_131007",
-            "function": "build:gate-real-db-upgrade_nova_mysql_devstack_131007"
+            "function": "build:real-db-upgrade_nova_mysql_devstack_131007"
         }
         plugin1_config = {
-            "name": "gate_real_db_upgrade",
+            "name": "real_db_upgrade",
             "datasets_dir": "/var/lib/turbo-hipster/datasets_user_001",
-            "function": "build:gate-real-db-upgrade_nova_mysql_user_001"
+            "function": "build:real-db-upgrade_nova_mysql_user_001"
         }
         plugin2_config = {
             "name": "shell_script",
@@ -46,14 +46,14 @@ class TestWorkerServer(base.TestWithGearman):
         self.assertEqual(plugin0_config,
                          self.worker_server.plugins[0]['plugin_config'])
         self.assertEqual(
-            'turbo_hipster.task_plugins.gate_real_db_upgrade.task',
+            'turbo_hipster.task_plugins.real_db_upgrade.task',
             self.worker_server.plugins[0]['module'].__name__
         )
 
         self.assertEqual(plugin1_config,
                          self.worker_server.plugins[1]['plugin_config'])
         self.assertEqual(
-            'turbo_hipster.task_plugins.gate_real_db_upgrade.task',
+            'turbo_hipster.task_plugins.real_db_upgrade.task',
             self.worker_server.plugins[1]['module'].__name__
         )
 
@@ -104,9 +104,9 @@ class TestZuulClient(base.TestWithGearman):
             self.fail("The correct number of functions haven't registered with"
                       " gearman")
 
-        self.assertIn('build:gate-real-db-upgrade_nova_mysql_devstack_131007',
+        self.assertIn('build:real-db-upgrade_nova_mysql_devstack_131007',
                       self.gearman_server.functions)
-        self.assertIn('build:gate-real-db-upgrade_nova_mysql_user_001',
+        self.assertIn('build:real-db-upgrade_nova_mysql_user_001',
                       self.gearman_server.functions)
         self.assertIn('build:do_something_shelly',
                       self.gearman_server.functions)
