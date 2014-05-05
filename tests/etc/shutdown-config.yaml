@@ -1,6 +1,5 @@
 zuul_server:
   gerrit_site: http://review.openstack.org
-  zuul_site: http://119.9.13.90
   git_origin: git://git.openstack.org/
   gearman_host: localhost
   gearman_port: 0

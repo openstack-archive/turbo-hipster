@@ -192,7 +192,7 @@ class ShellTask(Task):
         cmd = os.path.join(os.path.join(os.path.dirname(__file__),
                                         'gerrit-git-prep.sh'))
         cmd += ' ' + self.worker_server.config['zuul_server']['gerrit_site']
-        cmd += ' ' + self.worker_server.config['zuul_server']['zuul_site']
+        cmd += ' ' + self.worker_server.config['zuul_server']['git_origin']
         utils.execute_to_log(cmd, self.shell_output_log, env=git_args,
                              cwd=local_path)
         self.git_path = local_path

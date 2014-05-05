@@ -1,10 +1,9 @@
 #!/bin/bash -e
 
-# Stolen from http://git.openstack.org/cgit/openstack-infra/config/plain/modules/jenkins/files/slave_scripts/gerrit-git-prep.sh but has been hacked to be AWESOME!
+# Stolen from http://git.openstack.org/cgit/openstack-infra/config/plain/modules/jenkins/files/slave_scripts/gerrit-git-prep.sh
 
 GERRIT_SITE=$1
-ZUUL_SITE=$2
-GIT_ORIGIN=$3
+GIT_ORIGIN=$2
 
 if [ -z "$GERRIT_SITE" ]
 then
@@ -12,9 +11,9 @@ then
   exit 1
 fi
 
-if [ -z "$ZUUL_SITE" ]
+if [ -z "$ZUUL_URL" ]
 then
-  echo "The zuul site name (eg 'http://zuul.openstack.org') must be the second argument."
+  echo "The ZUUL_URL must be provided."
   exit 1
 fi
 
@@ -27,8 +26,16 @@ fi
 
 if [ -z "$ZUUL_REF" ]
 then
-    echo "This job may only be triggered by Zuul."
-    exit 1
+    if [ -n "$BRANCH" ]
+    then
+        echo "No ZUUL_REF so using requested branch $BRANCH from origin."
+        ZUUL_REF=$BRANCH
+        # use the origin since zuul mergers have outdated branches
+        ZUUL_URL=$GIT_ORIGIN
+    else
+        echo "Provide either ZUUL_REF or BRANCH in the calling enviromnent."
+        exit 1
+    fi
 fi
 
 if [ ! -z "$ZUUL_CHANGE" ]
@@ -48,8 +55,6 @@ then
         git clone $GIT_ORIGIN/$ZUUL_PROJECT .
     fi
 fi
-git checkout master
-git pull
 git remote set-url origin $GIT_ORIGIN/$ZUUL_PROJECT
 
 # attempt to work around bugs 925790 and 1229352
@@ -66,25 +71,25 @@ if ! git clean -x -f -d -q ; then
     git clean -x -f -d -q
 fi
 
-if [ -z "$ZUUL_NEWREV" ]
+if echo "$ZUUL_REF" | grep -q ^refs/tags/
 then
-    git fetch $ZUUL_SITE/p/$ZUUL_PROJECT $ZUUL_REF
+    git fetch --tags $ZUUL_URL/$ZUUL_PROJECT
+    git checkout $ZUUL_REF
+    git reset --hard $ZUUL_REF
+elif [ -z "$ZUUL_NEWREV" ]
+then
+    git fetch $ZUUL_URL/$ZUUL_PROJECT $ZUUL_REF
     git checkout FETCH_HEAD
     git reset --hard FETCH_HEAD
-    if ! git clean -x -f -d -q ; then
-        sleep 1
-        git clean -x -f -d -q
-    fi
 else
     git checkout $ZUUL_NEWREV
     git reset --hard $ZUUL_NEWREV
-    if ! git clean -x -f -d -q ; then
-        sleep 1
-        git clean -x -f -d -q
-    fi
 fi
-git branch -D working || true
-git checkout -b working
+
+if ! git clean -x -f -d -q ; then
+    sleep 1
+    git clean -x -f -d -q
+fi
 
 if [ -f .gitmodules ]
 then
