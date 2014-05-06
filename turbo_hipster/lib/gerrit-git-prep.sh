@@ -97,3 +97,7 @@ then
     git submodule sync
     git submodule update --init
 fi
+
+# Added for turbo-hipster
+git branch -D working || true
+git checkout -b working
