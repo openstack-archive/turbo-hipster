@@ -134,7 +134,7 @@ stable_release_db_sync() {
 
   # Some databases are from Folsom
   echo "Schema version is $version"
-  if [ $version == "133" ] # I think this should be [ $version lt "133" ]
+  if [ $version -le "133" ]
   then
     echo "Database is from Folsom! Upgrade via Grizzly"
     git branch -D stable/grizzly || true
@@ -148,7 +148,7 @@ stable_release_db_sync() {
   version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
   # Some databases are from Grizzly
   echo "Schema version is $version"
-  if [ $version == "161" ] # I think this should be [ $version lt "161" ]
+  if [ $version -le "161" ]
   then
     echo "Database is from Grizzly! Upgrade via Havana"
     git branch -D stable/havana || true
@@ -157,6 +157,20 @@ stable_release_db_sync() {
     git reset --hard remotes/origin/stable/havana
     pip_requires
     db_sync "havana" $1 $2 $3 $4 $5 $6
+  fi
+
+  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Havana
+  echo "Schema version is $version"
+  if [ $version -le "216" ]
+  then
+    echo "Database is from Grizzly! Upgrade via Icehouse"
+    git branch -D stable/icehouse || true
+    git remote update
+    git checkout -b stable/icehouse
+    git reset --hard remotes/origin/stable/icehouse
+    pip_requires
+    db_sync "icehouse" $1 $2 $3 $4 $5 $6
   fi
 }
 
