@@ -17,6 +17,7 @@
 
 import logging
 import os
+import signal
 import threading
 import yaml
 
@@ -131,12 +132,14 @@ class Server(threading.Thread):
         self.zuul_client.stop_gracefully()
         self.zuul_manager.stop_gracefully()
         self._stop.set()
+        os.kill(os.getpid(), signal.SIGUSR1)
 
     def shutdown(self):
         self.log.debug('Shutting down now!...')
         self.zuul_client.stop()
         self.zuul_manager.stop()
         self._stop.set()
+        os.kill(os.getpid(), signal.SIGUSR1)
 
     def stopped(self):
         return self._stop.isSet()
