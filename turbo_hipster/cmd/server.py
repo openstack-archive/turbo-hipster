@@ -21,6 +21,7 @@ import extras
 import os
 import signal
 import sys
+import time
 import yaml
 
 from turbo_hipster import worker_server
@@ -53,7 +54,7 @@ def setup_server(args):
 
     while not server.stopped():
         try:
-            signal.pause()
+            time.sleep(3)
         except KeyboardInterrupt:
             print "Ctrl + C: asking tasks to exit nicely...\n"
             server.shutdown()
