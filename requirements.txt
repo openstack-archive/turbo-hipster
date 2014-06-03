@@ -1,4 +1,3 @@
-setuptools<4.0
 pbr>=0.5.21,<0.6
 gear>=0.5.4,<1.0.0
 python-swiftclient
