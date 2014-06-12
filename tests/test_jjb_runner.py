@@ -26,21 +26,26 @@ from turbo_hipster.lib import utils
 class TestTaskRunner(base.TestWithGearman):
     log = logging.getLogger("TestTaskRunner")
 
-    def setUp(self):
-        super(TestTaskRunner, self).setUp()
+    def _grab_jjb(self):
         # Grab a copy of JJB's config
         temp_path = self.useFixture(fixtures.TempDir()).path
         cmd = 'git clone git://git.openstack.org/openstack-infra/config'
         utils.execute_to_log(cmd, '/dev/null', cwd=temp_path)
-        self.jjb_config_dir = os.path.join(
+        return os.path.join(
             temp_path, 'config',
             'modules/openstack_project/files/jenkins_job_builder/config'
         )
 
-    def test_job_can_shutdown_th(self):
+    def test_jjb_pep8_job(self):
+        # We can only do this if we have the slave scripts installed in
+        # /usr/local/jenkins/slave_scripts/
+        if not os.path.isdir('/usr/local/jenkins/slave_scripts/'):
+            self.skipTest("Slave scripts aren't installed")
+
+        jjb_config_dir = self._grab_jjb()
         self._load_config_fixture('jjb-config.yaml')
         # set jjb_config to pulled in config
-        self.config['plugins'][0]['jjb_config'] = self.jjb_config_dir
+        self.config['plugins'][0]['jjb_config'] = jjb_config_dir
 
         self.start_server()
         zuul = fakes.FakeZuul(self.config['zuul_server']['gearman_host'],
