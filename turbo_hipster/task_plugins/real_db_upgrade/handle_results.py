@@ -230,6 +230,13 @@ def check_log_file(log_file, git_path, dataset):
     for migration in lp.migrations:
         migration.setdefault('stats', {})
 
+        # check migration completed
+        if not 'duration' in migration:
+            success = False
+            messages.append('WARNING - Migration %s->%s failed to complete'
+                            % (migration['from'], migration['to']))
+            continue
+
         # Check total time
         if not check_migration(migration, 'maximum_migration_times',
                                migration['duration'], dataset['config']):
