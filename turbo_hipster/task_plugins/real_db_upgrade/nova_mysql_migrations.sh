@@ -198,10 +198,10 @@ cd $3
 
 echo "Setting up virtual env"
 source ~/.bashrc
-source /etc/bash_completion.d/virtualenvwrapper
 export WORKON_HOME=/var/lib/turbo-hipster/envs
 VENV_PATH=$WORKON_HOME/$1
 rm -rf $VENV_PATH
+source /usr/local/bin/virtualenvwrapper.sh
 mkvirtualenv $1
 toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
