@@ -179,11 +179,18 @@ echo "To execute this script manually, run this:"
 echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
 
 # Setup the environment
+set -x
 export PATH=/usr/lib/ccache:$PATH
 export PIP_DOWNLOAD_CACHE=$9
 #export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
 export PIP_INDEX_URL="http://pypi.openstack.org/simple/"
 export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
+which pip
+pip --version
+which virtualenv
+virtualenv --version
+which mkvirtualenv
+set +x
 
 # Restore database to known good state
 echo "Restoring test database $6"
