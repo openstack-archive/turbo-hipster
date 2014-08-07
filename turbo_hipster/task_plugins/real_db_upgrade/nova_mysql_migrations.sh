@@ -242,18 +242,18 @@ pip_requires
 db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the schema version
-#version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-#echo "Schema version is $version"
+version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+echo "Schema version is $version"
 
-#echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
-#db_sync "downgrade" $2 $3 $4 $5 $6 $8 $last_stable_version
+echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
+db_sync "downgrade" $2 $3 $4 $5 $6 $8 $last_stable_version
 
 # Determine the schema version
-#version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-#echo "Schema version is $version"
+version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+echo "Schema version is $version"
 
-#echo "And now back up to head from the start of trunk"
-#db_sync "patchset" $2 $3 $4 $5 $6 $8
+echo "And now back up to head from the start of trunk"
+db_sync "patchset" $2 $3 $4 $5 $6 $8
 
 # Determine the final schema version
 version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
