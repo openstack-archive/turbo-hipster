@@ -209,8 +209,8 @@ export WORKON_HOME=/var/lib/turbo-hipster/envs
 VENV_PATH=$WORKON_HOME/$1
 rm -rf $VENV_PATH
 source /usr/local/bin/virtualenvwrapper.sh
-mkvirtualenv $1
-toggleglobalsitepackages
+mkvirtualenv --no-site-packages $1
+#toggleglobalsitepackages
 export PYTHONPATH=$PYTHONPATH:$3
 
 if [ ! -e $VENV_PATH ]
