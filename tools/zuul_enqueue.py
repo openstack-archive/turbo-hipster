@@ -8,6 +8,7 @@ import traceback
 
 # Set the user to watch
 user = 'turbo-hipster'
+author_name = 'DB Datasets CI'
 
 # Grab a list of missing or negative reviews for a user:
 url = ("https://review.openstack.org/changes/?q=status:open "
@@ -33,7 +34,7 @@ for change in json.loads(r.text[5:]):
             if message['_revision_number'] < patchset:
                 # Finished looking at all the messages on this patchset
                 break
-            if message['author']['name'] == user:
+            if message['author']['name'] == author_name:
                 last_message = message['message']
                 break
 
