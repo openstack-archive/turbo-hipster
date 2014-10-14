@@ -21,7 +21,7 @@
 # $4 is the nova db user
 # $5 is the nova db password
 # $6 is the nova db name
-# $7 is the path to the dataset to test against
+# $7 is the path to the seed dataset to test against
 # $8 is the logging.conf for openstack
 # $9 is the pip cache dir
 
@@ -76,7 +76,7 @@ EOF
 
   # Log the migrations present
   echo "Migrations present:"
-  ls $GIR_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
+  ls $GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
 
   # Flush innodb's caches
   echo "Restarting mysql"
@@ -90,7 +90,7 @@ EOF
 
   if [ "%$2%" == "%%" ]
   then
-    end_version=`ls $GIR_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
+    end_version=`ls $GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
   else
     end_version=$2
   fi
