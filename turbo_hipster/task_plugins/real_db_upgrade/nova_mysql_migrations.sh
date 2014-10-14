@@ -15,7 +15,7 @@
 # under the License.
 
 
-# $1 is the unique id
+# $1 is the unique job id
 # $2 is the working dir path
 # $3 is the path to the git repo path
 # $4 is the nova db user
@@ -24,6 +24,16 @@
 # $7 is the path to the dataset to test against
 # $8 is the logging.conf for openstack
 # $9 is the pip cache dir
+
+UNIQUE_ID=$1
+WORKING_DIR_PATH=$2
+GIT_REPO_PATH=$3
+DB_USER=$4
+DB_PASS=$5
+DB_NAME=$6
+DATASET_SEED_SQL=$7
+LOG_CONF_FILE=$8
+PIP_CACHE_DIR=$9
 
 # We also support the following environment variables to tweak our behavour:
 #   NOCLEANUP: if set to anything, don't cleanup at the end of the run
@@ -183,12 +193,12 @@ stable_release_db_sync() {
 
 echo "Test running on "`hostname`" as "`whoami`" ("`echo ~`", $HOME)"
 echo "To execute this script manually, run this:"
-echo "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9"
+echo "$0 $@"
 
 # Setup the environment
 set -x
 export PATH=/usr/lib/ccache:$PATH
-export PIP_DOWNLOAD_CACHE=$9
+export PIP_DOWNLOAD_CACHE=$PIP_CACHE_DIR
 #export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
 export PIP_INDEX_URL="http://pypi.openstack.org/simple/"
 export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
@@ -200,25 +210,25 @@ which mkvirtualenv
 set +x
 
 # Restore database to known good state
-echo "Restoring test database $6"
+echo "Restoring test database $DB_NAME"
 set -x
-mysql -u $4 --password=$5 -e "drop database $6"
-mysql -u $4 --password=$5 -e "create database $6"
-mysql -u $4 --password=$5 $6 < $7
+mysql -u $DB_USER --password=$DB_PASS -e "drop database $DB_NAME"
+mysql -u $DB_USER --password=$DB_PASS -e "create database $DB_NAME"
+mysql -u $DB_USER --password=$DB_PASS $DB_NAME < $DATASET_SEED_SQL
 set +x
 
 echo "Build test environment"
-cd $3
+cd $GIT_REPO_PATH
 
 echo "Setting up virtual env"
 source ~/.bashrc
 export WORKON_HOME=/var/lib/turbo-hipster/envs
-VENV_PATH=$WORKON_HOME/$1
+VENV_PATH=$WORKON_HOME/$UNIQUE_ID
 rm -rf $VENV_PATH
 source /usr/local/bin/virtualenvwrapper.sh
-mkvirtualenv --no-site-packages $1
+mkvirtualenv --no-site-packages $UNIQUE_ID
 #toggleglobalsitepackages
-export PYTHONPATH=$PYTHONPATH:$3
+export PYTHONPATH=$PYTHONPATH:$GIT_REPO_PATH
 
 if [ ! -e $VENV_PATH ]
 then
@@ -226,9 +236,9 @@ then
   exit 1
 fi
 
-stable_release_db_sync $2 $3 $4 $5 $6 $8
+stable_release_db_sync $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
 
-last_stable_version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+last_stable_version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema after stable_release_db_sync version is $last_stable_version"
 
 # Make sure the test DB is up to date with trunk
@@ -239,31 +249,31 @@ else
   echo "Update database to current state of trunk"
   git checkout master
   pip_requires
-  db_sync "trunk" $2 $3 $4 $5 $6 $8
+  db_sync "trunk" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
   git checkout working
 fi
 
 # Now run the patchset
 echo "Now test the patchset"
 pip_requires
-db_sync "patchset" $2 $3 $4 $5 $6 $8
+db_sync "patchset" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
 
 # Determine the schema version
-version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
-db_sync "downgrade" $2 $3 $4 $5 $6 $8 $last_stable_version
+db_sync "downgrade" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE $last_stable_version
 
 # Determine the schema version
-version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 echo "And now back up to head from the start of trunk"
-db_sync "patchset" $2 $3 $4 $5 $6 $8
+db_sync "patchset" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
 
 # Determine the final schema version
-version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Final schema version is $version"
 
 if [ "%$NOCLEANUP%" == "%%" ]
@@ -271,5 +281,5 @@ then
   # Cleanup virtual env
   echo "Cleaning up virtual env"
   deactivate
-  rmvirtualenv $1
+  rmvirtualenv $UNIQUE_ID
 fi
