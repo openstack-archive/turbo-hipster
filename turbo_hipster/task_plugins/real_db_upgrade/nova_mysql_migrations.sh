@@ -236,28 +236,28 @@ else
   echo "Update database to current state of trunk"
   git checkout master
   pip_requires
-  db_sync "trunk" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
+  db_sync "trunk"
   git checkout working
 fi
 
 # Now run the patchset
 echo "Now test the patchset"
 pip_requires
-db_sync "patchset" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
+db_sync "patchset"
 
 # Determine the schema version
 version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
-db_sync "downgrade" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE $last_stable_version
+db_sync "downgrade" $last_stable_version
 
 # Determine the schema version
 version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema version is $version"
 
 echo "And now back up to head from the start of trunk"
-db_sync "patchset" $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
+db_sync "patchset"
 
 # Determine the final schema version
 version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
