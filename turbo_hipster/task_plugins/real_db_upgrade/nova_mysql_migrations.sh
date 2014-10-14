@@ -52,20 +52,14 @@ pip_requires() {
 }
 
 db_sync() {
-  # $1 is the test target
-  # $2 is the working dir path
-  # $3 is the path to the git repo path
-  # $4 is the nova db user
-  # $5 is the nova db password
-  # $6 is the nova db name
-  # $7 is the logging.conf for openstack
-  # $8 is an (optional) destination version number
+  # $1 is the test target (ie branch name)
+  # $2 is an (optional) destination version number
 
   # Create a nova.conf file
-  cat - > $2/nova-$1.conf <<EOF
+  cat - > $WORKING_DIR_PATH/nova-$1.conf <<EOF
 [DEFAULT]
-sql_connection = mysql://$4:$5@172.16.0.1/$6?charset=utf8
-log_config = $7
+sql_connection = mysql://$DB_USER:$DB_PASS@172.16.0.1/$DB_NAME?charset=utf8
+log_config = $LOG_CONF_FILE
 EOF
 
   # Silently return git to a known good state (delete untracked files)
@@ -82,7 +76,7 @@ EOF
 
   # Log the migrations present
   echo "Migrations present:"
-  ls $3/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
+  ls $GIR_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
 
   # Flush innodb's caches
   echo "Restarting mysql"
@@ -90,15 +84,15 @@ EOF
   sudo service mysql start
 
   echo "MySQL counters before upgrade:"
-  mysql -u $4 --password=$5 $6 -e "show status like 'innodb%';"
+  mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
 
-  start_version=`mysql -u $4 --password=$5 $6 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  start_version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 
-  if [ "%$8%" == "%%" ]
+  if [ "%$2%" == "%%" ]
   then
-    end_version=`ls $3/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
+    end_version=`ls $GIR_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
   else
-    end_version=$8
+    end_version=$2
   fi
 
   echo "Test will migrate from $start_version to $end_version"
@@ -114,12 +108,12 @@ EOF
   for i in `seq $start_version $increment $end_version`
   do
     set -x
-    sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $2/nova-$1.conf --verbose db sync --version $i
+    sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db sync --version $i
     manage_exit=$?
     set +x
 
     echo "MySQL counters after upgrade:"
-    mysql -u $4 --password=$5 $6 -e "show status like 'innodb%';"
+    mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
 
     echo "nova-manage returned exit code $manage_exit"
     if [ $manage_exit -gt 0 ]
@@ -133,14 +127,7 @@ EOF
 }
 
 stable_release_db_sync() {
-  # $1 is the working dir path
-  # $2 is the path to the git repo path
-  # $3 is the nova db user
-  # $4 is the nova db password
-  # $5 is the nova db name
-  # $6 is the logging.conf for openstack
-
-  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 
   # Some databases are from Folsom
   echo "Schema version is $version"
@@ -153,10 +140,10 @@ stable_release_db_sync() {
     # Use tag
     git reset --hard grizzly-eol
     pip_requires
-    db_sync "grizzly" $1 $2 $3 $4 $5 $6
+    db_sync "grizzly"
   fi
 
-  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
   # Some databases are from Grizzly
   echo "Schema version is $version"
   if [ $version -le "161" ]
@@ -168,10 +155,10 @@ stable_release_db_sync() {
     # Use tag
     git reset --hard havana-eol
     pip_requires
-    db_sync "havana" $1 $2 $3 $4 $5 $6
+    db_sync "havana"
   fi
 
-  version=`mysql -u $3 --password=$4 $5 -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
   # Some databases are from Havana
   echo "Schema version is $version"
   if [ $version -le "216" ]
@@ -182,7 +169,7 @@ stable_release_db_sync() {
     git checkout -b stable/icehouse
     git reset --hard remotes/origin/stable/icehouse
     pip_requires
-    db_sync "icehouse" $1 $2 $3 $4 $5 $6
+    db_sync "icehouse"
   fi
 
   # TODO(jhesketh): Add in Juno here once released
@@ -236,7 +223,7 @@ then
   exit 1
 fi
 
-stable_release_db_sync $WORKING_DIR_PATH $GIT_REPO_PATH $DB_USER $DB_PASS $DB_NAME $LOG_CONF_FILE
+stable_release_db_sync
 
 last_stable_version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
 echo "Schema after stable_release_db_sync version is $last_stable_version"
