@@ -137,10 +137,11 @@ stable_release_db_sync() {
   if [ $version -le "133" ]
   then
     echo "Database is from Folsom! Upgrade via Grizzly"
-    git branch -D stable/grizzly || true
+    git branch -D eol/grizzly || true
     git remote update
-    git checkout -b stable/grizzly
-    git reset --hard remotes/origin/stable/grizzly
+    git checkout -b eol/grizzly
+    # Use tag
+    git reset --hard grizzly-eol
     pip_requires
     db_sync "grizzly" $1 $2 $3 $4 $5 $6
   fi
@@ -151,10 +152,11 @@ stable_release_db_sync() {
   if [ $version -le "161" ]
   then
     echo "Database is from Grizzly! Upgrade via Havana"
-    git branch -D stable/havana || true
+    git branch -D eol/havana || true
     git remote update
-    git checkout -b stable/havana
-    git reset --hard remotes/origin/stable/havana
+    git checkout -b eol/havana
+    # Use tag
+    git reset --hard havana-eol
     pip_requires
     db_sync "havana" $1 $2 $3 $4 $5 $6
   fi
@@ -172,6 +174,11 @@ stable_release_db_sync() {
     pip_requires
     db_sync "icehouse" $1 $2 $3 $4 $5 $6
   fi
+
+  # TODO(jhesketh): Add in Juno here once released
+
+  # TODO(jhesketh): Make this more DRY and/or automatically match migration
+  # numbers to releases.
 }
 
 echo "Test running on "`hostname`" as "`whoami`" ("`echo ~`", $HOME)"
