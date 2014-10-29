@@ -38,7 +38,7 @@ class Runner(models.ShellTask):
         It pulls in a gearman job from the  build:real-db-upgrade
         queue and runs it through _handle_patchset"""
 
-    log = logging.getLogger("task_plugins.real_db_upgrade.task.Runner")
+    log = logging.getLogger("task.real_db_upgrade")
 
     def __init__(self, worker_server, plugin_config, job_name):
         super(Runner, self).__init__(worker_server, plugin_config, job_name)

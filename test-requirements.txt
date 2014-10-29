@@ -7,6 +7,9 @@ coverage>=3.6
 
 sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3
 discover
+mock
+six
+unittest2
 python-subunit
 testrepository>=0.0.13
 testtools>=0.9.27
