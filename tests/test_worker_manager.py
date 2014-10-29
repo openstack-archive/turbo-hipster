@@ -40,7 +40,8 @@ class TestWorkerServer(base.TestWithGearman):
         }
         plugin2_config = {
             "name": "shell_script",
-            "function": "build:do_something_shelly"
+            "function": "build:do_something_shelly",
+            "shell_script": "ls -lah && echo",
         }
 
         self.assertEqual(plugin0_config,

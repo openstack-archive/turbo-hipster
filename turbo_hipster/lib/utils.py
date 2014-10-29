@@ -232,17 +232,27 @@ def swift_push_file(results_set_name, file_path, swift_config):
 
 def local_push_file(results_set_name, file_path, local_config):
     """ Copy the file locally somewhere sensible """
-    dest_dir = os.path.join(local_config['path'], results_set_name)
-    dest_filename = os.path.basename(file_path)
-    if not os.path.isdir(dest_dir):
-        os.makedirs(dest_dir)
+    def _push_file_or_dir(results_set_name, file_path, local_config):
+        dest_dir = os.path.join(local_config['path'], results_set_name)
+        dest_filename = os.path.basename(file_path)
+        if not os.path.isdir(dest_dir):
+            os.makedirs(dest_dir)
 
-    dest_file = os.path.join(dest_dir, dest_filename)
+        dest_file = os.path.join(dest_dir, dest_filename)
+
+        if os.path.isfile(file_path):
+            shutil.copyfile(file_path, dest_file)
+        elif os.path.isdir(file_path):
+            shutil.copytree(file_path, dest_file)
 
     if os.path.isfile(file_path):
-        shutil.copyfile(file_path, dest_file)
+        _push_file_or_dir(results_set_name, file_path, local_config)
     elif os.path.isdir(file_path):
-        shutil.copytree(file_path, dest_file)
+        for f in os.listdir(file_path):
+            f_path = os.path.join(file_path, f)
+            _push_file_or_dir(results_set_name, f_path, local_config)
+
+    dest_filename = os.path.basename(file_path)
     return local_config['prepend_url'] + os.path.join(results_set_name,
                                                       dest_filename)
 
