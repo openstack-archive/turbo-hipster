@@ -66,17 +66,21 @@ class TestWithGearman(testtools.TestCase):
             self.config = yaml.safe_load(config_stream)
 
         # Set all of the working dirs etc to a writeable temp dir
-        temp_path = self.useFixture(fixtures.TempDir()).path
+        self.temp_path = self.useFixture(fixtures.TempDir()).path
         for config_dir in ['debug_log', 'jobs_working_dir', 'git_working_dir',
                            'pip_download_cache']:
             if config_dir in self.config:
                 if self.config[config_dir][0] == '/':
                     self.config[config_dir] = self.config[config_dir][1:]
-                self.config[config_dir] = os.path.join(temp_path,
+                self.config[config_dir] = os.path.join(self.temp_path,
                                                        self.config[config_dir])
         if self.config['publish_logs']['type'] == 'local':
             if self.config['publish_logs']['path'][0] == '/':
                 self.config['publish_logs']['path'] = \
                     self.config['publish_logs']['path'][1:]
             self.config['publish_logs']['path'] = os.path.join(
-                temp_path, self.config[config_dir])
+                self.temp_path, self.config['publish_logs']['path'])
+
+        if not os.path.isdir(
+            os.path.dirname(self.config['publish_logs']['path'])):
+            os.makedirs(os.path.dirname(self.config['publish_logs']['path']))
