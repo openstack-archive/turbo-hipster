@@ -210,9 +210,14 @@ class ShellTask(Task):
                 'unique_id': self.job.unique
             }
         )
+
+        env_args = copy.deepcopy(os.environ)
+        env_args.update(self.job_arguments)
+
         self.script_return_code = utils.execute_to_log(
             cmd,
-            self.shell_output_log
+            self.shell_output_log,
+            env=env_args
         )
 
     @common.task_step
