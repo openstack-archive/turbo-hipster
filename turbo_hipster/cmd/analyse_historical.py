@@ -33,8 +33,7 @@ from turbo_hipster.task_plugins.real_db_upgrade import handle_results
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default=
-                        '/etc/turbo-hipster/config.yaml',
+                        default='/etc/turbo-hipster/config.yaml',
                         help='Path to yaml config file.')
     args = parser.parse_args()
 
@@ -82,7 +81,7 @@ def main():
             if cursor.rowcount == 0:
                 for engine, dataset, migration in process(
                         connection, swift_config['container'], item['name']):
-                    if not 'duration' in migration:
+                    if 'duration' not in migration:
                         continue
 
                     if migration['stats']:
@@ -145,9 +144,9 @@ def process(connection, container, name):
         log.warn('Log %s contained no migrations' % name)
 
     for migration in lp.migrations:
-        if not 'start' in migration:
+        if 'start' not in migration:
             continue
-        if not 'end' in migration:
+        if 'end' not in migration:
             continue
         yield (engine_name, test_name, migration)
 

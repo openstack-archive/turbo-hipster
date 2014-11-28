@@ -84,7 +84,7 @@ class ZuulManager(threading.Thread):
                 self.log.debug("Waiting for server")
                 self.gearman_worker.waitForServer()
                 if (not self.stopped() and self.gearman_worker.running and
-                    self.gearman_worker.active_connections):
+                        self.gearman_worker.active_connections):
                     self.register_functions()
                     self.gearman_worker.waitForServer()
                     logging.debug("Waiting for job")
@@ -178,7 +178,7 @@ class ZuulClient(threading.Thread):
                 self.log.debug("Waiting for server")
                 self.gearman_worker.waitForServer()
                 if (not self.stopped() and self.gearman_worker.running and
-                    self.gearman_worker.active_connections):
+                        self.gearman_worker.active_connections):
                     self.register_functions()
                     self.gearman_worker.waitForServer()
                     self.log.debug("Waiting for job")

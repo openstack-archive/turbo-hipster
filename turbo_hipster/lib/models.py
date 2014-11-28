@@ -246,5 +246,5 @@ class ShellTask(Task):
         """Handle and cleanup functions. Shutdown if requested to so that no
         further jobs are ran if the environment is dirty."""
         if ('shutdown-th' in self.plugin_config and
-            self.plugin_config['shutdown-th']):
+                self.plugin_config['shutdown-th']):
             self.worker_server.shutdown_gracefully()

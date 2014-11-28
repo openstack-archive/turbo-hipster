@@ -231,7 +231,7 @@ def check_log_file(log_file, git_path, dataset):
         migration.setdefault('stats', {})
 
         # check migration completed
-        if not 'duration' in migration:
+        if 'duration' not in migration:
             success = False
             messages.append('WARNING - Migration %s->%s failed to complete'
                             % (migration['from'], migration['to']))
