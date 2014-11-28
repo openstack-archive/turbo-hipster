@@ -17,6 +17,8 @@ import copy
 import json
 import logging
 import os
+import pkg_resources
+import socket
 
 from turbo_hipster.lib import common
 from turbo_hipster.lib import utils
@@ -83,11 +85,17 @@ class Task(object):
     def _get_work_data(self):
         if self.work_data is None:
             hostname = os.uname()[1]
+            fqdn = socket.getfqdn()
+            version = pkg_resources.get_distribution('turbo_hipster').version
             self.work_data = dict(
                 name=self.job_name,
                 number=self.job.unique,
                 manager='turbo-hipster-manager-%s' % hostname,
                 url='http://localhost',
+                worker_hostname=hostname,
+                worker_fqdn=fqdn,
+                worker_program='turbo-hipster',
+                worker_version=version,
             )
         return self.work_data
 
