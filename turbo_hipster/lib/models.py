@@ -221,6 +221,10 @@ class ShellTask(Task):
 
         env_args = copy.deepcopy(os.environ)
         env_args.update(self.job_arguments)
+        if self.job.name.startswith('build:'):
+            env_args['TH_JOB_NAME'] = self.job.name[len('build:'):]
+        else:
+            env_args['TH_JOB_NAME'] = self.job.name
 
         self.script_return_code = utils.execute_to_log(
             cmd,
