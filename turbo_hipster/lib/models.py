@@ -17,6 +17,8 @@ import copy
 import json
 import logging
 import os
+import pkg_resources
+import socket
 
 from turbo_hipster.lib import common
 from turbo_hipster.lib import utils
@@ -83,12 +85,25 @@ class Task(object):
     def _get_work_data(self):
         if self.work_data is None:
             hostname = os.uname()[1]
+            fqdn = socket.getfqdn()
             self.work_data = dict(
                 name=self.job_name,
                 number=self.job.unique,
                 manager='turbo-hipster-manager-%s' % hostname,
                 url='http://localhost',
+                worker_hostname=hostname,
+                worker_fqdn=fqdn,
+                worker_program='turbo-hipster',
             )
+            try:
+                self.work_data['worker_version'] = (
+                    pkg_resources.get_distribution('turbo_hipster').version
+                )
+            except pkg_resources.DistributionNotFound:
+                # Package isn't installed; I do not think that manually
+                # attempting to extract version in some ad-hoc manner would be
+                # worth it -> just ignore this.
+                pass
         return self.work_data
 
     def _send_work_data(self):
