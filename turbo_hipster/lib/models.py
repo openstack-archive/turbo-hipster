@@ -19,6 +19,7 @@ import logging
 import os
 import pkg_resources
 import socket
+import shutil
 
 from turbo_hipster.lib import common
 from turbo_hipster.lib import utils
@@ -269,6 +270,10 @@ class ShellTask(Task):
     def _handle_cleanup(self):
         """Handle and cleanup functions. Shutdown if requested to so that no
         further jobs are ran if the environment is dirty."""
+
+        # Remove cruft from the build dir
+        shutil.rmtree(self.job_working_dir)
+
         if ('shutdown-th' in self.plugin_config and
             self.plugin_config['shutdown-th']):
             self.worker_server.shutdown_gracefully()
