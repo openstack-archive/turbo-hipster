@@ -249,8 +249,16 @@ def local_push_file(results_set_name, file_path, local_config):
 
 def scp_push_file(results_set_name, file_path, local_config):
     """ Copy the file remotely over ssh """
-    # TODO!
-    pass
+    execute_to_log('ssh -o BatchMode=yes %s@%s mkdir -p %s' % (
+                    local_config['username'], local_config['host'],
+                    os.path.join(local_config['path'], results_set_name)),
+                   '/dev/null')
+    execute_to_log('scp -o BatchMode=yes %s %s@%s:%s' % (
+                    file_path, local_config['username'], local_config['host'],
+                    os.path.join(local_config['path'], results_set_name, os.path.basename(file_path))),
+                   '/dev/null')
+    return (local_config['prepend_url'] +
+            os.path.join(results_set_name, os.path.basename(file_path)))
 
 
 def determine_job_identifier(zuul_arguments, job, unique):
