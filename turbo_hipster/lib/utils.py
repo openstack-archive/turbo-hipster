@@ -432,7 +432,22 @@ def local_push_files(results_set_name, file_list, local_config):
         shutil.copyfile(file_item['path'], dest_file)
 
 
-def scp_push_files(results_set_name, file_path, local_config):
+def scp_push_files(results_set_name, file_list, scp_config):
     """ Copy the file remotely over ssh """
-    # TODO!
-    pass
+    dirs = set()
+    for file_item in file_list:
+        dest_dir = os.path.join(scp_config['path'], results_set_name,
+                                os.path.dirname(file_item['filename']))
+        dirs.add(dest_dir)
+    for directory in dirs:
+        execute_to_log('ssh -o BatchMode=yes %s@%s mkdir -p %s'
+                       % (scp_config['username'], scp_config['host'],
+                          directory),
+                       '/dev/null')
+    for file_item in file_list:
+        execute_to_log('scp -o BatchMode=yes %s %s@%s:%s'
+                       % (file_item['path'], scp_config['username'],
+                          scp_config['host'],
+                          os.path.join(scp_config['path'], results_set_name,
+                                       file_item['filename'])),
+                       '/dev/null')
