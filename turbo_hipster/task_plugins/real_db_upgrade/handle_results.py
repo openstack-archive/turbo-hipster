@@ -19,63 +19,9 @@ Primarily place the log files somewhere useful and optionally email
 somebody """
 
 import calendar
-import tempfile
 import time
 import os
 import re
-
-
-from turbo_hipster.lib.utils import push_file
-
-
-def generate_log_index(datasets):
-    """ Create an index of logfiles and links to them """
-    # Loop over logfile URLs
-    # Create summary and links
-    output = '<html><head><title>Index of results</title></head><body>'
-    output += '<ul>'
-    for dataset in datasets:
-        output += '<li>'
-        output += '<a href="%s">%s</a>' % (dataset['result_uri'],
-                                           dataset['name'])
-        output += ' <span class="%s">%s</span>' % (dataset['result'],
-                                                   dataset['result'])
-        output += '</li>'
-
-    output += '</ul>'
-    output += '</body></html>'
-    return output
-
-
-def make_index_file(datasets, index_filename):
-    """ Writes an index into a file for pushing """
-    index_content = generate_log_index(datasets)
-    tempdir = tempfile.mkdtemp()
-    fd = open(os.path.join(tempdir, index_filename), 'w')
-    fd.write(index_content)
-    return os.path.join(tempdir, index_filename)
-
-
-def generate_push_results(datasets, publish_config):
-    """ Generates and pushes results """
-
-    last_link_uri = None
-    for i, dataset in enumerate(datasets):
-        result_uri = push_file(dataset['determined_path'],
-                               dataset['job_log_file_path'],
-                               publish_config)
-        datasets[i]['result_uri'] = result_uri
-        last_link_uri = result_uri
-
-    if len(datasets) > 1:
-        index_file = make_index_file(datasets, 'index.html')
-        # FIXME: the determined path here is just copied from the last dataset.
-        # Probably should be stored elsewhere...
-        index_file_url = push_file(dataset['determined_path'], index_file,
-                                   publish_config)
-        return index_file_url
-    else:
-        return last_link_uri
 
 
 MIGRATION_NUMBER_RE = re.compile('^([0-9]+).*\.py$')

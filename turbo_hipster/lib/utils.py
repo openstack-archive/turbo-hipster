@@ -15,12 +15,15 @@
 
 import git
 import logging
+import magic
 import os
 import requests
 import select
 import shutil
 import subprocess
 import swiftclient
+import sys
+import tempfile
 import time
 
 
@@ -197,74 +200,10 @@ def execute_to_log(cmd, logfile, timeout=-1, watch_logs=[], heartbeat=30,
     return p.returncode
 
 
-def push_file(results_set_name, file_path, publish_config):
-    """ Push a log file to a server. Returns the public URL """
-    method = publish_config['type'] + '_push_file'
-    if method in globals() and hasattr(globals()[method], '__call__'):
-        return globals()[method](results_set_name, file_path, publish_config)
-
-
-def swift_push_file(results_set_name, file_path, swift_config):
-    """ Push a log file to a swift server. """
-    def _push_individual_file(results_set_name, file_path, swift_config):
-        with open(file_path, 'r') as fd:
-            name = os.path.join(results_set_name, os.path.basename(file_path))
-            con = swiftclient.client.Connection(
-                authurl=swift_config['authurl'],
-                user=swift_config['user'],
-                key=swift_config['password'],
-                os_options={'region_name': swift_config['region']},
-                tenant_name=swift_config['tenant'],
-                auth_version=2.0)
-            con.put_object(swift_config['container'], name, fd)
-
-    if os.path.isfile(file_path):
-        _push_individual_file(results_set_name, file_path, swift_config)
-    elif os.path.isdir(file_path):
-        for path, folders, files in os.walk(file_path):
-            for f in files:
-                f_path = os.path.join(path, f)
-                _push_individual_file(results_set_name, f_path, swift_config)
-
-    return (swift_config['prepend_url'] +
-            os.path.join(results_set_name, os.path.basename(file_path)))
-
-
-def local_push_file(results_set_name, file_path, local_config):
-    """ Copy the file locally somewhere sensible """
-    def _push_file_or_dir(results_set_name, file_path, local_config):
-        dest_dir = os.path.join(local_config['path'], results_set_name)
-        dest_filename = os.path.basename(file_path)
-        if not os.path.isdir(dest_dir):
-            os.makedirs(dest_dir)
-
-        dest_file = os.path.join(dest_dir, dest_filename)
-
-        if os.path.isfile(file_path):
-            shutil.copyfile(file_path, dest_file)
-        elif os.path.isdir(file_path):
-            shutil.copytree(file_path, dest_file)
-
-    if os.path.isfile(file_path):
-        _push_file_or_dir(results_set_name, file_path, local_config)
-    elif os.path.isdir(file_path):
-        for f in os.listdir(file_path):
-            f_path = os.path.join(file_path, f)
-            _push_file_or_dir(results_set_name, f_path, local_config)
-
-    dest_filename = os.path.basename(file_path)
-    return local_config['prepend_url'] + os.path.join(results_set_name,
-                                                      dest_filename)
-
-
-def scp_push_file(results_set_name, file_path, local_config):
-    """ Copy the file remotely over ssh """
-    # TODO!
-    pass
-
-
 def zuul_swift_upload(file_path, job_arguments):
     """Upload working_dir to swift as per zuul's instructions"""
+    # TODO(jhesketh): replace with swift_form_post_submit from below
+
     # NOTE(jhesketh): Zuul specifies an object prefix in the destination so
     #                 we don't need to be concerned with results_set_name
 
@@ -299,3 +238,201 @@ def zuul_swift_upload(file_path, job_arguments):
 
     return (logserver_prefix +
             job_arguments['ZUUL_EXTRA_SWIFT_DESTINATION_PREFIX'])
+
+
+def generate_log_index(file_list, logserver_prefix, results_set_name):
+    """Create an index of logfiles and links to them"""
+
+    output = '<html><head><title>Index of results</title></head><body>'
+    output += '<ul>'
+    for f in file_list:
+        file_url = os.path.join(logserver_prefix, results_set_name, f)
+        # Because file_list is simply a list to create an index for and it
+        # isn't necessarily on disk we can't check if a  file is a folder or
+        # not. As such we normalise the name to get the folder/filename but
+        # then need to check if the last character was a trailing slash so to
+        # re-append it to make it obvious that it links to a folder
+        filename_postfix = '/' if f[-1] == '/' else ''
+        filename = os.path.basename(os.path.normpath(f)) + filename_postfix
+        output += '<li>'
+        output += '<a href="%s">%s</a>' % (file_url, filename)
+        output += '</li>'
+
+    output += '</ul>'
+    output += '</body></html>'
+    return output
+
+
+def make_index_file(file_list, logserver_prefix, results_set_name,
+                    index_filename='index.html'):
+    """Writes an index into a file for pushing"""
+
+    index_content = generate_log_index(file_list, logserver_prefix,
+                                       results_set_name)
+    tempdir = tempfile.mkdtemp()
+    fd = open(os.path.join(tempdir, index_filename), 'w')
+    fd.write(index_content)
+    return os.path.join(tempdir, index_filename)
+
+
+def get_file_mime(file_path):
+    """Get the file mime using libmagic"""
+
+    if not os.path.isfile(file_path):
+        return None
+
+    if hasattr(magic, 'from_file'):
+        return magic.from_file(file_path, mime=True)
+    else:
+        # no magic.from_file, we might be using the libmagic bindings
+        m = magic.open(magic.MAGIC_MIME)
+        m.load()
+        return m.file(file_path).split(';')[0]
+
+
+def swift_form_post_submit(file_list, url, hmac_body, signature):
+    """Send the files to swift via the FormPost middleware"""
+
+    # We are uploading the file_list as an HTTP POST multipart encoded.
+    # First grab out the information we need to send back from the hmac_body
+    payload = {}
+
+    (object_prefix,
+     payload['redirect'],
+     payload['max_file_size'],
+     payload['max_file_count'],
+     payload['expires']) = hmac_body.split('\n')
+    payload['signature'] = signature
+
+    # Loop over the file list in chunks of max_file_count
+    for sub_file_list in (file_list[pos:pos + int(payload['max_file_count'])]
+                          for pos in xrange(0, len(file_list),
+                                            int(payload['max_file_count']))):
+        if payload['expires'] < time.time():
+            raise Exception("Ran out of time uploading files!")
+        files = {}
+        # Zuul's log path is generated without a tailing slash. As such the
+        # object prefix does not contain a slash and the files would be
+        # uploaded as 'prefix' + 'filename'. Assume we want the destination
+        # url to look like a folder and make sure there's a slash between.
+        filename_prefix = '/' if url[-1] != '/' else ''
+        for i, f in enumerate(sub_file_list):
+            if os.path.getsize(f['path']) > int(payload['max_file_size']):
+                sys.stderr.write('Warning: %s exceeds %d bytes. Skipping...\n'
+                                 % (f['path'], int(payload['max_file_size'])))
+                continue
+            files['file%d' % (i + 1)] = (filename_prefix + f['filename'],
+                                         open(f['path'], 'rb'),
+                                         get_file_mime(f['path']))
+        requests.post(url, data=payload, files=files)
+
+
+def build_file_list(file_path, logserver_prefix, results_set_name,
+                    create_dir_indexes=True):
+    """Generate a list of files to upload to zuul. Recurses through directories
+       and generates index.html files if requested."""
+
+    # file_list: a list of dicts with {path=..., filename=...} where filename
+    #            is appended to the end of the object (paths can be used)
+    file_list = []
+    if os.path.isfile(file_path):
+        file_list.append({'filename': os.path.basename(file_path),
+                          'path': file_path})
+    elif os.path.isdir(file_path):
+        if file_path[-1] == os.sep:
+            file_path = file_path[:-1]
+        parent_dir = os.path.dirname(file_path)
+        for path, folders, files in os.walk(file_path):
+            folder_contents = []
+            for f in files:
+                full_path = os.path.join(path, f)
+                relative_name = os.path.relpath(full_path, parent_dir)
+                push_file = {'filename': relative_name,
+                             'path': full_path}
+                file_list.append(push_file)
+                folder_contents.append(relative_name)
+
+            for f in folders:
+                full_path = os.path.join(path, f)
+                relative_name = os.path.relpath(full_path, parent_dir)
+                folder_contents.append(relative_name + '/')
+
+            if create_dir_indexes:
+                index_file = make_index_file(folder_contents, logserver_prefix,
+                                             results_set_name)
+                relative_name = os.path.relpath(path, parent_dir)
+                file_list.append({
+                    'filename': os.path.join(relative_name,
+                                             os.path.basename(index_file)),
+                    'path': index_file})
+
+    return file_list
+
+
+def push_file(results_set_name, path_list, publish_config,
+              generate_indexes=True):
+    """ Push a log file/foler to a server. Returns the public URL """
+
+    file_list = []
+    root_list = []
+
+    for file_path in path_list:
+        file_path = os.path.normpath(file_path)
+        if os.path.isfile(file_path):
+            root_list.append(os.path.basename(file_path))
+        else:
+            root_list.append(os.path.basename(file_path) + '/')
+
+        file_list += build_file_list(
+            file_path, publish_config['prepend_url'], results_set_name,
+            generate_indexes
+        )
+
+    index_file = ''
+    if generate_indexes:
+        index_file = make_index_file(root_list, publish_config['prepend_url'],
+                                     results_set_name)
+        file_list.append({
+            'filename': os.path.basename(index_file),
+            'path': index_file})
+
+    method = publish_config['type'] + '_push_file'
+    if method in globals() and hasattr(globals()[method], '__call__'):
+        return globals()[method](results_set_name, file_list, publish_config)
+
+    return os.path.join(publish_config['prepend_url'], results_set_name,
+                        os.path.basename(index_file))
+
+
+def swift_push_file(results_set_name, file_list, swift_config):
+    """ Push a log file to a swift server. """
+    for file_item in file_list:
+        with open(file_item['path'], 'r') as fd:
+            con = swiftclient.client.Connection(
+                authurl=swift_config['authurl'],
+                user=swift_config['user'],
+                key=swift_config['password'],
+                os_options={'region_name': swift_config['region']},
+                tenant_name=swift_config['tenant'],
+                auth_version=2.0)
+            con.put_object(swift_config['container'], file_item['filename'],
+                           fd)
+
+
+def local_push_file(results_set_name, file_list, local_config):
+    """ Copy the file locally somewhere sensible """
+    for file_item in file_list:
+        dest_dir = os.path.join(local_config['path'], results_set_name,
+                                os.path.dirname(file_item['filename']))
+        dest_filename = os.path.basename(file_item['filename'])
+        if not os.path.isdir(dest_dir):
+            os.makedirs(dest_dir)
+
+        dest_file = os.path.join(dest_dir, dest_filename)
+        shutil.copyfile(file_item['path'], dest_file)
+
+
+def scp_push_file(results_set_name, file_path, local_config):
+    """ Copy the file remotely over ssh """
+    # TODO!
+    pass
