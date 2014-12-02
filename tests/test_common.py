@@ -25,9 +25,9 @@ from turbo_hipster.lib import models
 class TestTaskStep(testtools.TestCase):
     def test_task_step_decorator(self):
         class FakeTask(models.Task):
-            def __init__(self, global_config, plugin_config, job_name):
-                super(FakeTask, self).__init__(global_config, plugin_config,
-                                               job_name)
+            def __init__(self, global_config, job_name, job_config):
+                super(FakeTask, self).__init__(global_config, job_name,
+                                               job_config)
                 # Define the number of steps we will do to determine our
                 # progress.
                 self.total_steps = 2
@@ -43,7 +43,7 @@ class TestTaskStep(testtools.TestCase):
             def do_something_more(self):
                 pass
 
-        task = FakeTask({}, {}, 'job_name')
+        task = FakeTask({}, 'build:function', {})
         task.job = fakes.FakeJob()
 
         self.assertEqual(0, task.current_step)

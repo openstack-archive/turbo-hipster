@@ -93,7 +93,7 @@ class TestTaskRunner(base.TestWithGearman):
         # Modify the job to fail. The git_path, job_working_dir and unqiue_id
         # are all passed to the shell script. If we 'ls unique_id' it'll fail
         # since it doesn't exist.
-        self.config['plugins'][2]['shell_script'] = 'ls -lah'
+        self.config['jobs'][0]['shell_script'] = 'ls -lah'
 
         zuul.submit_job('build:do_something_shelly', data_req)
         zuul.wait_for_completion()

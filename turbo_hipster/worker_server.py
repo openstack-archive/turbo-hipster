@@ -47,15 +47,14 @@ class Server(threading.Thread):
         # Config init
         self.zuul_manager = None
         self.zuul_client = None
-        self.plugins = []
         self.services_started = False
 
         # TODO: Make me unique (random?) and we should be able to run multiple
         # instances of turbo-hipster on the one host
         self.worker_name = os.uname()[1]
 
-        self.tasks = {}
-        self.load_plugins()
+        self.jobs = {}
+        self.load_jobs()
 
     def load_extra_configuration(self):
         if isdir(self.config["conf_d"]):
@@ -84,41 +83,71 @@ class Server(threading.Thread):
                             filename=log_file,
                             level=logging.DEBUG)
 
+    def load_jobs(self):
+        # Legacy, load the plugins first
+        self.load_plugins()
+
+        self.log.debug("Loading jobs")
+        if 'jobs' in self.config:
+            for job in self.config['jobs']:
+                try:
+                    plugin = 'shell_script'
+                    if 'plugin' in job:
+                        plugin = job['plugin']
+
+                    module = __import__('turbo_hipster.task_plugins.' +
+                                        plugin + '.task',
+                                        fromlist='turbo_hipster.task_plugins' +
+                                        plugin)
+
+                    self.jobs[job['name']] = {
+                        'name': job['name'],
+                        'plugin': plugin,
+                        'job_config': job,
+                        'runner': module.Runner(self, job['name'], job),
+                    }
+                    self.log.debug('Job %s loaded' % job['name'])
+                except Exception as e:
+                    self.log.exception("Failure loading job")
+                    self.log.exception(e)
+
     def load_plugins(self):
         """ Load the available plugins from task_plugins """
         self.log.debug('Loading plugins')
         # Load plugins
-        for plugin in self.config['plugins']:
-            self.plugins.append({
-                'module': __import__('turbo_hipster.task_plugins.' +
-                                     plugin['name'] + '.task',
-                                     fromlist='turbo_hipster.task_plugins' +
-                                     plugin['name']),
-                'plugin_config': plugin
-            })
-            self.log.debug('Plugin %s loaded' % plugin['name'])
+        if 'plugins' in self.config:
+            for plugin in self.config['plugins']:
+                try:
+                    module = __import__('turbo_hipster.task_plugins.' +
+                                        plugin['name'] + '.task',
+                                        fromlist='turbo_hipster.task_plugins' +
+                                        plugin['name'])
+
+                    self.jobs[plugin['function']] = {
+                        'name': plugin['function'],
+                        'plugin': plugin['name'],
+                        'plugin_config': plugin,
+                        'runner': module.Runner(
+                            self, plugin['function'], plugin
+                        ),
+                    }
+                    self.log.debug('Job %s loaded' % plugin['function'])
+                except Exception as e:
+                    self.log.exception("Failure loading plugin")
+                    self.log.exception(e)
 
     def start_zuul_client(self):
         """ Run the tasks """
         self.log.debug('Starting zuul client')
         self.zuul_client = worker_manager.ZuulClient(self)
 
-        for task_number, plugin in enumerate(self.plugins):
-            module = plugin['module']
-            job_name = '%s-%s-%s' % (plugin['plugin_config']['name'],
-                                     self.worker_name, task_number)
-            self.tasks[job_name] = module.Runner(
-                self,
-                plugin['plugin_config'],
-                job_name
-            )
-            self.zuul_client.add_function(plugin['plugin_config']['function'],
-                                          self.tasks[job_name])
+        for job in self.jobs.values():
+            self.zuul_client.add_function(job['name'], job['runner'])
 
         self.zuul_client.start()
 
     def start_zuul_manager(self):
-        self.zuul_manager = worker_manager.ZuulManager(self, self.tasks)
+        self.zuul_manager = worker_manager.ZuulManager(self, self.jobs)
         self.zuul_manager.start()
 
     def shutdown_gracefully(self):

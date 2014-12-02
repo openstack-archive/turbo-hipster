@@ -9,6 +9,11 @@ jobs_working_dir: /var/lib/turbo-hipster/jobs
 git_working_dir: /var/lib/turbo-hipster/git
 pip_download_cache: /var/cache/pip
 
+jobs:
+  - name: build:do_something_shelly
+    shell_script: 'ls -lah && echo'
+
+# Legacy job definition as plugins
 plugins:
   - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_devstack_131007
@@ -17,10 +22,6 @@ plugins:
   - name: real_db_upgrade
     datasets_dir: /var/lib/turbo-hipster/datasets_user_001
     function: build:real-db-upgrade_nova_mysql_user_001
-
-  - name: shell_script
-    function: build:do_something_shelly
-    shell_script: 'ls -lah && echo'
 
 publish_logs:
   type: local

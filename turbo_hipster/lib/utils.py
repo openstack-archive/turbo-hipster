@@ -263,12 +263,6 @@ def scp_push_file(results_set_name, file_path, local_config):
     pass
 
 
-def determine_job_identifier(zuul_arguments, job, unique):
-    # use new determined path from zuul
-    path = zuul_arguments['LOG_PATH']
-    return path
-
-
 def zuul_swift_upload(file_path, job_arguments):
     """Upload working_dir to swift as per zuul's instructions"""
     # NOTE(jhesketh): Zuul specifies an object prefix in the destination so

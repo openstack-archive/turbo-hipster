@@ -19,6 +19,7 @@ import logging
 import os
 import pkg_resources
 import socket
+import uuid
 
 from turbo_hipster.lib import common
 from turbo_hipster.lib import utils
@@ -28,9 +29,13 @@ class Task(object):
     """ A base object for running a job (aka Task) """
     log = logging.getLogger("task")
 
-    def __init__(self, worker_server, plugin_config, job_name):
+    def __init__(self, worker_server, job_name, job_config):
+        # TODO(jhesketh): remove the need for worker_server here
         self.worker_server = worker_server
-        self.plugin_config = plugin_config
+        # NOTE(jhesketh): job_config may be in the old format where name
+        # refers to the plugin and function is the job name. Thus these should
+        # never be used in a job, instead use the provided job_name.
+        self.job_config = job_config
         self.job_name = job_name
         self._reset()
 
@@ -52,16 +57,16 @@ class Task(object):
         self.messages = []
         self.current_step = 0
         self.log_handler = None
+        self.th_uuid = str(uuid.uuid4())[-12:]
 
     def _prep_working_dir(self):
-        self.job_identifier = utils.determine_job_identifier(
-            self.job_arguments,
-            self.plugin_config['function'],
-            self.job.unique
-        )
+        # Use the th_uuid so that if the same job is somehow taken twice from
+        # zuul we won't re-use zuul's uuid. This shouldn't happen but if it
+        # does it prevents overwriting previous results
         self.job_working_dir = os.path.join(
             self.worker_server.config['jobs_working_dir'],
-            self.job_identifier
+            self.th_uuid,
+            self.job_arguments['LOG_PATH']
         )
         self.job_results_dir = os.path.join(
             self.job_working_dir,
@@ -221,7 +226,7 @@ class Task(object):
 
         if 'publish_logs' in self.worker_server.config:
             index_url = utils.push_file(
-                self.job_identifier, self.job_results_dir,
+                self.job_arguments['LOG_PATH'], self.job_results_dir,
                 self.worker_server.config['publish_logs'])
             self.log.debug("Index URL found at %s" % index_url)
             self.work_data['url'] = index_url
@@ -229,14 +234,14 @@ class Task(object):
         if 'ZUUL_EXTRA_SWIFT_URL' in self.job_arguments:
             # Upload to zuul's url as instructed
             utils.zuul_swift_upload(self.job_working_dir, self.job_arguments)
-            self.work_data['url'] = self.job_identifier
+            self.work_data['url'] = self.job_arguments['LOG_PATH']
 
 
 class ShellTask(Task):
     log = logging.getLogger("task.shell_task")
 
-    def __init__(self, worker_server, plugin_config, job_name):
-        super(ShellTask, self).__init__(worker_server, plugin_config, job_name)
+    def __init__(self, worker_server, job_name, job_config):
+        super(ShellTask, self).__init__(worker_server, job_name, job_config)
         # Define the number of steps we will do to determine our progress.
         self.total_steps = 5
 
@@ -285,7 +290,7 @@ class ShellTask(Task):
 
         self.log.debug("Grab the patchset we want to test against")
         local_path = os.path.join(self.worker_server.config['git_working_dir'],
-                                  self.job_name, job_args['ZUUL_PROJECT'])
+                                  self.th_uuid, job_args['ZUUL_PROJECT'])
         if not os.path.exists(local_path):
             os.makedirs(local_path)
 
@@ -305,7 +310,7 @@ class ShellTask(Task):
     @common.task_step
     def _execute_script(self):
         # Run script
-        cmd = self.plugin_config['shell_script']
+        cmd = self.job_config['shell_script']
         cmd += (
             (' %(git_path)s %(job_working_dir)s %(unique_id)s')
             % {
@@ -339,8 +344,8 @@ class ShellTask(Task):
     def _handle_cleanup(self):
         """Handle and cleanup functions. Shutdown if requested to so that no
         further jobs are ran if the environment is dirty."""
-        if ('shutdown-th' in self.plugin_config and
-            self.plugin_config['shutdown-th']):
+        if ('shutdown-th' in self.job_config and
+            self.job_config['shutdown-th']):
             self.worker_server.shutdown_gracefully()
 
     @common.task_step

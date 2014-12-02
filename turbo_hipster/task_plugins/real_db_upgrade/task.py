@@ -40,8 +40,8 @@ class Runner(models.ShellTask):
 
     log = logging.getLogger("task.real_db_upgrade")
 
-    def __init__(self, worker_server, plugin_config, job_name):
-        super(Runner, self).__init__(worker_server, plugin_config, job_name)
+    def __init__(self, worker_server, job_name, job_config):
+        super(Runner, self).__init__(worker_server, job_name, job_config)
 
         # Set up the runner worker
         self.datasets = []
@@ -69,10 +69,7 @@ class Runner(models.ShellTask):
             if (self.job_arguments['ZUUL_PROJECT'] ==
                     dataset['config']['project'] and
                     self._get_project_command(dataset['config']['type'])):
-                dataset['determined_path'] = utils.determine_job_identifier(
-                    self.job_arguments, self.plugin_config['function'],
-                    self.job.unique
-                )
+                dataset['determined_path'] = self.job_arguments['LOG_PATH']
                 dataset['job_log_file_path'] = os.path.join(
                     self.worker_server.config['jobs_working_dir'],
                     dataset['determined_path'],
@@ -129,7 +126,7 @@ class Runner(models.ShellTask):
         if len(self.datasets) > 0:
             return self.datasets
 
-        datasets_path = self.plugin_config['datasets_dir']
+        datasets_path = self.job_config['datasets_dir']
         for ent in os.listdir(datasets_path):
             dataset_dir = os.path.join(datasets_path, ent)
             if (os.path.isdir(dataset_dir) and os.path.isfile(

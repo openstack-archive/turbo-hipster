@@ -20,50 +20,125 @@ import fakes
 
 
 class TestWorkerServer(base.TestWithGearman):
-    def test_plugins_load(self):
-        "Test the configured plugins are loaded"
+    def test_jobs_load_from_legacy_plugins(self):
+        "Test the configured plugins are loaded from legacy config.yaml layout"
 
         self.start_server()
 
         self.assertFalse(self.worker_server.stopped())
-        self.assertEqual(3, len(self.worker_server.plugins))
+        self.assertEqual(3, len(self.worker_server.jobs))
 
-        plugin0_config = {
-            "name": "real_db_upgrade",
-            "datasets_dir": "/var/lib/turbo-hipster/datasets_devstack_131007",
-            "function": "build:real-db-upgrade_nova_mysql_devstack_131007"
+        expected_jobs = {
+            'build:real-db-upgrade_nova_mysql_devstack_131007': {
+                "name": "build:real-db-upgrade_nova_mysql_devstack_131007",
+                "plugin": "real_db_upgrade",
+                "runner_module_name": "turbo_hipster.task_plugins."
+                                      "real_db_upgrade.task",
+                "plugin_config": {
+                    "name": "real_db_upgrade",
+                    "datasets_dir": "/var/lib/turbo-hipster/"
+                                    "datasets_devstack_131007",
+                    "function": "build:real-db-upgrade_nova_mysql_devstack_"
+                                "131007"
+                },
+            },
+            'build:real-db-upgrade_nova_mysql_user_001': {
+                "name": "build:real-db-upgrade_nova_mysql_user_001",
+                "plugin": "real_db_upgrade",
+                "runner_module_name": "turbo_hipster.task_plugins."
+                                      "real_db_upgrade.task",
+                "plugin_config": {
+                    "name": "real_db_upgrade",
+                    "datasets_dir": "/var/lib/turbo-hipster/datasets_user_001",
+                    "function": "build:real-db-upgrade_nova_mysql_user_001"
+                },
+            },
+            'build:do_something_shelly': {
+                "name": "build:do_something_shelly",
+                "plugin": "shell_script",
+                "runner_module_name": "turbo_hipster.task_plugins."
+                                      "shell_script.task",
+                "job_config": {
+                    "name": "build:do_something_shelly",
+                    "shell_script": "ls -lah && echo",
+                },
+            },
         }
-        plugin1_config = {
-            "name": "real_db_upgrade",
-            "datasets_dir": "/var/lib/turbo-hipster/datasets_user_001",
-            "function": "build:real-db-upgrade_nova_mysql_user_001"
+
+        for job_name, job in self.worker_server.jobs.items():
+            self.assertEqual(expected_jobs[job_name]['name'],
+                             job['name'])
+            self.assertEqual(expected_jobs[job_name]['plugin'],
+                             job['plugin'])
+            if 'plugin_config' in job:
+                self.assertEqual(expected_jobs[job_name]['plugin_config'],
+                                 job['plugin_config'])
+            if 'job_config' in job:
+                self.assertEqual(expected_jobs[job_name]['job_config'],
+                                 job['job_config'])
+            self.assertEqual(
+                expected_jobs[job_name]['runner_module_name'],
+                job['runner'].__module__
+            )
+
+    def test_job_configuration(self):
+        "Test config.yaml job layout"
+        self._load_config_fixture('config.yaml')
+        self.start_server()
+
+        self.assertFalse(self.worker_server.stopped())
+        self.assertEqual(3, len(self.worker_server.jobs))
+
+        expected_jobs = {
+            'build:real-db-upgrade_nova_mysql': {
+                "name": "build:real-db-upgrade_nova_mysql",
+                "plugin": "real_db_upgrade",
+                "runner_module_name": "turbo_hipster.task_plugins."
+                                      "real_db_upgrade.task",
+                "job_config": {
+                    "name": "build:real-db-upgrade_nova_mysql",
+                    "plugin": "real_db_upgrade",
+                    "datasets_dir": "/home/josh/var/lib/turbo-hipster/datasets"
+                },
+            },
+            'build:real-db-upgrade_nova_mysql_user_001': {
+                "name": "build:real-db-upgrade_nova_mysql_user_001",
+                "plugin": "real_db_upgrade",
+                "runner_module_name": "turbo_hipster.task_plugins."
+                                      "real_db_upgrade.task",
+                "plugin_config": {
+                    "name": "real_db_upgrade",
+                    "datasets_dir": "/var/lib/turbo-hipster/datasets_user_001",
+                    "function": "build:real-db-upgrade_nova_mysql_user_001",
+                },
+            },
+            'build:some_shell_job': {
+                "name": "build:some_shell_job",
+                "plugin": "shell_script",
+                "runner_module_name": "turbo_hipster.task_plugins."
+                                      "shell_script.task",
+                "job_config": {
+                    "name": "build:some_shell_job",
+                    "shell_script": "/dev/null",
+                },
+            },
         }
-        plugin2_config = {
-            "name": "shell_script",
-            "function": "build:do_something_shelly",
-            "shell_script": "ls -lah && echo",
-        }
 
-        self.assertEqual(plugin0_config,
-                         self.worker_server.plugins[0]['plugin_config'])
-        self.assertEqual(
-            'turbo_hipster.task_plugins.real_db_upgrade.task',
-            self.worker_server.plugins[0]['module'].__name__
-        )
-
-        self.assertEqual(plugin1_config,
-                         self.worker_server.plugins[1]['plugin_config'])
-        self.assertEqual(
-            'turbo_hipster.task_plugins.real_db_upgrade.task',
-            self.worker_server.plugins[1]['module'].__name__
-        )
-
-        self.assertEqual(plugin2_config,
-                         self.worker_server.plugins[2]['plugin_config'])
-        self.assertEqual(
-            'turbo_hipster.task_plugins.shell_script.task',
-            self.worker_server.plugins[2]['module'].__name__
-        )
+        for job_name, job in self.worker_server.jobs.items():
+            self.assertEqual(expected_jobs[job_name]['name'],
+                             job['name'])
+            self.assertEqual(expected_jobs[job_name]['plugin'],
+                             job['plugin'])
+            if 'plugin_config' in job:
+                self.assertEqual(expected_jobs[job_name]['plugin_config'],
+                                 job['plugin_config'])
+            if 'job_config' in job:
+                self.assertEqual(expected_jobs[job_name]['job_config'],
+                                 job['job_config'])
+            self.assertEqual(
+                expected_jobs[job_name]['runner_module_name'],
+                job['runner'].__module__
+            )
 
     def test_zuul_client_started(self):
         "Test the zuul client has been started"

@@ -56,7 +56,16 @@ for your environment::
   **pip_download_cache**
     Some of turbo-hipsters task plugins download requirements
     for projects. This is the cache directory used by pip.
-  **plugins**
+  **jobs**
+    A list of registered jobs.
+      **name**
+        The name of the job to register. This is the function name
+        for zuul's job. eg build:some_job.
+      **plugin** (optional)
+        The plugin to use. Defaults to shell_task.
+    Any other variables the plugin may require for the job.
+  **plugins** (depreciated)
+    This is depreciated in favour of jobs (above).
     A list of enabled plugins and their settings in a dictionary.
     The only required parameters are *name*, which should be the
     same as the folder containing the plugin module, and
