@@ -224,9 +224,12 @@ class Task(object):
 
         self.log.debug("Process the resulting files (upload/push)")
 
+        dir_list = os.listdir(self.job_results_dir)
+        path_list = [os.path.join(self.job_results_dir, i) for i in dir_list]
+
         if 'publish_logs' in self.worker_server.config:
             index_url = utils.push_file(
-                self.job_arguments['LOG_PATH'], self.job_results_dir,
+                self.job_arguments['LOG_PATH'], path_list,
                 self.worker_server.config['publish_logs'])
             self.log.debug("Index URL found at %s" % index_url)
             self.work_data['url'] = index_url
