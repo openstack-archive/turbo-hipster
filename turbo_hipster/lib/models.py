@@ -265,7 +265,7 @@ class ShellTask(Task):
         self.log.info('Step 4: Analyse logs for errors')
         self._parse_and_check_results()
 
-        self.log.info('Step 5: handle the results')
+        self.log.info('Step 5: Handle the results')
         self._handle_results()
 
         self.log.info('Step 6: Handle extra actions such as shutting down')

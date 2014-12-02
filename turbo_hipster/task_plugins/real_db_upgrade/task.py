@@ -69,10 +69,8 @@ class Runner(models.ShellTask):
             if (self.job_arguments['ZUUL_PROJECT'] ==
                     dataset['config']['project'] and
                     self._get_project_command(dataset['config']['type'])):
-                dataset['determined_path'] = self.job_arguments['LOG_PATH']
                 dataset['job_log_file_path'] = os.path.join(
-                    self.worker_server.config['jobs_working_dir'],
-                    dataset['determined_path'],
+                    self.job_results_dir,
                     dataset['name'] + '.log'
                 )
                 dataset['result'] = 'UNTESTED'
@@ -92,17 +90,6 @@ class Runner(models.ShellTask):
     def _parse_and_check_results(self):
         super(Runner, self)._parse_and_check_results()
         self._check_all_dataset_logs_for_errors()
-
-    @common.task_step
-    def _handle_results(self):
-        """ pass over the results to handle_results.py for post-processing """
-        self.log.debug("Process the resulting files (upload/push)")
-        index_url = handle_results.generate_push_results(
-            self.job_datasets,
-            self.worker_server.config['publish_logs']
-        )
-        self.log.debug("Index URL found at %s" % index_url)
-        self.work_data['url'] = index_url
 
     def _check_all_dataset_logs_for_errors(self):
         self.log.debug('Check logs for errors')
@@ -175,10 +162,7 @@ class Runner(models.ShellTask):
                     ' %(dataset_path)s %(logging_conf)s %(pip_cache_dir)s')
                 % {
                     'unique_id': self.job.unique,
-                    'job_working_dir': os.path.join(
-                        self.worker_server.config['jobs_working_dir'],
-                        dataset['determined_path']
-                    ),
+                    'job_working_dir': self.job_working_dir,
                     'git_path': self.git_path,
                     'dbuser': dataset['config']['db_user'],
                     'dbpassword': dataset['config']['db_pass'],
