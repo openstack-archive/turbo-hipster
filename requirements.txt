@@ -5,6 +5,7 @@ python-keystoneclient
 argparse
 
 lockfile
+docutils # Required by python-daemon
 python-daemon
 extras
 GitPython>=0.3.2.RC1
