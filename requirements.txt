@@ -6,6 +6,7 @@ argparse
 
 lockfile
 python-daemon
+docutils
 extras
 GitPython>=0.3.2.RC1
 sphinxcontrib-programoutput
