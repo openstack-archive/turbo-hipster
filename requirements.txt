@@ -5,7 +5,7 @@ python-keystoneclient
 argparse
 
 lockfile
-python-daemon
+python-daemon<2.0
 extras
 GitPython>=0.3.2.RC1
 sphinxcontrib-programoutput
