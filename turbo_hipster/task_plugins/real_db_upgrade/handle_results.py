@@ -44,10 +44,21 @@ class LogParser(object):
 
     def find_schemas(self):
         """Return a list of the schema numbers present in git."""
+
+        # TODO(mikal): once more of the cells code lands this needs to handle
+        # the API migratons as well as the cells migration. Just do cells for
+        # now though.
+        cells_migration_path = os.path.join(
+            self.gitpath,
+            'nova/db/sqlalchemy/cell_migrations/migrate_repo/versions')
+
+        if not os.path.exists(cells_migration_path):
+            cells_migration_path = os.path.join(
+                self.gitpath,
+                'nova/db/sqlalchemy/migrate_repo/versions')
+
         return [int(MIGRATION_NUMBER_RE.findall(f)[0]) for f in os.listdir(
-            os.path.join(self.gitpath,
-                         'nova/db/sqlalchemy/migrate_repo/versions'))
-                if MIGRATION_NUMBER_RE.match(f)]
+            cells_migration_path) if MIGRATION_NUMBER_RE.match(f)]
 
     def process_log(self):
         """Analyse a log for errors."""

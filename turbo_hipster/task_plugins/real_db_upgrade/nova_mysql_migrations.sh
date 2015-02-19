@@ -74,9 +74,17 @@ EOF
   python setup.py -q develop
   python setup.py -q install
 
+  # Find where we store db versions
+  # TODO(mikal): note this only handles the cell db for now
+  versions_path="$GIT_REPO_PATH/nova/db/sqlalchemy/cell_migrations/migrate_repo/versions"
+  if [ ! -e $versions_path ]
+  then
+    versions_path="$GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions"
+  fi
+
   # Log the migrations present
   echo "Migrations present:"
-  ls $GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
+  ls $versions_path/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
 
   # Flush innodb's caches
   echo "Restarting mysql"
@@ -90,7 +98,7 @@ EOF
 
   if [ "%$2%" == "%%" ]
   then
-    end_version=`ls $GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
+    end_version=`ls $versions_path/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
   else
     end_version=$2
   fi
