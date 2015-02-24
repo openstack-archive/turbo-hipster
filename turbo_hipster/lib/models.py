@@ -121,6 +121,7 @@ class Task(object):
                     self._send_work_data()
                     self.job.sendWorkException(str(e).encode('utf-8'))
                     # No point trying the job, lets return here
+                    self._send_final_results()
                     return
 
             # From here we can log exceptions
@@ -140,8 +141,6 @@ class Task(object):
             try:
                 self._cleanup()
                 self._upload_results()
-                # Finally, send updated work data and completed packets
-                self._send_final_results()
             except Exception as e:
                 # If something failed during this section we have been unable
                 # to upload the log. As such raise an exception to gearman
@@ -154,6 +153,9 @@ class Task(object):
                     self.messages.append('Exception: %s' % e)
                     self._send_work_data()
                     self.job.sendWorkException(str(e).encode('utf-8'))
+            finally:
+                # Finally, send updated work data and completed packets
+                self._send_final_results()
 
     def stop_working(self, number=None):
         # Check the number is for this job instance (None will cancel all)
