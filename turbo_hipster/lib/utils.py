@@ -414,7 +414,8 @@ def swift_push_files(results_set_name, file_list, swift_config):
                 key=swift_config['password'],
                 os_options={'region_name': swift_config['region']},
                 tenant_name=swift_config['tenant'],
-                auth_version=2.0)
+                auth_version=2.0,
+                insecure=True)
             filename = os.path.join(results_set_name, file_item['filename'])
             con.put_object(swift_config['container'], filename, fd)
 
