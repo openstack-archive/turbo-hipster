@@ -185,7 +185,7 @@ echo "$0 $@"
 # Setup the environment
 set -x
 export PATH=/usr/lib/ccache:$PATH
-export PIP_DOWNLOAD_CACHE=$PIP_CACHE_DIR
+#export PIP_DOWNLOAD_CACHE=$PIP_CACHE_DIR
 #export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
 export PIP_INDEX_URL="http://pypi.openstack.org/simple/"
 export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
