@@ -47,6 +47,9 @@ class Task(object):
             self.log.removeHandler(self.log_handler)
             self.log_handler.flush()
             self.log_handler.close()
+        if ('shutdown-th' in self.job_config and
+            self.job_config['shutdown-th']):
+            self.worker_server.shutdown_gracefully()
 
     def _reset(self):
         self.job = None
@@ -305,8 +308,19 @@ class ShellTask(Task):
         )
         cmd += ' ' + self.worker_server.config['zuul_server']['gerrit_site']
         cmd += ' ' + self.worker_server.config['zuul_server']['git_origin']
-        utils.execute_to_log(cmd, self.git_prep_log, env=git_args,
-                             cwd=local_path)
+
+        # NOTE(jhesketh): The most common problem is the git remote timing out
+        # Retry cloning multiple times before raising a failure.
+        tries = 0
+        return_code = 1
+        while return_code != 0:
+            tries += 1
+            return_code = utils.execute_to_log(cmd, self.git_prep_log,
+                                               env=git_args, cwd=local_path)
+            if tries >= 3:
+                break
+        if return_code != 0:
+            raise Exception("Failed to fetch patchset")
         self.git_path = local_path
         return local_path
 
@@ -347,9 +361,7 @@ class ShellTask(Task):
     def _handle_cleanup(self):
         """Handle and cleanup functions. Shutdown if requested to so that no
         further jobs are ran if the environment is dirty."""
-        if ('shutdown-th' in self.job_config and
-            self.job_config['shutdown-th']):
-            self.worker_server.shutdown_gracefully()
+        pass
 
     @common.task_step
     def _handle_results(self):
