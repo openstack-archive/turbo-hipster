@@ -188,7 +188,7 @@ class TestTaskRunner(base.TestWithGearman):
         task_output_lines = task_output_file.readlines()
         self.assertIn("Step 1: Setup environment", task_output_lines[0])
         self.assertIn("Something failed running the job!",
-                      task_output_lines[5])
+                      task_output_lines[6])
         self.assertIn("Exception: check results failed!",
                       task_output_lines[len(task_output_lines) - 1])
 

@@ -289,6 +289,7 @@ class ShellTask(Task):
             self.job_results_dir,
             'shell_output.log'
         )
+        self.log.info('Working on node %s' % (os.uname()[1]))
 
     @common.task_step
     def _grab_patchset(self, job_args):
@@ -322,6 +323,8 @@ class ShellTask(Task):
             if tries >= 3:
                 break
         if return_code != 0:
+            cmd = 'ifconfig'
+            utils.execute_to_log(cmd, self.git_prep_log)
             raise Exception("Failed to fetch patchset")
         self.git_path = local_path
         return local_path
