@@ -253,19 +253,24 @@ echo "Now test the patchset"
 pip_requires
 db_sync "patchset"
 
-# Determine the schema version
-version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-echo "Schema version is $version"
+# =============================================================================
+# We used to do downgrade testing, but nova no longer supports it
+# https://github.com/openstack/openstack-specs/blob/master/specs/no-downward-sql-migration.rst
 
-echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
-db_sync "downgrade" $last_stable_version
+# # Determine the schema version
+# version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+# echo "Schema version is $version"
 
-# Determine the schema version
-version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-echo "Schema version is $version"
+# echo "Now downgrade all the way back to the last stable version (v$last_stable_version)"
+# db_sync "downgrade" $last_stable_version
 
-echo "And now back up to head from the start of trunk"
-db_sync "patchset"
+# # Determine the schema version
+# version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+# echo "Schema version is $version"
+
+# echo "And now back up to head from the start of trunk"
+# db_sync "patchset"
+# =============================================================================
 
 # Determine the final schema version
 version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
