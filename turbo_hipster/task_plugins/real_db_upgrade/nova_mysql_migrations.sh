@@ -120,7 +120,9 @@ EOF
     # so we'll migrate just before then
     if [ $i == 291 ]
     then
-      sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose migrate-flavor-data
+      set -x
+      sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db migrate-flavor-data
+      set +x
     fi
 
     set -x
