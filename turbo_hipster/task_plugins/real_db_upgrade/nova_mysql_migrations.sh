@@ -115,6 +115,14 @@ EOF
 
   for i in `seq $start_version $increment $end_version`
   do
+    # TODO(jhesketh): This is a bit of a hack until we update our datasets to
+    # have the flavour data migrated. We know 291 does the migration check
+    # so we'll migrate just before then
+    if [ $i == 291 ]
+    then
+      sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose migrate-flavor-data
+    fi
+
     set -x
     sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db sync --version $i
     manage_exit=$?
