@@ -121,7 +121,7 @@ EOF
     if [ $i == 291 ]
     then
       set -x
-      sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db migrate_flavor_data --max-number 10000000
+      sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db migrate_flavor_data --force
       set +x
     fi
 
