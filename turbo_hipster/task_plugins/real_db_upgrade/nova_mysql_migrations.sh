@@ -122,6 +122,8 @@ EOF
     then
       set -x
       sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db migrate_flavor_data --force
+      echo "MySQL counters after migrate_flavor_data:"
+      mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
       set +x
     fi
 
