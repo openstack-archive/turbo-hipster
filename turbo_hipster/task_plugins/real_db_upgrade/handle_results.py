@@ -116,7 +116,7 @@ class LogParser(object):
                     name = m.group(1)
                     value = int(m.group(2))
 
-                    if name in innodb_stats:
+                    if name in innodb_stats and name not in migration_stats:
                         delta = value - innodb_stats[name]
                         if delta > 0:
                             migration_stats[name] = delta
