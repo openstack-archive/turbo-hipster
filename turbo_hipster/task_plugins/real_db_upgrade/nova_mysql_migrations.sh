@@ -194,7 +194,35 @@ stable_release_db_sync() {
     db_sync "icehouse"
   fi
 
-  # TODO(jhesketh): Add in Juno here once released
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Icehouse
+  echo "Schema version is $version"
+  if [ $version -lt "254" ]
+  then
+    echo "Database is from Icehouse! Upgrade via Juno"
+    git branch -D stable/juno || true
+    git remote update
+    git checkout -b stable/juno
+    git reset --hard remotes/origin/stable/juno
+    pip_requires
+    db_sync "juno"
+  fi
+
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Juno
+  echo "Schema version is $version"
+  if [ $version -lt "280" ]
+  then
+    echo "Database is from Juno! Upgrade via Kilo"
+    git branch -D stable/kilo || true
+    git remote update
+    git checkout -b stable/kilo
+    git reset --hard remotes/origin/stable/kilo
+    pip_requires
+    db_sync "kilo"
+  fi
+
+  # TODO(jhesketh): Add in Liberty here once released
 
   # TODO(jhesketh): Make this more DRY and/or automatically match migration
   # numbers to releases.
