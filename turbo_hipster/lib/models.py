@@ -303,7 +303,9 @@ class ShellTask(Task):
         if not os.path.exists(local_path):
             os.makedirs(local_path)
 
+        env = os.environ
         git_args = copy.deepcopy(job_args)
+        env.update(git_args)
 
         cmd = os.path.join(
             os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -319,15 +321,15 @@ class ShellTask(Task):
         while return_code != 0:
             tries += 1
             return_code = utils.execute_to_log(cmd, self.git_prep_log,
-                                               env=git_args, cwd=local_path)
-            if tries >= 2:
+                                               env=env, cwd=local_path)
+            if tries == 2:
                 # Try upping the post buffer. See:
                 # http://stackoverflow.com/questions/6842687/
                 # the-remote-end-hung-up-unexpectedly-while-git-cloning
                 utils.execute_to_log(
                     "git config --global http.postBuffer 1048576000",
-                    self.git_prep_log, env=git_args, cwd=local_path)
-            if tries >= 3:
+                    self.git_prep_log, env=env, cwd=local_path)
+            if tries >= 4:
                 break
         if return_code != 0:
             cmd = 'ifconfig'
