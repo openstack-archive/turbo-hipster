@@ -136,7 +136,7 @@ class TestTaskRunner(base.TestWithGearman):
         def side_effect():
             raise Exception('check results failed!')
 
-        #ShellTask._parse_and_check_results = _fake_parse_and_check_results
+        # ShellTask._parse_and_check_results = _fake_parse_and_check_results
         mocked_parse_and_check_results.side_effect = side_effect
 
         self.start_server()

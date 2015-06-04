@@ -65,8 +65,7 @@ def main():
                     os.path.join(os.path.dirname(__file__), '../')))
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default=
-                        '/etc/turbo-hipster/config.yaml',
+                        default='/etc/turbo-hipster/config.yaml',
                         help='Path to yaml config file.')
     parser.add_argument('-b', '--background', action='store_true',
                         help='Run as a daemon in the background.')

@@ -48,7 +48,7 @@ class Task(object):
             self.log_handler.flush()
             self.log_handler.close()
         if ('shutdown-th' in self.job_config and
-            self.job_config['shutdown-th']):
+                self.job_config['shutdown-th']):
             self.worker_server.shutdown_gracefully()
 
     def _reset(self):

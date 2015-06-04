@@ -116,7 +116,7 @@ def process_dataset(dataset):
                     math.ceil(recommend)
 
         # Innodb stats
-        if not migration in stats_summary:
+        if migration not in stats_summary:
             continue
 
         for stats_key in ['XInnodb_rows_changed', 'Innodb_rows_read']:
