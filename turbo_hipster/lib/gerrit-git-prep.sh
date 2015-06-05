@@ -50,19 +50,19 @@ then
     rm -fr .[^.]* *
     if [ -d /opt/git/$ZUUL_PROJECT/.git ]
     then
-        git clone file:///opt/git/$ZUUL_PROJECT .
+        git clone -vvvvvv file:///opt/git/$ZUUL_PROJECT .
     else
-        git clone $GIT_ORIGIN/$ZUUL_PROJECT .
+        git clone -vvvvvv $GIT_ORIGIN/$ZUUL_PROJECT .
     fi
 fi
-git remote set-url origin $GIT_ORIGIN/$ZUUL_PROJECT
+git remote -vvvvvv set-url origin $GIT_ORIGIN/$ZUUL_PROJECT
 
 # attempt to work around bugs 925790 and 1229352
-if ! git remote update
+if ! git remote -vvvvvv update
 then
     echo "The remote update failed, so garbage collecting before trying again."
     git gc
-    git remote update
+    git remote -vvvvvv update
 fi
 
 git reset --hard
@@ -73,12 +73,12 @@ fi
 
 if echo "$ZUUL_REF" | grep -q ^refs/tags/
 then
-    git fetch --tags $ZUUL_URL/$ZUUL_PROJECT
+    git fetch -vvvvvv --tags $ZUUL_URL/$ZUUL_PROJECT
     git checkout $ZUUL_REF
     git reset --hard $ZUUL_REF
 elif [ -z "$ZUUL_NEWREV" ]
 then
-    git fetch $ZUUL_URL/$ZUUL_PROJECT $ZUUL_REF
+    git fetch -vvvvvv $ZUUL_URL/$ZUUL_PROJECT $ZUUL_REF
     git checkout FETCH_HEAD
     git reset --hard FETCH_HEAD
 else
