@@ -320,7 +320,7 @@ class ShellTask(Task):
         return_code = 1
         while return_code != 0:
             tries += 1
-            env.update({'GIT_CURL_VERBOSE': 1, 'GIT_TRACE': 1})
+            env.update({'GIT_CURL_VERBOSE': '1', 'GIT_TRACE': '1'})
             return_code = utils.execute_to_log(cmd, self.git_prep_log,
                                                env=env, cwd=local_path)
             if tries == 2:
