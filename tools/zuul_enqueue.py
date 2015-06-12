@@ -9,6 +9,8 @@ import traceback
 # Set the user to watch
 user = 'turbo-hipster'
 author_name = 'DB Datasets CI'
+upstream_user = 'jenkins'
+upstream_author_name = "Jenkins"
 
 # Grab a list of missing or negative reviews for a user:
 url = ("https://review.openstack.org/changes/?q=status:open "
@@ -21,6 +23,7 @@ r = requests.get(url)
 no_votes = []
 negative_votes = []
 merge_failures = []
+upstream_merge_failures = []
 unknown = []
 
 for change in json.loads(r.text[5:]):
@@ -28,41 +31,56 @@ for change in json.loads(r.text[5:]):
         patchset = change['revisions'][change['current_revision']]['_number']
         change_id = str(change['_number']) + ',' + str(patchset)
         last_message = None
+        last_upstream_message = None
         for message in sorted(change['messages'],
                               key=lambda k: (k['_revision_number'],
                                              k['date']), reverse=True):
             if message['_revision_number'] < patchset:
                 # Finished looking at all the messages on this patchset
                 break
-            if message['author']['name'] == author_name:
+            if not last_message and message['author']['name'] == author_name:
                 last_message = message['message']
-                break
+            if (not last_upstream_message and
+                    message['author']['name'] == upstream_author_name):
+                last_upstream_message = message['message']
 
-        if not last_message:
+        if (last_upstream_message and
+                'Merge Failed.' in last_upstream_message.split('\n')[2]):
+            upstream_merge_failures.append({
+                'change_id': change_id,
+                'updated': change['updated'],
+                'change': change,
+                'last_upstream_message': last_upstream_message,
+            })
+        elif not last_message:
             # turbo-hister hasn't commented on this patchset
             no_votes.append({
                 'change_id': change_id,
                 'updated': change['updated'],
-                'change': change
+                'change': change,
+                'last_upstream_message': last_upstream_message,
             })
         elif ('This change was unable to be automatically merged with the '
               'current state of the repository.' in last_message):
             merge_failures.append({
                 'change_id': change_id,
                 'updated': change['updated'],
-                'change': change
+                'change': change,
+                'last_upstream_message': last_upstream_message,
             })
         elif 'Database migration testing failed' in last_message:
             negative_votes.append({
                 'change_id': change_id,
                 'updated': change['updated'],
-                'change': change
+                'change': change,
+                'last_upstream_message': last_upstream_message,
             })
         else:
             unknown.append({
                 'change_id': change_id,
                 'updated': change['updated'],
-                'change': change
+                'change': change,
+                'last_upstream_message': last_upstream_message,
             })
 
     except Exception:
@@ -86,3 +104,6 @@ print ("=" * 20 + (" Changes with merge failure (%d) " % len(merge_failures)) +
 print_enqueues(merge_failures)
 print "=" * 20 + (" Others in this query (%d) " % len(unknown)) + "=" * 20
 print_enqueues(unknown)
+print "=" * 20 + (" Changes with merge failures upstream (%d) "
+                  % len(upstream_merge_failures)) + "=" * 20
+print_enqueues(upstream_merge_failures)
