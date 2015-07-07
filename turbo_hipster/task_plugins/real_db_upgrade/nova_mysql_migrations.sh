@@ -186,10 +186,11 @@ stable_release_db_sync() {
   if [ $version -lt "234" ]
   then
     echo "Database is from Havana! Upgrade via Icehouse"
-    git branch -D stable/icehouse || true
+    git branch -D eol/icehouse || true
     git remote update
-    git checkout -b stable/icehouse
-    git reset --hard remotes/origin/stable/icehouse
+    git checkout -b eol/icehouse
+    # Use tag
+    git reset --hard icehouse-eol
     pip_requires
     db_sync "icehouse"
   fi
