@@ -210,17 +210,13 @@ stable_release_db_sync() {
 
     # TODO(jhesketh): This is a bit of a hack until we update our datasets to
     # have the flavour data migrated. We have to do this before upgrading from
-    # kilo
-    if [ $i == 291 ]
-    then
-      set -x
-      echo "MySQL counters before migrate_flavor_data:"
-      mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
-      sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-kilo.conf --verbose db migrate_flavor_data --force
-      echo "MySQL counters after migrate_flavor_data:"
-      mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
-      set +x
-    fi
+    set -x
+    echo "MySQL counters before migrate_flavor_data:"
+    mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
+    sudo /sbin/ip netns exec nonet `dirname $0`/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-kilo.conf --verbose db migrate_flavor_data --force
+    echo "MySQL counters after migrate_flavor_data:"
+    mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "show status like 'innodb%';"
+    set +x
   fi
 
   # TODO(jhesketh): Add in Liberty here once released
