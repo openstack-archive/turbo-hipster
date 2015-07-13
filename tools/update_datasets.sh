@@ -1,0 +1,278 @@
+#!/bin/bash
+#
+# Copyright 2014 Rackspace Australia
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# A tool to update a given dataset to a given version. Used to keep datasets
+# somewhat fresh rather than over-exercising old migrations.
+
+
+# Usage: ./update_datasets.sh VENV_NAME WORKING_DIR GIT_PATH DB_USER DB_PASS DB_NAME SEED_DATA OUTPUT_DATA
+# apt-get install git virtualenvwrapper python-pip mysql-server python-lxml build-essential libffi-dev
+
+# $1 is the unique job id
+# $2 is the working dir path
+# $3 is the path to the git repo path
+# $4 is the nova db user
+# $5 is the nova db password
+# $6 is the nova db name
+# $7 is the path to the seed dataset to test against
+# $8 is the logging.conf for openstack
+# $9 is the pip cache dir
+
+UNIQUE_ID=$1
+WORKING_DIR_PATH=`realpath $2`
+GIT_REPO_PATH=`realpath $3`
+DB_USER=$4
+DB_PASS=$5
+DB_NAME=$6
+DATASET_SEED_SQL=`realpath $7`
+DATASET_OUTPUT_SQL=$8
+
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# We also support the following environment variables to tweak our behavour:
+#   NOCLEANUP: if set to anything, don't cleanup at the end of the run
+
+pip_requires() {
+  pip install -q mysql-python
+  pip install -q eventlet
+  requires="tools/pip-requires"
+  if [ ! -e $requires ]
+  then
+    requires="requirements.txt"
+  fi
+  echo "Install pip requirements from $requires"
+  pip install -q -r $requires
+  echo "Requirements installed"
+}
+
+db_sync() {
+  # $1 is the test target (ie branch name)
+  # $2 is an (optional) destination version number
+
+  # Create a nova.conf file
+  cat - > $WORKING_DIR_PATH/nova-$1.conf <<EOF
+[DEFAULT]
+sql_connection = mysql://$DB_USER:$DB_PASS@localhost/$DB_NAME?charset=utf8
+#log_config = $LOG_CONF_FILE
+EOF
+
+  # Silently return git to a known good state (delete untracked files)
+  git clean -xfdq
+
+  echo "***** Start DB upgrade to state of $1 *****"
+  echo "HEAD of branch under test is:"
+  git log -n 1
+
+  echo "Setting up the nova-manage entry point"
+  python setup.py -q clean
+  python setup.py -q develop
+  python setup.py -q install
+
+  # Log the migrations present
+  echo "Migrations present:"
+  ls $GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_"
+
+  # Flush innodb's caches
+  echo "Restarting mysql"
+  sudo service mysql stop
+  sudo service mysql start
+
+  start_version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+
+  if [ "%$2%" == "%%" ]
+  then
+    end_version=`ls $GIT_REPO_PATH/nova/db/sqlalchemy/migrate_repo/versions/*.py | sed 's/.*\///' | egrep "^[0-9]+_" | tail -1 | cut -f 1 -d "_"`
+  else
+    end_version=$2
+  fi
+
+  echo "Test will migrate from $start_version to $end_version"
+  if [ $end_version -lt $start_version ]
+  then
+    increment=-1
+    end_version=$(( $end_version + 1 ))
+  else
+    increment=1
+    start_version=$(( $start_version + 1))
+  fi
+
+  for i in `seq $start_version $increment $end_version`
+  do
+    set -x
+    $SCRIPT_DIR/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-$1.conf --verbose db sync --version $i
+    manage_exit=$?
+    set +x
+
+    echo "nova-manage returned exit code $manage_exit"
+    if [ $manage_exit -gt 0 ]
+    then
+      echo "Aborting early"
+      exit $manage_exit
+    fi
+  done
+
+  echo "***** Finished DB upgrade to state of $1 *****"
+}
+
+stable_release_db_sync() {
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+
+  # Some databases are from Folsom
+  echo "Schema version is $version"
+  if [ $version -lt "161" ]
+  then
+    echo "Database is from Folsom! Upgrade via Grizzly"
+    git branch -D eol/grizzly || true
+    git remote update
+    git checkout -b eol/grizzly
+    # Use tag
+    git reset --hard grizzly-eol
+    pip_requires
+    db_sync "grizzly"
+  fi
+
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Grizzly
+  echo "Schema version is $version"
+  if [ $version -lt "216" ]
+  then
+    echo "Database is from Grizzly! Upgrade via Havana"
+    git branch -D eol/havana || true
+    git remote update
+    git checkout -b eol/havana
+    # Use tag
+    git reset --hard havana-eol
+    pip_requires
+    db_sync "havana"
+  fi
+
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Havana
+  echo "Schema version is $version"
+  if [ $version -lt "234" ]
+  then
+    echo "Database is from Havana! Upgrade via Icehouse"
+    git branch -D eol/icehouse || true
+    git remote update
+    git checkout -b eol/icehouse
+    # Use tag
+    git reset --hard icehouse-eol
+    pip_requires
+    db_sync "icehouse"
+  fi
+
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Icehouse
+  echo "Schema version is $version"
+  if [ $version -lt "254" ]
+  then
+    echo "Database is from Icehouse! Upgrade via Juno"
+    git branch -D stable/juno || true
+    git remote update
+    git checkout -b stable/juno
+    git reset --hard remotes/origin/stable/juno
+    pip_requires
+    db_sync "juno"
+  fi
+
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Juno
+  echo "Schema version is $version"
+  if [ $version -lt "280" ]
+  then
+    echo "Database is from Juno! Upgrade via Kilo"
+    git branch -D stable/kilo || true
+    git remote update
+    git checkout -b stable/kilo
+    git reset --hard remotes/origin/stable/kilo
+    pip_requires
+    db_sync "kilo"
+
+    # TODO(jhesketh): This is a bit of a hack until we update our datasets to
+    # have the flavour data migrated. We have to do this before upgrading from
+    set -x
+    $SCRIPT_DIR/nova-manage-wrapper.sh $VENV_PATH --config-file $WORKING_DIR_PATH/nova-kilo.conf --verbose db migrate_flavor_data --force
+    set +x
+  fi
+
+  # TODO(jhesketh): Add in Liberty here once released
+
+  # TODO(jhesketh): Make this more DRY and/or automatically match migration
+  # numbers to releases.
+}
+
+echo "Test running on "`hostname`" as "`whoami`" ("`echo ~`", $HOME)"
+echo "To execute this script manually, run this:"
+echo "$0 $@"
+
+# Setup the environment
+set -x
+export PATH=/usr/lib/ccache:$PATH
+#export PIP_INDEX_URL="http://www.rcbops.com/pypi/mirror"
+export PIP_INDEX_URL="http://pypi.openstack.org/simple/"
+export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
+which pip
+pip --version
+which virtualenv
+virtualenv --version
+which mkvirtualenv
+set +x
+
+# Restore database to known good state
+echo "Restoring test database $DB_NAME"
+set -x
+mysql -u $DB_USER --password=$DB_PASS -e "drop database $DB_NAME"
+mysql -u $DB_USER --password=$DB_PASS -e "create database $DB_NAME"
+mysql -u $DB_USER --password=$DB_PASS $DB_NAME < $DATASET_SEED_SQL
+set +x
+
+echo "Build test environment"
+cd $GIT_REPO_PATH
+
+echo "Setting up virtual env"
+source ~/.bashrc
+export WORKON_HOME=`pwd`/envs
+mkdir -p $WORKON_HOME
+VENV_PATH=$WORKON_HOME/$UNIQUE_ID
+rm -rf $VENV_PATH
+source /usr/local/bin/virtualenvwrapper.sh
+source /etc/bash_completion.d/virtualenvwrapper
+mkvirtualenv --no-site-packages $UNIQUE_ID
+#toggleglobalsitepackages
+export PYTHONPATH=$PYTHONPATH:$GIT_REPO_PATH
+
+if [ ! -e $VENV_PATH ]
+then
+  echo "Error: making the virtual env failed"
+  exit 1
+fi
+
+stable_release_db_sync
+
+# Determine the final schema version
+version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+echo "Final schema version is $version"
+
+if [ "%$NOCLEANUP%" == "%%" ]
+then
+  # Cleanup virtual env
+  echo "Cleaning up virtual env"
+  deactivate
+  rmvirtualenv $UNIQUE_ID
+fi
+
+cd $SCRIPT_DIR
+mysqldump -u $DB_USER --password=$DB_PASS $DB_NAME > $DATASET_OUTPUT_SQL
