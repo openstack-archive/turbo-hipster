@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Code-Review+2: Joshua Hesketh <joshua.hesketh@rackspace.com>
+Workflow+1: Joshua Hesketh <joshua.hesketh@rackspace.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 13 Jul 2015 14:52:38 +0000
+Reviewed-on: https://review.openstack.org/201139
+Project: stackforge/turbo-hipster
+Branch: refs/heads/master
