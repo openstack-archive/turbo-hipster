@@ -1,7 +1,7 @@
 :title: Installation
 
 .. _gearman: http://gearman.org/
-.. _zuul: http://ci.openstack.org/zuul/
+.. _zuul: http://docs.openstack.org/infra/zuul/
 
 Installation
 ============
