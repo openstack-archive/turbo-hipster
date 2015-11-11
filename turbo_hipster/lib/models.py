@@ -17,6 +17,7 @@ import copy
 import json
 import logging
 import os
+import tempfile
 import pkg_resources
 import socket
 import uuid
@@ -259,6 +260,7 @@ class ShellTask(Task):
         self.job_working_dir = None
         self.shell_output_log = None
         self.git_prep_log = None
+        self.output_summary = None
 
     def do_job_steps(self):
         self.log.info('Step 1: Setup environment')
@@ -289,6 +291,7 @@ class ShellTask(Task):
             self.job_results_dir,
             'shell_output.log'
         )
+        self.output_summary = tempfile.mkstemp()
         self.log.info('Working on node %s' % (os.uname()[1]))
 
     @common.task_step
@@ -358,6 +361,7 @@ class ShellTask(Task):
             env_args['TH_JOB_NAME'] = self.job.name[len('build:'):]
         else:
             env_args['TH_JOB_NAME'] = self.job.name
+        env_args['TH_RESULT_FILE'] = self.output_summary[1]
 
         self.script_return_code = utils.execute_to_log(
             cmd,
@@ -369,6 +373,10 @@ class ShellTask(Task):
     def _parse_and_check_results(self):
         if self.script_return_code > 0:
             self.success = False
+            with os.fdopen(self.output_summary[0]) as fp:
+                line = fp.readline().strip()
+                if len(line) and not line.startswith('SUCCESS'):
+                    self.messages.append(line)
             self.messages.append('Return code from test script was non-zero '
                                  '(%d)' % self.script_return_code)
 
@@ -376,7 +384,11 @@ class ShellTask(Task):
     def _handle_cleanup(self):
         """Handle and cleanup functions. Shutdown if requested to so that no
         further jobs are ran if the environment is dirty."""
-        pass
+
+        try:
+            os.remove(self.output_summary[1])
+        except OSError:
+            pass
 
     @common.task_step
     def _handle_results(self):
