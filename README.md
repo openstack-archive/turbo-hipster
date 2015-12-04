@@ -24,7 +24,7 @@ Installation
 * apt-get install vim git python-pip python-setuptools python-keystoneclient virtualenvwrapper python-eventlet python-numpy python-mysqldb python-git python-gitdb python-netaddr python-pkg-resources libxml2-dev libxml2-utils libxslt-dev git-review libxml2-dev libxml2-utils libxslt-dev libmysqlclient-dev pep8 postgresql-server-dev-9.1 python2.7-dev python-coverage python-netaddr
 * pip install -U pip 
 * apt-get purge python-pip
-* cd /home/th; git clone http://github.com/stackforge/turbo-hipster
+* cd /home/th; git clone http://github.com/openstack/turbo-hipster
 * apply any patches you need
 * python setup.py install
 * cp turbo_hipster/task_plugins/gate_real_db_upgrade/*.sh /usr/local/lib/python2.7/dist-packages/turbo_hipster/task_plugins/gate_real_db_upgrade/

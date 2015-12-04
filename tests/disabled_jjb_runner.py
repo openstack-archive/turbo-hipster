@@ -55,7 +55,7 @@ class TestTaskRunner(base.TestWithGearman):
         job_uuid = str(uuid.uuid1())[:8]
         data_req = {
             'ZUUL_UUID': job_uuid,
-            'ZUUL_PROJECT': 'stackforge/turbo-hipster',
+            'ZUUL_PROJECT': 'openstack/turbo-hipster',
             'ZUUL_PIPELINE': 'check',
             'ZUUL_URL': 'git://git.openstack.org/',
             'BRANCH': 'master',
