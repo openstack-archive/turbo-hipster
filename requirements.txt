@@ -1,7 +1,6 @@
 gear>=0.5.4,<1.0.0
 python-swiftclient
 python-keystoneclient
-argparse
 
 lockfile
 python-daemon<2.0
