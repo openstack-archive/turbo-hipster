@@ -244,11 +244,13 @@ which mkvirtualenv
 set +x
 
 # Restore database to known good state
-echo "Restoring test database $DB_NAME"
+echo "Loading test database $DB_NAME"
 set -x
-mysql -u $DB_USER --password=$DB_PASS -e "drop database $DB_NAME"
-mysql -u $DB_USER --password=$DB_PASS -e "create database $DB_NAME"
-mysql -u $DB_USER --password=$DB_PASS $DB_NAME < $DATASET_SEED_SQL
+if ! mysql -u $DB_USER --password=$DB_PASS -e 'use $DB_NAME'
+then
+    mysql -u $DB_USER --password=$DB_PASS -e "create database $DB_NAME"
+    mysql -u $DB_USER --password=$DB_PASS $DB_NAME < $DATASET_SEED_SQL
+fi
 set +x
 
 echo "Build test environment"
