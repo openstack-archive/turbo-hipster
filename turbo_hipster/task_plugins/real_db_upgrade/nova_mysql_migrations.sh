@@ -246,7 +246,7 @@ set +x
 # Restore database to known good state
 echo "Loading test database $DB_NAME"
 set -x
-if ! mysql -u $DB_USER --password=$DB_PASS -e 'use $DB_NAME'
+if ! mysql -u $DB_USER --password=$DB_PASS -e "use $DB_NAME"
 then
     mysql -u $DB_USER --password=$DB_PASS -e "create database $DB_NAME"
     mysql -u $DB_USER --password=$DB_PASS $DB_NAME < $DATASET_SEED_SQL
