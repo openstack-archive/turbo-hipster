@@ -57,6 +57,7 @@ pip_requires() {
   fi
 
   echo "Requirements installed"
+  pip freeze
 }
 
 db_sync() {
