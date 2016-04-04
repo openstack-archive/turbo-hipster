@@ -48,6 +48,14 @@ pip_requires() {
   fi
   echo "Install pip requirements from $requires"
   pip install -q -r $requires
+
+  # Workaround for old python version on ubuntu-precise
+  ubuntu_version=$( lsb_release -r | awk '{ print $2 }' | sed 's/[.]//' )
+  if [ $ubuntu_version -eq 1204 ]
+  then
+    pip install -U "greenlet<0.4.9"
+  fi
+
   echo "Requirements installed"
 }
 
