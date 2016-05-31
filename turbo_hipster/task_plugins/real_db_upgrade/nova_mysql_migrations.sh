@@ -48,9 +48,9 @@ pip_requires() {
     requires="requirements.txt"
   fi
 
-  wget http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt?h=$1
+  wget http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt?h=$1 -O $WORKING_DIR_PATH/upper-constraints.txt
   echo "Install pip requirements from $requires"
-  pip install -c upper-constraints.txt -r $requires
+  pip install -c $WORKING_DIR_PATH/upper-constraints.txt -r $requires
 
   # Workaround for old python version on ubuntu-precise
   ubuntu_version=$( lsb_release -r | awk '{ print $2 }' | sed 's/[.]//' )
