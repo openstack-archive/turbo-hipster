@@ -39,6 +39,7 @@ PIP_CACHE_DIR=$9
 #   NOCLEANUP: if set to anything, don't cleanup at the end of the run
 
 pip_requires() {
+  # $1 is the branch to use for the upper constraints
   pip install -q mysql-python
   pip install -q eventlet
   requires="tools/pip-requires"
@@ -46,8 +47,10 @@ pip_requires() {
   then
     requires="requirements.txt"
   fi
+
+  wget http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt?h=$1
   echo "Install pip requirements from $requires"
-  pip install -q -r $requires
+  pip install -c upper-constraints.txt -r $requires
 
   # Workaround for old python version on ubuntu-precise
   ubuntu_version=$( lsb_release -r | awk '{ print $2 }' | sed 's/[.]//' )
@@ -156,7 +159,7 @@ stable_release_db_sync() {
     git checkout -b eol/grizzly
     # Use tag
     git reset --hard grizzly-eol
-    pip_requires
+    pip_requires stable/grizzly
     db_sync "grizzly"
   fi
 
@@ -171,7 +174,7 @@ stable_release_db_sync() {
     git checkout -b eol/havana
     # Use tag
     git reset --hard havana-eol
-    pip_requires
+    pip_requires stable/havana
     db_sync "havana"
   fi
 
@@ -186,7 +189,7 @@ stable_release_db_sync() {
     git checkout -b eol/icehouse
     # Use tag
     git reset --hard icehouse-eol
-    pip_requires
+    pip_requires stable/icehouse
     db_sync "icehouse"
   fi
 
@@ -200,7 +203,7 @@ stable_release_db_sync() {
     git remote update
     git checkout -b stable/juno
     git reset --hard remotes/origin/stable/juno
-    pip_requires
+    pip_requires stable/juno
     db_sync "juno"
   fi
 
@@ -214,7 +217,7 @@ stable_release_db_sync() {
     git remote update
     git checkout -b stable/kilo
     git reset --hard remotes/origin/stable/kilo
-    pip_requires
+    pip_requires stable/kilo
     db_sync "kilo"
 
     # TODO(jhesketh): This is a bit of a hack until we update our datasets to
@@ -293,14 +296,14 @@ then
 else
   echo "Update database to current state of trunk"
   git checkout master
-  pip_requires
+  pip_requires master
   db_sync "trunk"
   git checkout working
 fi
 
 # Now run the patchset
 echo "Now test the patchset"
-pip_requires
+pip_requires master
 db_sync "patchset"
 
 # =============================================================================
