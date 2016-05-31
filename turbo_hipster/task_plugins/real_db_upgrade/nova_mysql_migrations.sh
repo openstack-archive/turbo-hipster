@@ -148,66 +148,6 @@ EOF
 
 stable_release_db_sync() {
   version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-
-  # Some databases are from Folsom
-  echo "Schema version is $version"
-  if [ $version -lt "161" ]
-  then
-    echo "Database is from Folsom! Upgrade via Grizzly"
-    git branch -D eol/grizzly || true
-    git remote update
-    git checkout -b eol/grizzly
-    # Use tag
-    git reset --hard grizzly-eol
-    pip_requires stable/grizzly
-    db_sync "grizzly"
-  fi
-
-  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-  # Some databases are from Grizzly
-  echo "Schema version is $version"
-  if [ $version -lt "216" ]
-  then
-    echo "Database is from Grizzly! Upgrade via Havana"
-    git branch -D eol/havana || true
-    git remote update
-    git checkout -b eol/havana
-    # Use tag
-    git reset --hard havana-eol
-    pip_requires stable/havana
-    db_sync "havana"
-  fi
-
-  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-  # Some databases are from Havana
-  echo "Schema version is $version"
-  if [ $version -lt "234" ]
-  then
-    echo "Database is from Havana! Upgrade via Icehouse"
-    git branch -D eol/icehouse || true
-    git remote update
-    git checkout -b eol/icehouse
-    # Use tag
-    git reset --hard icehouse-eol
-    pip_requires stable/icehouse
-    db_sync "icehouse"
-  fi
-
-  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
-  # Some databases are from Icehouse
-  echo "Schema version is $version"
-  if [ $version -lt "254" ]
-  then
-    echo "Database is from Icehouse! Upgrade via Juno"
-    git branch -D stable/juno || true
-    git remote update
-    git checkout -b stable/juno
-    git reset --hard remotes/origin/stable/juno
-    pip_requires stable/juno
-    db_sync "juno"
-  fi
-
-  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
   # Some databases are from Juno
   echo "Schema version is $version"
   if [ $version -lt "280" ]
@@ -231,7 +171,35 @@ stable_release_db_sync() {
     # set +x
   fi
 
-  # TODO(jhesketh): Add in Liberty here once released
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Kilo
+  echo "Schema version is $version"
+  if [ $version -lt "302" ]
+  then
+    echo "Database is from Kilo! Upgrade via Liberty"
+    git branch -D stable/liberty || true
+    git remote update
+    git checkout -b stable/liberty
+    git reset --hard remotes/origin/stable/liberty
+    pip_requires stable/liberty
+    db_sync "liberty"
+  fi
+
+  version=`mysql -u $DB_USER --password=$DB_PASS $DB_NAME -e "select * from migrate_version \G" | grep version | sed 's/.*: //'`
+  # Some databases are from Liberty
+  echo "Schema version is $version"
+  if [ $version -lt "319" ]
+  then
+    echo "Database is from Liberty! Upgrade via Mitaka"
+    git branch -D stable/mitaka || true
+    git remote update
+    git checkout -b stable/mitaka
+    git reset --hard remotes/origin/stable/mitaka
+    pip_requires stable/mitaka
+    db_sync "mitaka"
+  fi
+
+  # TODO(jhesketh): Add in Newton here once released
 
   # TODO(jhesketh): Make this more DRY and/or automatically match migration
   # numbers to releases.
