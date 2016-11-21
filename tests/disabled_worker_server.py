@@ -49,4 +49,4 @@ class TestServerManager(testtools.TestCase):
         serv = worker_server.Server(self.config)
         serv_config = serv.config
         self.assertIn("extra_configuration", serv_config)
-        self.assertEquals("testing123", serv_config["extra_configuration"])
+        self.assertEqual("testing123", serv_config["extra_configuration"])
