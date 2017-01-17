@@ -95,16 +95,16 @@ for change in json.loads(r.text[5:]):
 
 def print_enqueues(changes):
     for change in sorted(changes, key=lambda k: k['updated'], reverse=True):
-        print ("zuul enqueue --trigger gerrit --pipeline check "
-               "--project openstack/nova --change %s" % (change['change_id']))
+        print("zuul enqueue --trigger gerrit --pipeline check "
+              "--project openstack/nova --change %s" % (change['change_id']))
 
 print "=" * 20 + (" Changes with no votes (%d) " % len(no_votes)) + "=" * 20
 print_enqueues(no_votes)
-print ("=" * 20 + (" Changes with negative votes (%d) " % len(negative_votes))
-       + "=" * 20)
+print("=" * 20 + (" Changes with negative votes (%d) " % len(negative_votes))
+      + "=" * 20)
 print_enqueues(negative_votes)
-print ("=" * 20 + (" Changes with merge failure (%d) " % len(merge_failures)) +
-       "=" * 20)
+print("=" * 20 + (" Changes with merge failure (%d) " % len(merge_failures)) +
+      "=" * 20)
 print_enqueues(merge_failures)
 print "=" * 20 + (" Others in this query (%d) " % len(unknown)) + "=" * 20
 print_enqueues(unknown)

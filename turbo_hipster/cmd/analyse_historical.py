@@ -71,8 +71,8 @@ def main():
     items = connection.get_container(swift_config['container'], limit=1000)[1]
     while items:
         total_items += len(items)
-        print ('%s Processing %d items, %d items total'
-               % (datetime.datetime.now(), len(items), total_items))
+        print('%s Processing %d items, %d items total'
+              % (datetime.datetime.now(), len(items), total_items))
 
         for item in items:
             log.info('Processing %s' % item['name'])
