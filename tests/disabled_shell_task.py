@@ -36,7 +36,7 @@ class TestTaskRunner(base.TestWithGearman):
             'ZUUL_UUID': job_uuid,
             'ZUUL_PROJECT': 'stackforge/turbo-hipster',
             'ZUUL_PIPELINE': 'check',
-            'ZUUL_URL': 'git://git.openstack.org/',
+            'ZUUL_URL': 'https://git.openstack.org/',
             'BRANCH': 'master',
             'BASE_LOG_PATH': '56/123456/8',
             'LOG_PATH': '56/123456/8/check/job_name/%s' % job_uuid
@@ -84,7 +84,7 @@ class TestTaskRunner(base.TestWithGearman):
             'ZUUL_UUID': job_uuid,
             'ZUUL_PROJECT': 'stackforge/turbo-hipster',
             'ZUUL_PIPELINE': 'check',
-            'ZUUL_URL': 'git://git.openstack.org/',
+            'ZUUL_URL': 'https://git.openstack.org/',
             'BRANCH': 'master',
             'BASE_LOG_PATH': '56/123456/8',
             'LOG_PATH': '56/123456/8/check/job_name/%s' % job_uuid
@@ -148,7 +148,7 @@ class TestTaskRunner(base.TestWithGearman):
             'ZUUL_UUID': job_uuid,
             'ZUUL_PROJECT': 'stackforge/turbo-hipster',
             'ZUUL_PIPELINE': 'check',
-            'ZUUL_URL': 'git://git.openstack.org/',
+            'ZUUL_URL': 'https://git.openstack.org/',
             'BRANCH': 'master',
             'BASE_LOG_PATH': '56/123456/8',
             'LOG_PATH': '56/123456/8/check/job_name/%s' % job_uuid
@@ -209,7 +209,7 @@ class TestTaskRunner(base.TestWithGearman):
             'ZUUL_UUID': job_uuid,
             'ZUUL_PROJECT': 'stackforge/turbo-hipster',
             'ZUUL_PIPELINE': 'check',
-            'ZUUL_URL': 'git://git.openstack.org/',
+            'ZUUL_URL': 'https://git.openstack.org/',
             'BRANCH': 'master',
             'BASE_LOG_PATH': '56/123456/8',
             'LOG_PATH': '56/123456/8/check/job_name/%s' % job_uuid

@@ -29,7 +29,7 @@ class TestTaskRunner(base.TestWithGearman):
     def _grab_jjb(self):
         # Grab a copy of JJB's config
         temp_path = self.useFixture(fixtures.TempDir()).path
-        cmd = 'git clone git://git.openstack.org/openstack-infra/config'
+        cmd = 'git clone https://git.openstack.org/openstack-infra/config'
         utils.execute_to_log(cmd, '/dev/null', cwd=temp_path)
         return os.path.join(
             temp_path, 'config',
@@ -57,7 +57,7 @@ class TestTaskRunner(base.TestWithGearman):
             'ZUUL_UUID': job_uuid,
             'ZUUL_PROJECT': 'stackforge/turbo-hipster',
             'ZUUL_PIPELINE': 'check',
-            'ZUUL_URL': 'git://git.openstack.org/',
+            'ZUUL_URL': 'https://git.openstack.org/',
             'BRANCH': 'master',
             'BASE_LOG_PATH': '56/123456/8',
             'LOG_PATH': '56/123456/8/check/job_name/%s' % job_uuid
